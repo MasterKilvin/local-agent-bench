@@ -1,0 +1,70 @@
+diff --git c/main.py i/main.py
+index 4811001..1c7c98b 100644
+--- c/main.py
++++ i/main.py
+@@ -4,4 +4,5 @@ from stock.importer import import_text
+ from stock.store import Store
+ 
+ if __name__ == '__main__':
+-    print(json.dumps(import_text(sys.stdin.read(), Store())))
++    dry_run = '--dry-run' in sys.argv[1:]
++    print(json.dumps(import_text(sys.stdin.read(), Store(), dry_run=dry_run)))
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..3f3d4ac 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,48 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_DIGITS = '0123456789'
++
++
++def _field(row, name):
++    try:
++        value = row[name]
++    except KeyError:
++        raise ValueError(f'missing {name} field')
++    if value is None:
++        raise ValueError(f'missing {name} field')
++    if not isinstance(value, str) or not value.strip():
++        raise ValueError(f'{name} must not be empty')
++    return value.strip()
++
++
++def _parse_row(row):
++    sku = _field(row, 'sku')
++    name = _field(row, 'name')
++    qty = _field(row, 'qty')
++    if any(ch not in _DIGITS for ch in qty):
++        raise ValueError('qty must be a nonnegative integer')
++    return {'sku': sku, 'name': name, 'qty': int(qty)}
++
++
++def import_text(text, store, dry_run=False):
++    # Phase 1: validate every row and compute the diff from the starting
++    # store state before committing anything (or, for a dry run, before
++    # touching the store at all).
++    planned = []
++    reader = csv.DictReader(io.StringIO(text))
++    for row in reader:
++        item = _parse_row(row)
++        planned.append((item, store.get(item['sku'])))
++
++    # Phase 2: build the result and commit only when not a dry run.
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
+-        before = store.get(item['sku'])
++    for item, before in planned:
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        if not dry_run:
++            store.put(item)
+     return result

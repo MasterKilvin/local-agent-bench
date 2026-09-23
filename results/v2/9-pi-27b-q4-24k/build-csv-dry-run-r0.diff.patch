@@ -1,0 +1,63 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..cf22c46
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..e2873a4
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..689e1ca
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..1229389 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,41 @@
+ import csv
+ import io
++import re
++
++_QTY_RE = re.compile(r'^[0-9]+$')
++
++
++def _parse_row(row):
++    sku = row.get('sku')
++    name = row.get('name')
++    qty = row.get('qty')
++    if not isinstance(sku, str) or not isinstance(name, str) or not isinstance(qty, str):
++        raise ValueError('row must have sku, name and qty fields: %r' % (row,))
++    sku = sku.strip()
++    name = name.strip()
++    qty = qty.strip()
++    if not sku:
++        raise ValueError('empty sku in row: %r' % (row,))
++    if not name:
++        raise ValueError('empty name in row: %r' % (row,))
++    if not _QTY_RE.match(qty):
++        raise ValueError('qty must be a nonnegative integer of decimal digits: %r' % (row,))
++    return {'sku': sku, 'name': name, 'qty': int(qty)}
++
++
++def import_text(text, store, dry_run=False):
++    rows = list(csv.DictReader(io.StringIO(text)))
++    # Validate every row before committing any changes.
++    parsed = [_parse_row(row) for row in rows]
+ 
+-def import_text(text, store):
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
++    for item in parsed:
+         before = store.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        if not dry_run:
++            store.put(item)
+     return result

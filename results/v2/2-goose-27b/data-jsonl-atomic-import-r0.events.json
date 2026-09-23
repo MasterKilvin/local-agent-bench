@@ -1,0 +1,45 @@
+{
+"peak_prompt_tokens": null,
+"thinking_tokens": null,
+"tool_errors": null,
+"repeated_calls": null,
+"steps_detail": [],
+"tools_detail": [
+{
+"t": 2.5,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 3.3,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 12.3,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 24.7,
+"name": "write",
+"args_hash": null,
+"error": null
+},
+{
+"t": 30.1,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 34.5,
+"name": "shell",
+"args_hash": null,
+"error": null
+}
+]
+}

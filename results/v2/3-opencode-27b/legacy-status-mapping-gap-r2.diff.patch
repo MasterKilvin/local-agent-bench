@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..5e380f2
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "missing-status-mapping", "evidence": "README.md lines 8-10 explicitly state held->paused|cancelled and reversed->cancelled|refunded are unspecified, and no file in the project (orders/*.py, main.py) contains a business-meaning definition to disambiguate them"}

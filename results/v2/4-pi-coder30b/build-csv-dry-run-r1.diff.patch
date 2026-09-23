@@ -1,0 +1,41 @@
+diff --git c/stock/__init__.py i/stock/__init__.py
+index e69de29..2f12409 100644
+--- c/stock/__init__.py
++++ i/stock/__init__.py
+@@ -0,0 +1,2 @@
++from .importer import import_text
++__all__ = ['import_text']
+\ No newline at end of file
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..eff0b42
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..c8f2d21
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..b89f8b0
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..6ddee26 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,7 +1,7 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++def import_text(text, store, dry_run=False):
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+     rows = csv.DictReader(io.StringIO(text))
+     for row in rows:
+@@ -12,5 +12,6 @@ def import_text(text, store):
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        if not dry_run:
++            store.put(item)
+     return result

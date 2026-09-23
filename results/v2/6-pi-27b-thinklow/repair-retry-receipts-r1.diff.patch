@@ -1,0 +1,54 @@
+diff --git c/receipts/__pycache__/__init__.cpython-312.pyc i/receipts/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..8da4690
+Binary files /dev/null and i/receipts/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/receipts/__pycache__/gateway.cpython-312.pyc i/receipts/__pycache__/gateway.cpython-312.pyc
+new file mode 100644
+index 0000000..ccd920e
+Binary files /dev/null and i/receipts/__pycache__/gateway.cpython-312.pyc differ
+diff --git c/receipts/__pycache__/worker.cpython-312.pyc i/receipts/__pycache__/worker.cpython-312.pyc
+new file mode 100644
+index 0000000..12d44a2
+Binary files /dev/null and i/receipts/__pycache__/worker.cpython-312.pyc differ
+diff --git c/receipts/worker.py i/receipts/worker.py
+index e9047c3..dc06833 100644
+--- c/receipts/worker.py
++++ i/receipts/worker.py
+@@ -1,9 +1,36 @@
+ from .gateway import TemporaryError
+ 
++
+ def process(job_id, amount, gateway, attempts=3):
++    # A job has at most one receipt. `gateway.find(job_id)` is the source of
++    # truth for a committed receipt: `issue` may raise `TemporaryError` *after*
++    # it has already written the receipt (the "failure immediately after the
++    # write" case), so the only safe way to recover a committed receipt is to
++    # look it up rather than issuing again.
+     for _ in range(attempts):
++        # Idempotency: if a receipt is already committed (by an earlier call,
++        # or by an earlier attempt of this call that failed after writing),
++        # return it instead of creating a duplicate.
++        existing = gateway.find(job_id)
++        if existing is not None:
++            return existing
++
+         try:
+             return gateway.issue(job_id, amount)
+         except TemporaryError:
+-            pass
++            # The failure may be before the write (nothing committed) or
++            # immediately after it (a receipt *was* committed despite the
++            # error). Recover any committed receipt before retrying, so we
++            # never issue a second one; if none was committed, retry.
++            committed = gateway.find(job_id)
++            if committed is not None:
++                return committed
++            # No receipt was committed -> this was a pre-write failure; retry.
++            continue
++
++    # All allowed attempts failed without committing. Per the contract, only
++    # raise if nothing was ever committed; otherwise return what exists.
++    committed = gateway.find(job_id)
++    if committed is not None:
++        return committed
+     raise TemporaryError('exhausted')

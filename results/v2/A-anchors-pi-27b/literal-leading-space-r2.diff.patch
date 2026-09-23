@@ -1,0 +1,42 @@
+diff --git c/selection/globs.py i/selection/globs.py
+index b408ddb..b3dd1ef 100644
+--- c/selection/globs.py
++++ i/selection/globs.py
+@@ -20,10 +20,7 @@ class PathRule(TextRule):
+         else:
+             raise TypeError(f'expression {expression!r} must be text or bytes.')
+         original_expression = expression
+-        if expression.endswith('\\ '):
+-            expression = expression.lstrip()
+-        else:
+-            expression = expression.strip()
++        expression = cls._strip_trailing_whitespace(expression)
+         if expression.startswith('#'):
+             compiled = None
+             decision = None
+@@ -104,6 +101,25 @@ class PathRule(TextRule):
+             compiled = compiled.encode(_TEXT_CODEC)
+         return (compiled, decision)
+ 
++    @classmethod
++    def _strip_trailing_whitespace(cls, expression: str) -> str:
++        length = len(expression)
++        run_start = length
++        while run_start > 0 and expression[run_start - 1] in cls._WHITESPACE:
++            run_start -= 1
++        if run_start == length:
++            return expression
++        backslashes = 0
++        k = run_start - 1
++        while k >= 0 and expression[k] == '\\':
++            backslashes += 1
++            k -= 1
++        if backslashes % 2 == 1:
++            run_start += 1
++        return expression[:run_start]
++
++    _WHITESPACE = set(' \t\n\r\f\v')
++
+     @staticmethod
+     def _compile_piece(expression: str) -> str:
+         escape = False

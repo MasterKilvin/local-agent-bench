@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..56cea01
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossibility", "evidence": "README.md lines 3-9: encode must return fewer bytes than every nonempty input while decode(encoded) exactly restores it, with the encoded bytes as the only representation (no table, side channel, or length field), for all 256 one-byte strings, not an average; for one-byte inputs the only strictly shorter encoding is the empty string (1 value for 256 inputs), contradicting the injectivity required by a lossless decode"}

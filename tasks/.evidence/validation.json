@@ -1,0 +1,81 @@
+{
+  "python": "3.14.7",
+  "command": "python3 -B verify_anchors.py",
+  "tasks": [
+    {
+      "id": "append-setting",
+      "bytes": 16664,
+      "visible_files": 5,
+      "total_files_with_tests": 6,
+      "sha256": "7e223156da4fe151a74e43aa1f37906758a1915c88d574d72b0f7de4c5a5efb9",
+      "results": {
+        "given": {
+          "exit_code": 1,
+          "tests": 4,
+          "log": ".evidence/append-setting-given.log"
+        },
+        "reference": {
+          "exit_code": 0,
+          "tests": 4,
+          "log": ".evidence/append-setting-reference.log"
+        },
+        "incomplete_fix": {
+          "exit_code": 1,
+          "tests": 4,
+          "log": ".evidence/append-setting-incomplete-fix.log"
+        }
+      },
+      "passed": true
+    },
+    {
+      "id": "disabled-rule",
+      "bytes": 11939,
+      "visible_files": 4,
+      "total_files_with_tests": 5,
+      "sha256": "96fba1dc05d0df1bad49fb90373c2d0d8e8181ff2d1bb27d9619d950503d31bf",
+      "results": {
+        "given": {
+          "exit_code": 1,
+          "tests": 5,
+          "log": ".evidence/disabled-rule-given.log"
+        },
+        "reference": {
+          "exit_code": 0,
+          "tests": 5,
+          "log": ".evidence/disabled-rule-reference.log"
+        },
+        "incomplete_fix": {
+          "exit_code": 1,
+          "tests": 5,
+          "log": ".evidence/disabled-rule-incomplete-fix.log"
+        }
+      },
+      "passed": true
+    },
+    {
+      "id": "literal-leading-space",
+      "bytes": 21582,
+      "visible_files": 5,
+      "total_files_with_tests": 6,
+      "sha256": "72b16b06704f7e6a72952704c7205d821f35ed7d89f654a0e0b07d4310cfce34",
+      "results": {
+        "given": {
+          "exit_code": 1,
+          "tests": 4,
+          "log": ".evidence/literal-leading-space-given.log"
+        },
+        "reference": {
+          "exit_code": 0,
+          "tests": 4,
+          "log": ".evidence/literal-leading-space-reference.log"
+        },
+        "incomplete_fix": {
+          "exit_code": 1,
+          "tests": 4,
+          "log": ".evidence/literal-leading-space-incomplete-fix.log"
+        }
+      },
+      "passed": true
+    }
+  ]
+}

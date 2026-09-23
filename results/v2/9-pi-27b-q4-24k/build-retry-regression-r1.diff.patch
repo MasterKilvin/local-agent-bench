@@ -1,0 +1,125 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..47f88bc
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,119 @@
++"""Regression tests for the retry wrapper (see README.md).
++
++PermanentError must propagate immediately on any attempt, even after a
++transient failure. TransientError is retried up to `attempts` total
++calls, returning the first success or raising the last transient error.
++No other exception type is retried.
++
++Only the public API described in README.md is used:
++    run(operation, attempts=3), TransientError, PermanentError.
++"""
++
++import unittest
++
++from retry.wrapper import run, TransientError, PermanentError
++
++
++class CountingOperation:
++    """Zero-argument operation that returns a scripted sequence of outcomes.
++
++    Each step is either a return value or an exception instance to raise.
++    The last step repeats if the operation is called more times than scripted.
++    """
++
++    def __init__(self, steps):
++        self.steps = list(steps)
++        self.calls = 0
++
++    def __call__(self):
++        self.calls += 1
++        outcome = self.steps[min(self.calls - 1, len(self.steps) - 1)]
++        if isinstance(outcome, BaseException):
++            raise outcome
++        return outcome
++
++
++class ImmediateSuccessTests(unittest.TestCase):
++    def test_success_on_first_attempt_calls_once(self):
++        op = CountingOperation(['ok'])
++        self.assertEqual('ok', run(op))
++        self.assertEqual(1, op.calls)
++
++    def test_success_with_explicit_attempts(self):
++        op = CountingOperation(['ok'])
++        self.assertEqual('ok', run(op, attempts=5))
++        self.assertEqual(1, op.calls)
++
++
++class TransientErrorTests(unittest.TestCase):
++    def test_transient_then_success_recovers(self):
++        op = CountingOperation([TransientError('t1'), 'ok'])
++        self.assertEqual('ok', run(op, attempts=3))
++        self.assertEqual(2, op.calls)
++
++    def test_all_transient_exhausts_attempts_and_raises_last(self):
++        first = TransientError('first')
++        last = TransientError('last')
++        op = CountingOperation([first, last])
++        with self.assertRaises(TransientError) as cm:
++            run(op, attempts=2)
++        self.assertIs(last, cm.exception)
++        self.assertEqual(2, op.calls)
++
++    def test_default_attempts_is_three_calls(self):
++        op = CountingOperation([TransientError('t')])
++        with self.assertRaises(TransientError):
++            run(op)
++        self.assertEqual(3, op.calls)
++
++    def test_custom_attempts_controls_total_calls(self):
++        op = CountingOperation([TransientError('t'), TransientError('t2')])
++        with self.assertRaises(TransientError):
++            run(op, attempts=5)
++        self.assertEqual(5, op.calls)
++
++    def test_single_attempt_raises_after_one_call(self):
++        op = CountingOperation([TransientError('t')])
++        with self.assertRaises(TransientError):
++            run(op, attempts=1)
++        self.assertEqual(1, op.calls)
++
++
++class PermanentErrorTests(unittest.TestCase):
++    def test_permanent_on_first_attempt_propagates_immediately(self):
++        perm = PermanentError('perm')
++        op = CountingOperation([perm, 'ok'])
++        with self.assertRaises(PermanentError) as cm:
++            run(op, attempts=3)
++        self.assertIs(perm, cm.exception)
++        self.assertEqual(1, op.calls)
++
++    def test_permanent_after_transient_failure_stops_immediately(self):
++        perm = PermanentError('perm')
++        op = CountingOperation([TransientError('t1'), perm, 'ok'])
++        with self.assertRaises(PermanentError) as cm:
++            run(op, attempts=3)
++        self.assertIs(perm, cm.exception)
++        # Must not continue to the third attempt.
++        self.assertEqual(2, op.calls)
++
++    def test_permanent_on_last_attempt_matches_transient_limit(self):
++        perm = PermanentError('perm')
++        op = CountingOperation([TransientError('t'), perm, 'never'])
++        with self.assertRaises(PermanentError):
++            run(op, attempts=2)
++        self.assertEqual(2, op.calls)
++
++
++class OtherExceptionTests(unittest.TestCase):
++    def test_unexpected_exception_is_not_retried(self):
++        boom = ValueError('boom')
++        op = CountingOperation([boom, 'ok'])
++        with self.assertRaises(ValueError) as cm:
++            run(op, attempts=3)
++        self.assertIs(boom, cm.exception)
++        self.assertEqual(1, op.calls)
++
++
++if __name__ == '__main__':
++    unittest.main()

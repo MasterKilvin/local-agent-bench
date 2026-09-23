@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..9d50b61
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossibility", "evidence": "README.md requires a strictly-shorter encoding for all 256 one-byte strings (only b'' is shorter than 1 byte, so all 256 map to b'') while decode(b'') can return only one value, and archive/codec.py's decode (and README.md's ban on external tables/shared state/side channels) gives the decoder no way to distinguish them"}

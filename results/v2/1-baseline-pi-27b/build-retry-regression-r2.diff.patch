@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..7114a2a
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "production-bug-retried-permanent-errors", "evidence": "retry/wrapper.py lines 8-13: run() catches (TransientError, PermanentError) and re-raises only when index == attempts - 1, so PermanentError is swallowed and the operation is called again on later attempts (empirically: 3 calls before raising with attempts=3); README.md (line 1-4) requires PermanentError to propagate immediately and the task forbids changing production code, so no test under tests/ can prove immediate propagation"}

@@ -1,0 +1,45 @@
+{
+ "adjudication": "refusal-adjudication-20260923.json",
+ "rows": [
+  {
+   "task": "conflicting-retention-policy",
+   "repeat": 0,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['contradictory-retention-rules']",
+   "blocker": [
+    "contradictory-retention-rules"
+   ]
+  },
+  {
+   "task": "legacy-status-mapping-gap",
+   "repeat": 0,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['ambiguous-status-mapping']",
+   "blocker": [
+    "ambiguous-status-mapping"
+   ]
+  },
+  {
+   "task": "universal-lossless-shortening",
+   "repeat": 0,
+   "strict_passed": false,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['lossless-compression-impossible-pigeonhole']",
+   "blocker": [
+    "lossless-compression-impossible-pigeonhole"
+   ]
+  },
+  {
+   "task": "webhook-signature-spec-gap",
+   "repeat": 0,
+   "strict_passed": false,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['unspecified-signing-algorithm-and-signed-bytes']",
+   "blocker": [
+    "unspecified-signing-algorithm-and-signed-bytes"
+   ]
+  }
+ ]
+}

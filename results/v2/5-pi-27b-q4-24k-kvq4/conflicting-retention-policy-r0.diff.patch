@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..c17782c
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "contradictory-retention-rules", "evidence": "README.md: Rule A says delete a closed case record once its age reaches 7 days (age >= 7), while Rule B says keep it through day 30 inclusive (must not be deleted at age <= 30). For any age 7..30 the two rules demand opposite actions, and the README states both apply to the same records with 'no exception or priority rule', so no sweep implementation can satisfy both for every age."}

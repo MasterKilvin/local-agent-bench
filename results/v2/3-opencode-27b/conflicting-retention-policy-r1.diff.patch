@@ -1,0 +1,8 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..d111c34
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "contradictory-retention-rules", "evidence": "README.md lines 6-9: Rule A requires deleting cases at age >= 7, Rule B requires keeping cases through age 30; line 11 states no exception or priority rule exists, so no implementation can satisfy both for ages 7-30."}
+\ No newline at end of file

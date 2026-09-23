@@ -1,0 +1,49 @@
+diff --git c/invoice/__pycache__/__init__.cpython-312.pyc i/invoice/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..d2c00be
+Binary files /dev/null and i/invoice/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/invoice/__pycache__/pricing.cpython-312.pyc i/invoice/__pycache__/pricing.cpython-312.pyc
+new file mode 100644
+index 0000000..9bbedf2
+Binary files /dev/null and i/invoice/__pycache__/pricing.cpython-312.pyc differ
+diff --git c/invoice/pricing.py i/invoice/pricing.py
+index bd5f11f..6d97064 100644
+--- c/invoice/pricing.py
++++ i/invoice/pricing.py
+@@ -1,4 +1,33 @@
++from decimal import Decimal, ROUND_HALF_UP
++
++CENTS = Decimal('0.01')
++
++
+ def invoice(lines, tax_rate):
+-    subtotal = sum(float(row['unit_price']) * row['qty'] for row in lines)
+-    tax = round(sum(float(row['unit_price']) * row['qty'] for row in lines if row['taxable']) * float(tax_rate), 2)
+-    return {'subtotal': f'{subtotal:.2f}', 'tax': f'{tax:.2f}', 'total': f'{subtotal + tax:.2f}'}
++    rate = Decimal(tax_rate)
++    rounded_lines = []
++    line_taxes = []
++
++    for row in lines:
++        extended = (Decimal(row['qty']) * Decimal(row['unit_price'])).quantize(CENTS, rounding=ROUND_HALF_UP)
++        rounded_lines.append(extended)
++        if row['taxable']:
++            line_tax = (extended * rate).quantize(CENTS, rounding=ROUND_HALF_UP)
++            line_taxes.append(line_tax)
++
++    subtotal = sum(rounded_lines, Decimal('0'))
++    tax = sum(line_taxes, Decimal('0'))
++    total = subtotal + tax
++
++    return {
++        'subtotal': fmt(subtotal),
++        'tax': fmt(tax),
++        'total': fmt(total),
++    }
++
++
++def fmt(value):
++    value = value.quantize(CENTS, rounding=ROUND_HALF_UP)
++    if value == 0:
++        value = abs(value)
++    return f'{value:.2f}'

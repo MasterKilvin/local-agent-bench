@@ -1,0 +1,111 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..609a11d
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,105 @@
++"""Regression tests for the retry wrapper (public API per README.md).
++
++Prove that:
++* ``PermanentError`` stops immediately on any attempt, including after a
++  transient failure (call count must be exactly 1, or transients-so-far + 1).
++* ``TransientError`` is retried up to ``attempts`` total calls, returning
++  the first success or raising the last transient error.
++"""
++
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++class PermanentErrorStopsImmediatelyTests(unittest.TestCase):
++    def test_permanent_error_is_not_retried(self):
++        calls = {'n': 0}
++
++        def operation():
++            calls['n'] += 1
++            raise PermanentError('nope')
++
++        with self.assertRaises(PermanentError) as ctx:
++            run(operation, attempts=5)
++
++        self.assertEqual(str(ctx.exception), 'nope')
++        # Must propagate immediately: exactly one call, no retries.
++        self.assertEqual(calls['n'], 1)
++
++    def test_permanent_error_after_transient_failure_stops_immediately(self):
++        outcomes = [
++            TransientError('t1'),
++            PermanentError('fatal'),
++            TransientError('t2'),  # must never be reached
++        ]
++        calls = {'n': 0}
++
++        def operation():
++            calls['n'] += 1
++            raise outcomes.pop(0)
++
++        with self.assertRaises(PermanentError) as ctx:
++            run(operation, attempts=5)
++
++        self.assertEqual(str(ctx.exception), 'fatal')
++        # One transient call + one permanent call, then it must stop.
++        self.assertEqual(calls['n'], 2)
++        # The transient error queued afterwards must never have been raised
++        # (it is still pending in outcomes).
++        self.assertEqual([str(e) for e in outcomes], ['t2'])
++
++    def test_permanent_error_on_last_attempt_still_calls_once(self):
++        calls = {'n': 0}
++
++        def operation():
++            calls['n'] += 1
++            raise PermanentError('fatal')
++
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=1)
++
++        self.assertEqual(calls['n'], 1)
++
++
++class TransientErrorRetriesTests(unittest.TestCase):
++    def test_transient_errors_are_retried_until_success(self):
++        outcomes = [
++            TransientError('t1'),
++            TransientError('t2'),
++            'success',
++        ]
++
++        def operation():
++            item = outcomes.pop(0)
++            if isinstance(item, str):
++                return item
++            raise item
++
++        self.assertEqual(run(operation, attempts=3), 'success')
++        self.assertEqual(outcomes, [])
++
++    def test_transient_errors_exhaust_attempts_raise_last_transient(self):
++        outcomes = [
++            TransientError('t1'),
++            TransientError('t2'),
++            TransientError('t3'),
++            TransientError('t4'),
++        ]
++        calls = {'n': 0}
++
++        def operation():
++            calls['n'] += 1
++            raise outcomes.pop(0)
++
++        # attempts=4: exactly 4 total calls, then the *last* transient error.
++        with self.assertRaises(TransientError) as ctx:
++            run(operation, attempts=4)
++
++        self.assertEqual(str(ctx.exception), 't4')
++        self.assertEqual(calls['n'], 4)
++        self.assertEqual(outcomes, [])
++
++
++if __name__ == '__main__':
++    unittest.main()

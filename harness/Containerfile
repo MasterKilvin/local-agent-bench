@@ -1,0 +1,5 @@
+# Agent room image: the workroom's base image plus git and ripgrep, which coding agents expect.
+# Build: podman build -t localhost/bench-agentroom:1 -f Containerfile .
+FROM docker.io/library/python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends git ripgrep ca-certificates \
+ && rm -rf /var/lib/apt/lists/*

@@ -1,0 +1,95 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..5816a29
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..70c72db
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..8ab44e4
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..12724b1 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,50 @@
+-def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
++import re
++
++_RANGE = re.compile(r'bytes=([0-9]+)-([0-9]+)')
++_PREFIX = re.compile(r'bytes=([0-9]+)-')
++_SUFFIX = re.compile(r'bytes=-([0-9]+)')
++
++
++def parse_range(header):
++    """Parse a single range header.
++
++    Returns one of ('range', start, end_or_None), ('suffix', n), or None.
++    The header must exactly match bytes=D-D, bytes=D-, or bytes=-D where D
++    is one or more ASCII digits 0-9 (leading zeros allowed).  Anything else
++    (whitespace, signs, underscores, Unicode digits, extra separators,
++    multiple ranges, both endpoints omitted) is invalid.
++    """
++    if not isinstance(header, str):
++        return None
++    m = _RANGE.fullmatch(header)
++    if m is not None:
++        return 'range', int(m.group(1)), int(m.group(2))
++    m = _PREFIX.fullmatch(header)
++    if m is not None:
++        return 'range', int(m.group(1)), None
++    m = _SUFFIX.fullmatch(header)
++    if m is not None:
++        return 'suffix', int(m.group(1)), None
++    return None
++
++
++def resolve(spec, length):
++    """Resolve a parsed single range against an entity of `length` bytes.
++
++    Returns an inclusive (start, end) pair, or None if the range is
++    unsatisfiable (start at/past EOF, zero suffix, or reverse bounds).
++    An end past EOF is clamped; a suffix longer than the entity yields
++    the whole entity.
++    """
++    if spec is None or length == 0:
++        return None
++    kind, a, b = spec
++    if kind == 'suffix':
++        if a == 0:
++            return None
++        return max(0, length - a), length - 1
++    start = a
++    end = length - 1 if b is None else min(b, length - 1)
++    if start > end:
++        return None
+     return start, end
+diff --git c/download/service.py i/download/service.py
+index 72a053d..8003785 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,14 @@
+-from .ranges import bounds
++from .ranges import parse_range, resolve
++
+ 
+ def serve(data, range_header=None):
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
++    bounds = resolve(parse_range(range_header), len(data))
++    if bounds is None:
++        return 416, {'Content-Length': '0',
++                     'Content-Range': 'bytes */%d' % len(data)}, b''
++    start, end = bounds
++    body = data[start:end + 1]
+     return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++                 'Content-Range': 'bytes %d-%d/%d' % (start, end, len(data))}, body

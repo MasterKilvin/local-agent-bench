@@ -1,0 +1,93 @@
+{
+"peak_prompt_tokens": null,
+"thinking_tokens": null,
+"tool_errors": null,
+"repeated_calls": null,
+"steps_detail": [],
+"tools_detail": [
+{
+"t": 4.3,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 4.3,
+"name": "todo_write todo",
+"args_hash": null,
+"error": null
+},
+{
+"t": 4.8,
+"name": "read_image",
+"args_hash": null,
+"error": null
+},
+{
+"t": 5.3,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 44.4,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 60.2,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 64.3,
+"name": "write",
+"args_hash": null,
+"error": null
+},
+{
+"t": 77.9,
+"name": "write",
+"args_hash": null,
+"error": null
+},
+{
+"t": 77.9,
+"name": "write",
+"args_hash": null,
+"error": null
+},
+{
+"t": 86.7,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 90.7,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 96.8,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 98.0,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 100.4,
+"name": "write",
+"args_hash": null,
+"error": null
+}
+]
+}

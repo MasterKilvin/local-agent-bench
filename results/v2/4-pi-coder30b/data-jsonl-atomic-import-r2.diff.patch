@@ -1,0 +1,28 @@
+diff --git c/events/importer.py i/events/importer.py
+index 4a941c5..18270c9 100644
+--- c/events/importer.py
++++ i/events/importer.py
+@@ -6,7 +6,8 @@ class ImportProblem(Exception):
+         super().__init__(f'invalid line {line}')
+ 
+ def import_bytes(payload, store):
+-    count = 0
++    # First pass: validate all lines and collect records
++    records = []
+     for line, raw in enumerate(payload.splitlines(), 1):
+         if not raw.strip():
+             continue
+@@ -16,6 +17,11 @@ def import_bytes(payload, store):
+                 raise ValueError()
+         except (UnicodeDecodeError, ValueError):
+             raise ImportProblem(line)
++        records.append(record)
++    
++    # Second pass: append all records to store
++    count = 0
++    for record in records:
+         store.append(record)
+         count += 1
+-    return count
++    return count
+\ No newline at end of file

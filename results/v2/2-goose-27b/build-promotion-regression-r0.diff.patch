@@ -1,0 +1,87 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..f92519d
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..957df35
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..84d32b0
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..f46cbed
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..a5809b1
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,65 @@
++"""Regression tests for the promotion double-discount bug at checkout.
++
++Public API (per README.md):
++    checkout(lines, rate) -> str
++Each line has a decimal-string ``price`` and a positive integer ``qty``.
++``rate`` is a decimal-string fraction between 0 and 1. The promotion must
++be applied exactly once to the subtotal, then rounded ROUND_HALF_UP to
++two decimal places.
++
++The covered regression bug applies the promotion twice (i.e. multiplies
++by (1 - rate) instead of once), producing a total discounted two times
++over.
++"""
++
++import unittest
++from decimal import Decimal, ROUND_HALF_UP
++
++from shop.checkout import checkout
++
++TWOPLACES = Decimal('0.01')
++
++
++def expected_total(lines, rate):
++    """Payable total per README rules: promotion applied exactly once."""
++    subtotal = sum(
++        (Decimal(line['price']) * line['qty'] for line in lines),
++        Decimal(0),
++    )
++    factor = Decimal(1) - Decimal(rate)
++    return (subtotal * factor).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
++
++
++class CheckoutPromotionAppliedOnce(unittest.TestCase):
++    """The promotion must be applied exactly once to the subtotal."""
++
++    def test_single_line_quantity_above_one(self):
++        """One line with qty > 1.
++
++        Subtotal 30.00; a 10% promotion gives 27.00. The
++        double-discount bug yields 30 * 0.9 * 0.9 = 24.30.
++        """
++        lines = [{'price': '10.00', 'qty': 3}]
++        rate = '0.10'
++        expected = expected_total(lines, rate)  # Decimal('27.00')
++        self.assertEqual(expected, Decimal('27.00'))
++        self.assertEqual(checkout(lines, rate), str(expected))
++
++    def test_multiple_lines_all_quantity_one(self):
++        """Several lines, each with qty exactly 1.
++
++        Subtotal 15.00; a 25% promotion gives 11.25. The
++        double-discount bug yields 15 * 0.75 * 0.75 = 8.44.
++        """
++        lines = [
++            {'price': '10.00', 'qty': 1},
++            {'price': '5.00', 'qty': 1},
++        ]
++        rate = '0.25'
++        expected = expected_total(lines, rate)  # Decimal('11.25')
++        self.assertEqual(expected, Decimal('11.25'))
++        self.assertEqual(checkout(lines, rate), str(expected))
++
++
++if __name__ == '__main__':
++    unittest.main()

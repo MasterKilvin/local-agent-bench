@@ -1,0 +1,36 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..c2abe6f
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,30 @@
++"""Regression tests for the double-discount bug in checkout.
++
++The promotion must be applied exactly once to the subtotal:
++    payable = subtotal * (1 - rate), rounded with ROUND_HALF_UP.
++The buggy code applied it twice: subtotal * (1 - rate) ** 2.
++"""
++import unittest
++
++from shop.checkout import checkout
++
++
++class DoubleDiscountRegressionTests(unittest.TestCase):
++    def test_single_line_with_quantity_above_one(self):
++        # Subtotal: 10.00 * 2 = 20.00; 10% off once = 18.00.
++        # Buggy double discount would give 20.00 * 0.9 * 0.9 = 16.20.
++        lines = [{'price': '10.00', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_multiple_lines_with_all_quantities_one(self):
++        # Subtotal: 5.05 + 10.00 = 15.05; 10% off once = 13.545 -> 13.55 (HALF_UP).
++        # Buggy double discount would give 15.05 * 0.9 * 0.9 = 12.1905 -> 12.19.
++        lines = [
++            {'price': '5.05', 'qty': 1},
++            {'price': '10.00', 'qty': 1},
++        ]
++        self.assertEqual(checkout(lines, '0.10'), '13.55')
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -1,0 +1,67 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..3a90c85
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..59b3f28
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..7f2f751
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..ea3023b
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..0474481
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,45 @@
++"""Regression tests for the double-discount bug at checkout.
++
++Per README.md: `checkout(lines, rate)` sums line prices, applies the
++promotion exactly once to the subtotal, rounds with ROUND_HALF_UP, and
++returns the total as a two-decimal string.
++
++Expected values below are computed by applying the promotion exactly
++once:
++  expected = (sum(price * qty) * (Decimal(1) - Decimal(rate)))
++             .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
++"""
++
++from decimal import Decimal, ROUND_HALF_UP
++import unittest
++
++from shop.checkout import checkout
++
++
++def _expected(lines, rate):
++    subtotal = sum((Decimal(line['price']) * line['qty'] for line in lines), Decimal(0))
++    return str((subtotal * (Decimal(1) - Decimal(rate))).quantize(
++        Decimal('0.01'), rounding=ROUND_HALF_UP))
++
++
++class DoubleDiscountRegressionTest(unittest.TestCase):
++    def test_single_line_quantity_above_one(self):
++        # Single line, quantity > 1 (20.00 subtotal). Promotion applied
++        # once with rate 0.10 -> 18.00. Applied twice -> 16.20 (fails).
++        lines = [{'price': '10.00', 'qty': 2}]
++        rate = '0.10'
++        self.assertEqual(checkout(lines, rate), _expected(lines, rate))
++        self.assertEqual(checkout(lines, rate), '18.00')
++
++    def test_multiple_lines_all_quantities_one(self):
++        # Separate multiple-line basket, all quantities equal to one
++        # (subtotal 5.33). Promotion applied once with rate 0.20 -> 4.26.
++        # Applied twice -> 3.41 (fails).
++        lines = [{'price': '3.33', 'qty': 1}, {'price': '2.00', 'qty': 1}]
++        rate = '0.20'
++        self.assertEqual(checkout(lines, rate), _expected(lines, rate))
++        self.assertEqual(checkout(lines, rate), '4.26')
++
++
++if __name__ == '__main__':
++    unittest.main()

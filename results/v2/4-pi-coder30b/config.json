@@ -1,0 +1,59 @@
+{
+ "agent": "pi",
+ "agent_version": "0.87.0",
+ "model": "qwen3-coder:30b-64k",
+ "model_info": {
+  "num_ctx": 65536,
+  "manifest_sha256": "5d94265d163a",
+  "modified_at": "2026-09-21T22:34:45.803372961-04:00",
+  "details": {
+   "parent_model": "qwen3-coder:30b",
+   "format": "gguf",
+   "family": "qwen3moe",
+   "families": [
+    "qwen3moe"
+   ],
+   "parameter_size": "30.5B",
+   "quantization_level": "Q4_K_M"
+  },
+  "capabilities": [
+   "completion",
+   "tools"
+  ]
+ },
+ "endpoint": "http://127.0.0.1:11435/v1",
+ "ctx": 65536,
+ "max_output": 8192,
+ "steps": 30,
+ "timeout": 900,
+ "repeats": 3,
+ "thinking": null,
+ "protocol": "v2",
+ "image": "localhost/bench-agentroom-deps:1",
+ "image_id": "1203913142c72c18fc3",
+ "workroom_sha": "ea01f440cb10",
+ "tasks_sha": "7c8fddf11146",
+ "run_py_sha": "5563a27b3811",
+ "n_tasks": 20,
+ "started": "2026-09-23 01:05:46",
+ "agent_config": {
+  "providers": {
+   "ollama": {
+    "baseUrl": "http://127.0.0.1:11435/v1",
+    "api": "openai-completions",
+    "apiKey": "ollama",
+    "compat": {
+     "supportsDeveloperRole": false,
+     "supportsReasoningEffort": false
+    },
+    "models": [
+     {
+      "id": "qwen3-coder:30b-64k",
+      "contextWindow": 65536,
+      "maxTokens": 8192
+     }
+    ]
+   }
+  }
+ }
+}

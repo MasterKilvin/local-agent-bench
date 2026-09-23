@@ -1,0 +1,152 @@
+diff --git c/retry/__pycache__/__init__.cpython-312.pyc i/retry/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..cc09ae9
+Binary files /dev/null and i/retry/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/retry/__pycache__/wrapper.cpython-312.pyc i/retry/__pycache__/wrapper.cpython-312.pyc
+new file mode 100644
+index 0000000..5538c01
+Binary files /dev/null and i/retry/__pycache__/wrapper.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..c3ee7b2
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..5769004
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..907bfd7
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,130 @@
++"""Regression tests for retry.wrapper.run using only its public API.
++
++Guarantees pinned here (per README.md):
++- A PermanentError raised on any attempt must stop the wrapper
++  immediately: no further calls to the operation, exactly one total
++  call if it fails on the first try, and two total calls if it
++  follows one transient failure.
++- TransientError still retries: exactly `attempts` total calls, the
++  first success is returned, and the last transient error is raised
++  when all attempts fail.
++
++The production wrapper currently violates the permanent-error rule:
++it catches PermanentError and lets the loop continue, so the operation
++is needlessly re-invoked before the exception finally surfaces.
++"""
++
++import unittest
++
++from retry.wrapper import PermanentError, run, TransientError
++
++
++def make_sequence(sequence):
++    """Return an operation that yields each value in `sequence`, raising any
++    exception instances, and recording every call in `calls`."""
++    calls = []
++
++    def operation():
++        calls.append(None)
++        item = sequence[min(len(calls), len(sequence)) - 1]
++        if isinstance(item, Exception):
++            raise item
++        return item
++
++    return operation, calls
++
++
++class PermanentErrorStopsImmediately(unittest.TestCase):
++    """Permanent errors must propagate without any further invocation."""
++
++    def test_permanent_failure_on_first_attempt_makes_exactly_one_call(self):
++        operation, calls = make_sequence([PermanentError("stop")])
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=3)
++        self.assertEqual(len(calls), 1,
++                         "PermanentError must not be re-invoked; "
++                         "expected 1 call, got %d" % len(calls))
++
++    def test_permanent_after_transient_stops_after_second_call(self):
++        operation, calls = make_sequence(
++            [TransientError("blip"), PermanentError("stop")])
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=5)
++        self.assertEqual(len(calls), 2,
++                         "After a permanent failure only 2 calls may have "
++                         "happened; got %d" % len(calls))
++
++    def test_permanent_failure_is_still_the_raised_exception(self):
++        operation, calls = make_sequence([PermanentError("boom")])
++        with self.assertRaises(PermanentError) as ctx:
++            run(operation, attempts=4)
++        self.assertEqual(str(ctx.exception), "boom")
++
++    def test_permanent_on_later_attempt_never_goes_past_it(self):
++        operation, calls = make_sequence(
++            [TransientError("blip"), TransientError("blip"),
++             PermanentError("stop")])
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=6)
++        self.assertEqual(len(calls), 3)
++
++
++class TransientErrorStillRetries(unittest.TestCase):
++    """Transient failures continue to be retried up to `attempts` calls."""
++
++    def test_all_transient_raises_last_and_uses_all_attempts(self):
++        operation, calls = make_sequence([TransientError("always down")])
++        with self.assertRaises(TransientError) as ctx:
++            run(operation, attempts=3)
++        self.assertEqual(len(calls), 3,
++                         "Transient errors must be retried; expected 3 "
++                         "calls, got %d" % len(calls))
++        self.assertEqual(str(ctx.exception), "always down")
++
++    def test_success_on_final_attempt_is_returned(self):
++        operation, calls = make_sequence(
++            [TransientError("a"), TransientError("b"), "ok"])
++        self.assertEqual(run(operation, attempts=3), "ok")
++        self.assertEqual(len(calls), 3)
++
++    def test_earlier_success_short_circuits_retry(self):
++        operation, calls = make_sequence(
++            [TransientError("blip"), "recovered"])
++        self.assertEqual(run(operation, attempts=5), "recovered")
++        self.assertEqual(len(calls), 2,
++                         "A successful call must stop retrying; got %d "
++                         "calls" % len(calls))
++
++    def test_first_success_never_retries(self):
++        operation, calls = make_sequence(["ok"])
++        self.assertEqual(run(operation, attempts=10), "ok")
++        self.assertEqual(len(calls), 1)
++
++    def test_attempts_controls_retry_budget(self):
++        operation, calls = make_sequence([TransientError("x")])
++        with self.assertRaises(TransientError):
++            run(operation, attempts=7)
++        self.assertEqual(len(calls), 7)
++
++    def test_default_attempts_is_positive(self):
++        operation, calls = make_sequence([TransientError("x")])
++        with self.assertRaises(TransientError):
++            run(operation)
++        self.assertEqual(len(calls), 3)
++        self.assertGreater(len(calls), 0)
++
++
++class NonRetryedExceptionsUntouched(unittest.TestCase):
++    """The contract only names Transient/Permanent; plain exceptions still
++    propagate (single call) and are not swallowed."""
++
++    def test_plain_exception_propagates(self):
++        def operation():
++            raise ValueError("not retryable")
++
++        with self.assertRaises(ValueError):
++            run(operation, attempts=3)
++
++
++if __name__ == "__main__":
++    unittest.main()

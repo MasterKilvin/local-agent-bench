@@ -1,0 +1,153 @@
+{
+"peak_prompt_tokens": 7502,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 1,
+"steps_detail": [
+{
+"t": 2.1,
+"prompt": 1669,
+"completion": 51,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 5.2,
+"prompt": 2024,
+"completion": 152,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 7.1,
+"prompt": 2845,
+"completion": 83,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 16.7,
+"prompt": 3163,
+"completion": 489,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 26.2,
+"prompt": 3679,
+"completion": 470,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 45.2,
+"prompt": 4204,
+"completion": 967,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 50.0,
+"prompt": 5284,
+"completion": 237,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 65.4,
+"prompt": 5623,
+"completion": 778,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 75.6,
+"prompt": 6456,
+"completion": 509,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 85.1,
+"prompt": 6992,
+"completion": 473,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 90.4,
+"prompt": 7502,
+"completion": 262,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 2.1,
+"name": "bash",
+"args_hash": "c8da57b59ec9b9e9",
+"error": null
+},
+{
+"t": 5.2,
+"name": "bash",
+"args_hash": "58f6b8ae89e943eb",
+"error": null
+},
+{
+"t": 7.1,
+"name": "read",
+"args_hash": "a78db5e595a3d310",
+"error": null
+},
+{
+"t": 7.1,
+"name": "read",
+"args_hash": "2487bb8b849a400a",
+"error": null
+},
+{
+"t": 16.7,
+"name": "edit",
+"args_hash": "3ae21fec5dd264d5",
+"error": null
+},
+{
+"t": 26.2,
+"name": "bash",
+"args_hash": "d1a03a28af868d2a",
+"error": null
+},
+{
+"t": 45.2,
+"name": "read",
+"args_hash": "a78db5e595a3d310",
+"error": null
+},
+{
+"t": 50.0,
+"name": "bash",
+"args_hash": "4d6c6d25f765f307",
+"error": null
+},
+{
+"t": 65.4,
+"name": "bash",
+"args_hash": "fbc02ebfc8daa3da",
+"error": null
+},
+{
+"t": 75.6,
+"name": "edit",
+"args_hash": "f1d2a065c3f7d7e3",
+"error": null
+},
+{
+"t": 85.1,
+"name": "bash",
+"args_hash": "5e44a04bb872bfcb",
+"error": null
+}
+]
+}

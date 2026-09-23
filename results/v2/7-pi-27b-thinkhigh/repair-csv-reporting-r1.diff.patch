@@ -1,0 +1,65 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..b334582
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..93e1944
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/parser.cpython-312.pyc i/stock/__pycache__/parser.cpython-312.pyc
+new file mode 100644
+index 0000000..f3f1eb7
+Binary files /dev/null and i/stock/__pycache__/parser.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..df75f28
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index 76fcd00..269334a 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,18 +1,23 @@
++import re
++
+ from .parser import rows
+ 
++_QUANTITY_RE = re.compile(r'[0-9]+')
++
++
+ def import_text(text, store):
+     report = {'seen': 0, 'imported': 0, 'rejected': 0, 'quantity': 0}
+     for parts in rows(text):
+         report['seen'] += 1
+-        if len(parts) != 3 or not parts[0] or not parts[1]:
++        if len(parts) != 3:
+             report['rejected'] += 1
+             continue
+-        try:
+-            qty = int(parts[2])
+-        except ValueError:
++        sku, name, qty = (part.strip() for part in parts)
++        if not sku or not name or _QUANTITY_RE.fullmatch(qty) is None:
+             report['rejected'] += 1
+             continue
+-        store.put(parts[0], parts[1], qty)
++        quantity = int(qty)
++        store.put(sku, name, quantity)
+         report['imported'] += 1
+-        report['quantity'] += qty
++        report['quantity'] += quantity
+     return report
+diff --git c/stock/parser.py i/stock/parser.py
+index 005ca5d..653ed2b 100644
+--- c/stock/parser.py
++++ i/stock/parser.py
+@@ -1,3 +1,8 @@
++import csv
++from io import StringIO
++
++
+ def rows(text):
+-    for line in text.splitlines()[1:]:
+-        yield line.split(',')
++    reader = csv.reader(StringIO(text))
++    next(reader, None)  # first record is the header (`sku,name,qty`)
++    yield from reader

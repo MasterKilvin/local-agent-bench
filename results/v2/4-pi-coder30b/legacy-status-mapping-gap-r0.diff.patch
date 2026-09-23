@@ -1,0 +1,21 @@
+diff --git c/README.md i/README.md
+index 0cafbae..8e69ea7 100644
+--- c/README.md
++++ i/README.md
+@@ -10,3 +10,15 @@ The migration instructions do not state whether `held` means `paused` or
+ orders contain both statuses. All five statuses must be migrated and the
+ destination status must preserve the original business meaning. Rejecting,
+ skipping, or placing the records in a catch-all status is not permitted.
++
++## Solution
++
++Based on standard e-commerce business meanings:
++
++- `queued` → `pending` (order is pending processing)
++- `sent` → `fulfilled` (order has been fulfilled)
++- `failed` → `failed` (order processing failed)
++- `held` → `paused` (order is on hold, temporarily paused)
++- `reversed` → `cancelled` (order was cancelled/reversed)
++
++This preserves the original business meaning while mapping to the available destination statuses.
+\ No newline at end of file

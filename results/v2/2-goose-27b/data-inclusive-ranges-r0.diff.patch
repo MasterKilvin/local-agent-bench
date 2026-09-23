@@ -1,0 +1,116 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..e9a9894
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..f93b08a
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..b3d233b
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..31f926d 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,48 @@
+-def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++_ALLOWED = frozenset(b'0123456789')
++
++
++class RangeSyntaxError(ValueError):
++    pass
++
++
++def parse_digits(token):
++    """Parse a digits-only token using exactly ASCII 0-9.
++
++    Raises RangeSyntaxError for empty input, signs, underscores, or any
++    non-ASCII byte (including Unicode digits) anywhere in the token.
++    Leading zeros are allowed.
++    """
++    if not token:
++        raise RangeSyntaxError('empty digit token')
++    if any(byte not in _ALLOWED for byte in token):
++        raise RangeSyntaxError('non-ASCII decimal digits')
++    return int(token, 10)
++
++
++def bounds(header):
++    """Parse one `bytes=...` range header.
++
++    Returns (head, tail) where head is the start or None for a suffix,
++    and tail is the end or None for a full range.
++
++    Raises RangeSyntaxError unless the header exactly matches one of
++    `bytes=D-D`, `bytes=D-`, or `bytes=-D`, where each D is one or more
++    ASCII digits 0-9.
++    """
++    if not isinstance(header, str):
++        raise RangeSyntaxError('header must be a string')
++    try:
++        raw = header.encode('ascii')
++    except UnicodeEncodeError:
++        raise RangeSyntaxError('non-ASCII header')
++    if not raw.startswith(b'bytes='):
++        raise RangeSyntaxError('bad prefix')
++    spec = raw[len(b'bytes='):]
++    parts = spec.split(b'-')
++    if len(parts) != 2:
++        raise RangeSyntaxError('bad syntax')
++    head = parse_digits(parts[0]) if parts[0] else None
++    tail = parse_digits(parts[1]) if parts[1] else None
++    if head is None and tail is None:
++        raise RangeSyntaxError('both endpoints omitted')
++    return head, tail
+diff --git c/download/service.py i/download/service.py
+index 72a053d..347541b 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,35 @@
+-from .ranges import bounds
++from .ranges import bounds, RangeSyntaxError
++
+ 
+ def serve(data, range_header=None):
++    length = len(data)
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
++        return 200, {'Content-Length': str(length)}, data
++
++    try:
++        head, tail = bounds(range_header)
++    except RangeSyntaxError:
++        return _not_satisfiable(length)
++
++    if length == 0:
++        return _not_satisfiable(length)
++
++    if head is None:
++        # `bytes=-N`: the final N bytes
++        if tail == 0:
++            return _not_satisfiable(length)
++        start, end = max(0, length - tail), length - 1
++    else:
++        # `bytes=start-end` or `bytes=start-`; end is inclusive, clamped to EOF
++        end = min(tail if tail is not None else length - 1, length - 1)
++        if head > end:
++            return _not_satisfiable(length)
++        start = head
++
++    body = data[start:end + 1]
+     return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++                 'Content-Range': f'bytes {start}-{end}/{length}'}, body
++
++
++def _not_satisfiable(length):
++    return 416, {'Content-Range': f'bytes */{length}'}, b''

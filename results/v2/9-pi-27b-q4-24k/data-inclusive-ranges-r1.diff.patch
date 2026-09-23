@@ -1,0 +1,123 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..fefd78a
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..9764559
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..665ed70
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..f8789ad 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,44 @@
+-def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++"""Strict single-range parsing.
++
++The header must exactly match one of:
++
++    bytes=D-D
++    bytes=D-
++    bytes=-D
++
++where each D is one or more plain ASCII digits 0 through 9 (leading zeros
++allowed).  Anything else -- whitespace, signs, underscores, Unicode digits,
++multiple ranges, empty endpoints -- is rejected with ValueError.
++"""
++import re
++
++_FULL = re.compile(r'bytes=([0-9]+)-([0-9]+)')
++_PREFIX = re.compile(r'bytes=([0-9]+)-')
++_SUFFIX = re.compile(r'bytes=-([0-9]+)')
++
++
++def parse(header):
++    """Parse *header* and return (kind, a, b).
++
++    kind is 'full' (a=start, b=end), 'prefix' (a=start) or 'suffix'
++    (a=number of trailing bytes).  Raises ValueError when the header does
++    not match the grammar exactly.
++    """
++    if isinstance(header, (bytes, bytearray, memoryview)):
++        try:
++            header = bytes(header).decode('ascii')
++        except UnicodeDecodeError:
++            raise ValueError('header is not ASCII')
++    if not isinstance(header, str):
++        raise ValueError('header must be a string')
++
++    m = _FULL.fullmatch(header)
++    if m:
++        return 'full', int(m.group(1), 10), int(m.group(2), 10)
++    m = _PREFIX.fullmatch(header)
++    if m:
++        return 'prefix', int(m.group(1), 10), 0
++    m = _SUFFIX.fullmatch(header)
++    if m:
++        return 'suffix', int(m.group(1), 10), 0
++    raise ValueError('bad range syntax')
+diff --git c/download/service.py i/download/service.py
+index 72a053d..afd6e19 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,45 @@
+-from .ranges import bounds
++from .ranges import parse
++
++
++def _not_satisfiable(length):
++    headers = {'Content-Range': 'bytes */%d' % length, 'Content-Length': '0'}
++    return 416, headers, b''
++
+ 
+ def serve(data, range_header=None):
++    length = len(data)
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++        return 200, {'Content-Length': str(length)}, data
++
++    try:
++        kind, a, b = parse(range_header)
++    except ValueError:
++        # Every range on empty data is unsatisfiable, and so is any
++        # header that does not match the grammar at all.
++        return _not_satisfiable(length)
++    if length == 0:
++        return _not_satisfiable(0)
++
++    if kind == 'full':
++        start, end = a, b
++        if end < start:  # reverse bounds
++            return _not_satisfiable(length)
++        if start >= length:  # start beyond EOF
++            return _not_satisfiable(length)
++        end = min(end, length - 1)  # clamp end past EOF
++    elif kind == 'prefix':
++        start = a
++        if start >= length:
++            return _not_satisfiable(length)
++        end = length - 1
++    else:  # suffix
++        n = a
++        if n == 0:  # zero suffix
++            return _not_satisfiable(length)
++        start = length - n if n < length else 0
++        end = length - 1
++
++    body = data[start:end + 1]  # inclusive end
++    headers = {'Content-Length': str(len(body)),
++               'Content-Range': 'bytes %d-%d/%d' % (start, end, length)}
++    return 206, headers, body

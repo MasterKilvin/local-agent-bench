@@ -1,0 +1,8 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..671006c
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "rule-conflict", "evidence": "The README.md presents two conflicting rules for case record retention: Rule A states to delete records at age 7 or later, while Rule B states to keep records through day 30. The current test data (main.py) shows records with ages 4, 8, and 31 being processed such that only c2 (age 8) and c3 (age 31) are deleted, but there's no clear resolution mechanism for how the rules interact when age is between 7 and 30 days. Without information on which rule takes precedence in this region or if there's additional implicit logic needed to resolve this conflict, implementation cannot be completed accurately."}
+\ No newline at end of file

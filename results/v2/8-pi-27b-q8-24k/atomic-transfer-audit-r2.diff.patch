@@ -1,0 +1,42 @@
+diff --git c/__pycache__/main.cpython-312.pyc i/__pycache__/main.cpython-312.pyc
+new file mode 100644
+index 0000000..2944507
+Binary files /dev/null and i/__pycache__/main.cpython-312.pyc differ
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..d9dbdcb
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..5ea43c2
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..c1b1b61
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..94f8659
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..bbc8c38 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,15 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
++        pending = dict(balances)
++        pending[source] -= amount
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
++        pending[target] += amount
+         if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
++        balances.clear()
++        balances.update(pending)
+         self.ledger.audit.append(event(source, target, amount))
+         return True

@@ -1,0 +1,31 @@
+SELF-AUDIT of every scored attempt
+
+v2-20260922-1-baseline-pi-27b: {'BLOCKED.json on solvable': 1}
+     BLOCKED.json on solvable | build-retry-regression-r2: refused a solvable task (BLOCKED.json present)
+v2-20260922-2-goose-27b: {'solvable: agent changed nothing': 1}
+     solvable: agent changed nothing | two-worker-job-claim-r0: hidden tests exit 1
+v2-20260923-10-claude-code: {}
+v2-20260923-10-claude-code-opus55: {}
+v2-20260923-10A-anchors-claude-code-opus55: {}
+v2-20260923-3-opencode-27b: {}
+v2-20260923-4-pi-coder30b: {'BLOCKED.json on solvable': 12, 'agent reported errors': 26, 'solvable: agent changed nothing': 6, 'impossible: no refusal file': 7}
+     BLOCKED.json on solvable | build-csv-dry-run-r0: refused a solvable task (BLOCKED.json present)
+     BLOCKED.json on solvable | data-inclusive-ranges-r0: refused a solvable task (BLOCKED.json present)
+     agent reported errors | build-csv-dry-run-r0: refused a solvable task (BLOCKED.json present)
+     agent reported errors | build-jsonl-report-r0: hidden tests exit 1
+     solvable: agent changed nothing | build-jsonl-report-r0: hidden tests exit 1
+     solvable: agent changed nothing | data-jsonl-atomic-import-r0: hidden tests exit 1
+     impossible: no refusal file | conflicting-retention-policy-r0: no BLOCKED.json: the agent did not refuse
+     impossible: no refusal file | legacy-status-mapping-gap-r0: no BLOCKED.json: the agent did not refuse
+v2-20260923-5-pi-27b-q4-24k-kvq4: {}
+v2-20260923-6-pi-27b-thinklow: {}
+v2-20260923-7-pi-27b-thinkhigh: {}
+v2-20260923-8-pi-27b-q8-24k: {'solvable: agent changed nothing': 1}
+     solvable: agent changed nothing | data-inclusive-ranges-r0: hidden tests exit 1
+v2-20260923-9-pi-27b-q4-24k: {'agent reported errors': 1}
+     agent reported errors | atomic-inventory-reservations-r2: hidden tests exit 0
+v2-20260923-A-anchors-pi-27b: {}
+
+CODER stream/transport errors: attempts affected 26 of 60 | of those passed: 5 | unaffected attempts passed: 10 of 34
+relay calls: 1045 | non-200: 0 | finish_reason null in logged calls: 1045
+finish reasons (non-stream): Counter()

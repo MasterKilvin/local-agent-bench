@@ -1,0 +1,15 @@
+--- pre-fix-extract.py
++++ fixed-extract.py
+@@ -38,9 +38,9 @@
+             raise TypeError(f'pattern:{pattern!r} is not a unicode or byte string.')
+         original_pattern = pattern
+         if pattern.endswith('\\ '):
+-            pattern = pattern.lstrip()
+-        else:
+-            pattern = pattern.strip()
++            pass
++        else:
++            pattern = pattern.rstrip()
+         if pattern.startswith('#'):
+             regex = None
+             include = None

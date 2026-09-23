@@ -1,0 +1,62 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..e20e235
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,55 @@
++import unittest
++from retry.wrapper import run, TransientError, PermanentError
++
++class TestRetryRegression(unittest.TestCase):
++    def test_permanent_error_stops_immediately(self):
++        """PermanentError must propagate immediately on any attempt"""
++        call_count = 0
++        
++        def operation():
++            nonlocal call_count
++            call_count += 1
++            raise PermanentError("permanent error")
++        
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=3)
++        
++        # Should stop immediately on first attempt
++        self.assertEqual(call_count, 1)
++    
++    def test_transient_error_retries_up_to_attempts(self):
++        """TransientError is retried up to attempts total calls"""
++        call_count = 0
++        max_calls = 3
++        
++        def operation():
++            nonlocal call_count
++            call_count += 1
++            if call_count < max_calls:
++                raise TransientError("transient error")
++            return "success"
++        
++        result = run(operation, attempts=max_calls)
++        self.assertEqual(result, "success")
++        self.assertEqual(call_count, max_calls)
++    
++    def test_mixed_errors(self):
++        """Transient error followed by permanent should stop on permanent"""
++        call_count = 0
++        
++        def operation():
++            nonlocal call_count
++            call_count += 1
++            if call_count == 1:
++                raise TransientError("transient error")
++            else:
++                raise PermanentError("permanent error")
++        
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=3)
++        
++        # Should have been called twice (once for transient, once for permanent)  
++        self.assertEqual(call_count, 2)
++
++if __name__ == '__main__':
++    unittest.main()
+\ No newline at end of file

@@ -1,0 +1,12 @@
+863b84e285947de915fc6761ac6b53085a96f8696e0630f237166998b5572d8d  upstream/README.md
+36796f1e46da12ca501bd84c7c80b390ceb2669f341ff6a502bb990773075b72  upstream/dotenv-main-v0.19.1-prefix.py
+fb937ff445e068fbcc592b7cf845e661bcbdd7093f9cd61fd1aff18bc6dbe161  upstream/dotenv-main-v0.19.2-fixed.py
+1cc074555cbf7de8ccb8667f15d8a0ce59ff74113d9ec000699ee8970a00652c  upstream/dotenv-parser-v0.19.2.py
+b9490c1367e940d2f537506d4182aaa44dfc76eb96f3c4101b1b590aaf47892c  upstream/dotenv-v0.19.1..v0.19.2.diff
+d27209ab3d162782a8f8e3872b9b353c49e092c9aa467a64522883407d8d1030  upstream/dotenv-LICENSE.txt
+7dcbdc4e170be5cf8424fd969d8b85578b73a0bee6ce8390316d3d7ad0ab935e  upstream/pathspec-pattern-v0.12.1-prefix.py
+e625c4cd6562ef0a3e086330976e0610b8dc6342115d8bae2a95b061ce4610ff  upstream/pathspec-pattern-v1.0.0-fixed.py
+ee0a5a2aca0b1fc0186c543832aca3db0c42108df35ce563d467bec7a46db116  upstream/pathspec-gitwildmatch-v0.12.1.py
+6c5d8f52d73d80e147b85c07274df9c7dd72dd1f009f9748639a1189bca5b1ca  upstream/pathspec-gitwildmatch-v1.0.0-fixed.py
+d3fcdb191269cd4c6ec34d45ae50c9b304d22b44c7fb9d78d1afd30622da819e  upstream/pathspec-v0.12.1..v1.0.0.diff
+fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85  upstream/pathspec-LICENSE.txt

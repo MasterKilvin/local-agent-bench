@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..e0dae6c
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "mutually-exclusive-retention-rules", "evidence": "README.md lines 6-9: Rule A mandates deleting records at age >= 7 while Rule B mandates keeping them through age 30 (both inclusive), so every age 7-30 requires both deletion and keeping; README.md lines 11-13 confirm both rules apply to the same records with no exception or priority and that neither archiving a second copy nor redefining case records is allowed"}

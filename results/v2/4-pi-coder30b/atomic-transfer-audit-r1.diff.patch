@@ -1,0 +1,42 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..a6b6c57
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..884b4ed
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..72d0a5a
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..26fadac
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..b7b8599 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,18 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
++        
++        # Perform all operations that could fail first
+         balances[source] -= amount
+         if inject is not None:
+             inject('after_debit')
+         balances[target] += amount
+         if inject is not None:
+             inject('after_credit')
++        
++        # Only commit the audit event after all other operations succeed
++        audit_event = event(source, target, amount)
++        if inject is not None:
+             inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
+-        return True
++        self.ledger.audit.append(audit_event)
++        return True
+\ No newline at end of file

@@ -1,0 +1,20 @@
+diff --git c/routing/__pycache__/__init__.cpython-312.pyc i/routing/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..2095c30
+Binary files /dev/null and i/routing/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/routing/__pycache__/rules.cpython-312.pyc i/routing/__pycache__/rules.cpython-312.pyc
+new file mode 100644
+index 0000000..31c7318
+Binary files /dev/null and i/routing/__pycache__/rules.cpython-312.pyc differ
+diff --git c/routing/rules.py i/routing/rules.py
+index eb9b203..e6f4dc4 100644
+--- c/routing/rules.py
++++ i/routing/rules.py
+@@ -31,6 +31,7 @@ class TextRule(RuleBase):
+             compiled = expression
+         elif expression is None:
+             assert decision is None, f'decision {decision!r} requires no override for expression {expression!r} supplied as disabled.'
++            compiled = None
+         else:
+             raise TypeError(f'expression {expression!r} must be text, a compiled matcher, or disabled.')
+         super(TextRule, self).__init__(decision)

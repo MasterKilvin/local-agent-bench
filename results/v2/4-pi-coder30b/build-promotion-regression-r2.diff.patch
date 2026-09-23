@@ -1,0 +1,110 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..ebda32e
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "complete", "blocker": "", "evidence": ""}
+\ No newline at end of file
+diff --git c/debug_test.py i/debug_test.py
+new file mode 100644
+index 0000000..abbb736
+--- /dev/null
++++ i/debug_test.py
+@@ -0,0 +1,42 @@
++from decimal import Decimal, ROUND_HALF_UP
++
++# Test case 1: Single line quantity 2
++lines = [{'price': '10.00', 'qty': 2}]
++rate = '0.10'
++
++subtotal = sum((Decimal(line['price']) * line['qty'] for line in lines), Decimal(0))
++print(f"Subtotal: {subtotal}")
++
++discount = Decimal(1) - Decimal(rate)
++print(f"Discount factor: {discount}")
++
++# Current buggy implementation (applies discount twice)
++result_buggy = str((subtotal * discount * discount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
++print(f"Buggy result: {result_buggy}")
++
++# Correct implementation (applies discount once)
++result_correct = str((subtotal * discount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
++print(f"Correct result: {result_correct}")
++
++print()
++
++# Test case 2: Multiple lines with qty 1 each
++lines2 = [
++    {'price': '10.00', 'qty': 1},
++    {'price': '15.00', 'qty': 1}
++]
++rate2 = '0.15'
++
++subtotal2 = sum((Decimal(line['price']) * line['qty'] for line in lines2), Decimal(0))
++print(f"Subtotal 2: {subtotal2}")
++
++discount2 = Decimal(1) - Decimal(rate2)
++print(f"Discount factor 2: {discount2}")
++
++# Current buggy implementation (applies discount twice)
++result_buggy2 = str((subtotal2 * discount2 * discount2).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
++print(f"Buggy result 2: {result_buggy2}")
++
++# Correct implementation (applies discount once)
++result_correct2 = str((subtotal2 * discount2).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
++print(f"Correct result 2: {result_correct2}")
+\ No newline at end of file
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..90f66df
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..e7c742c
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..e07060a
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..d727049
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..a3c5916
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,30 @@
++import unittest
++from shop.checkout import checkout
++
++
++class TestRegression(unittest.TestCase):
++    
++    def test_single_line_quantity_above_one(self):
++        # This tests a single line with quantity above one that should not be double-discounted
++        lines = [{'price': '10.00', 'qty': 2}]
++        rate = '0.10'
++        result = checkout(lines, rate)
++        # Expected: (10.00 * 2) * (1 - 0.10) = 20.00 * 0.90 = 18.00
++        expected = '18.00'
++        self.assertEqual(result, expected)
++    
++    def test_multiple_lines_all_quantity_one(self):
++        # This tests a multiple-line basket with all quantities equal to one
++        lines = [
++            {'price': '10.00', 'qty': 1},
++            {'price': '15.00', 'qty': 1}
++        ]
++        rate = '0.15'
++        result = checkout(lines, rate)
++        # Expected: (10.00 + 15.00) * (1 - 0.15) = 25.00 * 0.85 = 21.25
++        expected = '21.25'
++        self.assertEqual(result, expected)
++
++
++if __name__ == '__main__':
++    unittest.main()
+\ No newline at end of file

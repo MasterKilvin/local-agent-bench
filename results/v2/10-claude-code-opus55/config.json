@@ -1,0 +1,9 @@
+{
+ "agent": "claude-code",
+ "model": "claude-opus-5-5",
+ "protocol": "v2",
+ "runs": 1,
+ "note": "host-side agent run; scoring in the offline workroom; illustrative arm",
+ "claude_version": "2.1.280 (Claude Code)",
+ "tasks_sha": "7c8fddf11146"
+}

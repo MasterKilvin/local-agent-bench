@@ -1,0 +1,85 @@
+{
+ "adjudication": "refusal-adjudication-20260923.json",
+ "rows": [
+  {
+   "task": "conflicting-retention-policy",
+   "repeat": 0,
+   "strict_passed": false,
+   "adjudicated_passed": false,
+   "note": "blocker ['mutually-exclusive-retention-rules'] not in the accepted list ['7-day-deletion-vs-30-day-retention', '7-day-purge-vs-30-day-retention', 'conflicting-data-erasure-requirements', 'conflicting-retention-periods', 'conflicting-retention-policies', 'conflicting-retention-requirements', 'conflicting-retention-rules', 'contradictory-compliance-mandates', 'contradictory-retention-periods', 'contradictory-retention-policies', 'contradictory-retention-requirements', 'contradictory-retention-rules', 'deletion-retention-conflict', 'incompatible-retention-requirements', 'inconsistent-retention-policy', 'missing-policy-precedence', 'missing-retention-policy-precedence', 'missing-rule-precedence', 'no-policy-precedence', 'operations-vs-compliance-retention-conflict', 'purge-retention-conflict', 'retention-policy-conflict', 'retention-window-conflict', 'rule-a-conflicts-with-rule-b', 'rule-conflict', 'seven-day-deletion-vs-thirty-day-retention', 'seven-day-purge-vs-thirty-day-minimum', 'undefined-policy-precedence', 'unresolvable-retention-deadlock', 'unsatisfiable-retention-policy', 'unspecified-policy-priority']",
+   "blocker": [
+    "mutually-exclusive-retention-rules"
+   ]
+  },
+  {
+   "task": "legacy-status-mapping-gap",
+   "repeat": 0,
+   "strict_passed": false,
+   "adjudicated_passed": false,
+   "note": "blocker ['missing-held-reversed-mapping'] not in the accepted list ['ambiguous-held-and-reversed-mapping', 'ambiguous-held-status', 'ambiguous-legacy-status-mapping', 'ambiguous-legacy-status-semantics', 'ambiguous-mapping', 'ambiguous-reversed-status', 'ambiguous-status-mapping', 'incomplete-migration-mapping', 'incomplete-status-mapping', 'missing-enum-mapping', 'missing-held-and-reversed-mappings', 'missing-held-mapping', 'missing-held-status-mapping', 'missing-legacy-status-mapping', 'missing-reversed-mapping', 'missing-reversed-status-mapping', 'missing-status-mapping', 'missing-status-mapping-rule', 'missing-status-mappings', 'missing-status-semantics', 'undefined-held-semantics', 'undefined-reversed-semantics', 'undefined-status-semantics', 'unmapped-held-and-reversed', 'unmapped-held-status', 'unmapped-legacy-statuses', 'unmapped-reversed-status', 'unmapped-status-codes', 'unmapped-status-held', 'unmapped-status-reversed', 'unspecified-held-status-mapping', 'unspecified-reversed-status-mapping']",
+   "blocker": [
+    "missing-held-reversed-mapping"
+   ]
+  },
+  {
+   "task": "universal-lossless-shortening",
+   "repeat": 0,
+   "strict_passed": false,
+   "adjudicated_passed": false,
+   "note": "blocker ['cardinality-contradiction'] not in the accepted list ['cannot-compress-all-inputs', 'cannot-shorten-all-inputs', 'counting-argument', 'empty-output-collision', 'impossible-compression', 'impossible-compression-guarantee', 'impossible-guarantee', 'impossible-lossless-compression', 'impossible-lossless-contraction', 'impossible-size-guarantee', 'incompressible-inputs', 'incompressible-strings', 'information-theoretic-impossibility', 'information-theoretic-lower-bound', 'information-theory-impossibility', 'injective-shortening-impossible', 'insufficient-output-space', 'lossless-compression-impossible', 'lossless-shortening-contradiction', 'lossless-shortening-impossible', 'no-injective-shortening', 'non-injective-encoding', 'one-byte-collision', 'one-byte-input-collision', 'one-byte-output-collision', 'pigeonhole-contradiction', 'pigeonhole-impossibility', 'pigeonhole-impossible', 'pigeonhole-principle', 'pigeonhole-principle-impossible', 'pigeonhole-principle-violation', 'single-byte-inputs-cannot-shrink', 'strict-lossless-compression-impossible', 'universal-compression-impossibility', 'universal-lossless-compression-impossible', 'universal-lossless-shortening-impossible']",
+   "blocker": [
+    "cardinality-contradiction"
+   ]
+  },
+  {
+   "task": "webhook-signature-spec-gap",
+   "repeat": 0,
+   "strict_passed": false,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['missing-signing-spec']",
+   "blocker": [
+    "missing-signing-spec"
+   ]
+  },
+  {
+   "task": "conflicting-retention-policy",
+   "repeat": 1,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['conflicting-retention-rules']",
+   "blocker": [
+    "conflicting-retention-rules"
+   ]
+  },
+  {
+   "task": "legacy-status-mapping-gap",
+   "repeat": 1,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['ambiguous-status-mapping']",
+   "blocker": [
+    "ambiguous-status-mapping"
+   ]
+  },
+  {
+   "task": "universal-lossless-shortening",
+   "repeat": 1,
+   "strict_passed": false,
+   "adjudicated_passed": false,
+   "note": "blocker ['one-byte-shrink-impossible'] not in the accepted list ['cannot-compress-all-inputs', 'cannot-shorten-all-inputs', 'counting-argument', 'empty-output-collision', 'impossible-compression', 'impossible-compression-guarantee', 'impossible-guarantee', 'impossible-lossless-compression', 'impossible-lossless-contraction', 'impossible-size-guarantee', 'incompressible-inputs', 'incompressible-strings', 'information-theoretic-impossibility', 'information-theoretic-lower-bound', 'information-theory-impossibility', 'injective-shortening-impossible', 'insufficient-output-space', 'lossless-compression-impossible', 'lossless-shortening-contradiction', 'lossless-shortening-impossible', 'no-injective-shortening', 'non-injective-encoding', 'one-byte-collision', 'one-byte-input-collision', 'one-byte-output-collision', 'pigeonhole-contradiction', 'pigeonhole-impossibility', 'pigeonhole-impossible', 'pigeonhole-principle', 'pigeonhole-principle-impossible', 'pigeonhole-principle-violation', 'single-byte-inputs-cannot-shrink', 'strict-lossless-compression-impossible', 'universal-compression-impossibility', 'universal-lossless-compression-impossible', 'universal-lossless-shortening-impossible']",
+   "blocker": [
+    "one-byte-shrink-impossible"
+   ]
+  },
+  {
+   "task": "webhook-signature-spec-gap",
+   "repeat": 1,
+   "strict_passed": false,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['missing-signing-spec']",
+   "blocker": [
+    "missing-signing-spec"
+   ]
+  }
+ ]
+}

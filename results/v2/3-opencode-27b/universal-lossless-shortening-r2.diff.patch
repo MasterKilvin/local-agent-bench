@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..09e2e96
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossibility", "evidence": "README.md line 8 requires encode strictly fewer bytes for every input including all 256 one-byte strings, but the only byte string shorter than 1 byte is the empty string, so 256 distinct inputs cannot inject into 1 distinct output while decode restores exact originals"}

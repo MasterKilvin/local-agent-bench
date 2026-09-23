@@ -1,0 +1,53 @@
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..c6e339e 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,42 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++
++def import_text(text, store, dry_run=False):
++    """Import CSV rows of the form `sku,name,qty` into a Store.
++
++    All rows are validated before any change is committed. An invalid row
++    raises ValueError and leaves the store unchanged. With dry_run=True the
++    same result a real import would produce is returned, but the store is
++    left untouched.
++    """
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
++
++    prepared = []
++    for index, raw in enumerate(csv.DictReader(io.StringIO(text)), 1):
++        fields = (raw.get('sku'), raw.get('name'), raw.get('qty'))
++        if any(value is None for value in fields):
++            raise ValueError(
++                'row %d: expected columns sku,name,qty; got keys %r'
++                % (index, [key for key in raw if key is not None]))
++        values = [value.strip() for value in fields]
++        sku, name, qty = values
++        if not sku:
++            raise ValueError('row %d: sku must not be empty' % index)
++        if not name:
++            raise ValueError('row %d: name must not be empty' % index)
++        if not (qty != '' and all('0' <= ch <= '9' for ch in qty)):
++            raise ValueError('row %d: quantity must be a nonnegative integer' % index)
++        prepared.append({'sku': sku, 'name': name, 'qty': int(qty)})
++
++    for item in prepared:
+         before = store.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+-        result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        result['changes'].append(
++            {'sku': item['sku'], 'before': before, 'after': dict(item)})
++        if not dry_run:
++            store.put(item)
+     return result

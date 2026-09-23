@@ -1,0 +1,145 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..fafd3cd
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "success", "blocker": null, "evidence": "No blocking issues found. Implementation successfully fixes cursor paging issue with duplicate timestamps."}
+\ No newline at end of file
+diff --git c/activity/__pycache__/__init__.cpython-312.pyc i/activity/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..5a44b40
+Binary files /dev/null and i/activity/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/activity/__pycache__/paging.cpython-312.pyc i/activity/__pycache__/paging.cpython-312.pyc
+new file mode 100644
+index 0000000..cc627f4
+Binary files /dev/null and i/activity/__pycache__/paging.cpython-312.pyc differ
+diff --git c/activity/__pycache__/store.cpython-312.pyc i/activity/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..94e1b89
+Binary files /dev/null and i/activity/__pycache__/store.cpython-312.pyc differ
+diff --git c/activity/paging.py i/activity/paging.py
+index e9fc2b8..20af7f4 100644
+--- c/activity/paging.py
++++ i/activity/paging.py
+@@ -3,7 +3,14 @@ def page(records, cursor=None, limit=10):
+         raise ValueError('limit')
+     ordered = sorted(records, key=lambda x: (x['timestamp'], x['id']))
+     if cursor is not None:
+-        ordered = [x for x in ordered if x['timestamp'] > cursor]
++        # When filtering by cursor, need to consider both timestamp and id
++        # to handle ties properly
++        cursor_timestamp, cursor_id = cursor
++        ordered = [x for x in ordered if (x['timestamp'] > cursor_timestamp) or 
++                   (x['timestamp'] == cursor_timestamp and x['id'] > cursor_id)]
+     items = ordered[:limit]
+-    next_cursor = items[-1]['timestamp'] if len(ordered) > limit else None
+-    return {'items': items, 'next_cursor': next_cursor}
++    next_cursor = None
++    if len(ordered) > limit:
++        # The next cursor should be the timestamp and id of the last item in this page
++        next_cursor = (items[-1]['timestamp'], items[-1]['id'])
++    return {'items': items, 'next_cursor': next_cursor}
+\ No newline at end of file
+diff --git c/advanced_test.py i/advanced_test.py
+new file mode 100644
+index 0000000..3290a6a
+--- /dev/null
++++ i/advanced_test.py
+@@ -0,0 +1,31 @@
++import json
++from activity.paging import page
++
++def test_multiple_duplicates():
++    # Test with multiple records having the same timestamp
++    records = [
++        {'id': 'a', 'timestamp': '2026-01-01T00:00:00Z'},
++        {'id': 'b', 'timestamp': '2026-01-01T00:00:00Z'},
++        {'id': 'c', 'timestamp': '2026-01-01T00:00:00Z'},
++        {'id': 'd', 'timestamp': '2026-01-01T00:00:01Z'},
++        {'id': 'e', 'timestamp': '2026-01-01T00:00:01Z'},
++    ]
++    
++    print("All records:", json.dumps(records))
++    
++    # First page
++    result1 = page(records, limit=2)
++    print("Page 1:", json.dumps(result1))
++    
++    # Second page using cursor from first page
++    if result1['next_cursor']:
++        result2 = page(records, cursor=result1['next_cursor'], limit=2)
++        print("Page 2:", json.dumps(result2))
++        
++        # Third page using cursor from second page
++        if result2['next_cursor']:
++            result3 = page(records, cursor=result2['next_cursor'], limit=2)
++            print("Page 3:", json.dumps(result3))
++
++if __name__ == '__main__':
++    test_multiple_duplicates()
+\ No newline at end of file
+diff --git c/test_pagination.py i/test_pagination.py
+new file mode 100644
+index 0000000..12ef5b4
+--- /dev/null
++++ i/test_pagination.py
+@@ -0,0 +1,25 @@
++import json
++from activity.store import sample
++from activity.paging import page
++
++def test_cursor_pagination():
++    # Get all records
++    all_records = sample()
++    print("All records:", json.dumps(all_records))
++    
++    # First page
++    result1 = page(all_records, limit=2)
++    print("Page 1:", json.dumps(result1))
++    
++    # Second page using cursor from first page
++    if result1['next_cursor']:
++        result2 = page(all_records, cursor=result1['next_cursor'], limit=2)
++        print("Page 2:", json.dumps(result2))
++        
++        # Third page using cursor from second page
++        if result2['next_cursor']:
++            result3 = page(all_records, cursor=result2['next_cursor'], limit=2)
++            print("Page 3:", json.dumps(result3))
++
++if __name__ == '__main__':
++    test_cursor_pagination()
+\ No newline at end of file
+diff --git c/unsorted_test.py i/unsorted_test.py
+new file mode 100644
+index 0000000..73e11b4
+--- /dev/null
++++ i/unsorted_test.py
+@@ -0,0 +1,25 @@
++import json
++from activity.paging import page
++
++def test_unsorted_input():
++    # Test with unsorted input - this should still work correctly
++    records = [
++        {'id': 'd', 'timestamp': '2026-01-01T00:00:01Z'},
++        {'id': 'a', 'timestamp': '2026-01-01T00:00:00Z'},
++        {'id': 'c', 'timestamp': '2026-01-01T00:00:00Z'},
++        {'id': 'b', 'timestamp': '2026-01-01T00:00:01Z'},
++    ]
++    
++    print("Unsorted records:", json.dumps(records))
++    
++    # First page
++    result1 = page(records, limit=2)
++    print("Page 1:", json.dumps(result1))
++    
++    # Second page using cursor from first page
++    if result1['next_cursor']:
++        result2 = page(records, cursor=result1['next_cursor'], limit=2)
++        print("Page 2:", json.dumps(result2))
++
++if __name__ == '__main__':
++    test_unsorted_input()
+\ No newline at end of file

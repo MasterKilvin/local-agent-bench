@@ -1,0 +1,27 @@
+diff --git c/receipts/worker.py i/receipts/worker.py
+index e9047c3..d5ca49d 100644
+--- c/receipts/worker.py
++++ i/receipts/worker.py
+@@ -1,9 +1,20 @@
+ from .gateway import TemporaryError
+ 
+ def process(job_id, amount, gateway, attempts=3):
++    # First check if a receipt already exists for this job
++    existing_receipt = gateway.find(job_id)
++    if existing_receipt:
++        return existing_receipt
++    
++    # If no existing receipt, try to create one
+     for _ in range(attempts):
+         try:
+             return gateway.issue(job_id, amount)
+         except TemporaryError:
++            # After a successful write, check again for existing receipt 
++            # (in case of race conditions or retries)
++            existing_receipt = gateway.find(job_id)
++            if existing_receipt:
++                return existing_receipt
+             pass
+-    raise TemporaryError('exhausted')
++    raise TemporaryError('exhausted')
+\ No newline at end of file

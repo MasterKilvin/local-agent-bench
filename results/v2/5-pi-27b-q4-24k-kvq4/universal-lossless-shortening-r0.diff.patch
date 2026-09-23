@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..482f7d4
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "impossible-by-cardinality", "evidence": "README.md requires encode to be strictly shorter for every nonempty input including all 256 one-byte strings, but the only string shorter than a 1-byte input is the empty string, so 256 distinct inputs must map to one value, making exact decode impossible (pigeonhole principle)"}

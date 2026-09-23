@@ -1,0 +1,45 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..2e749c6
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..96abc72
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..f932937
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..6136b3c
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..7c11d6a
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,23 @@
++import unittest
++
++from shop.checkout import checkout
++
++
++class TestSingleLineQuantityAboveOne(unittest.TestCase):
++    def test_promotion_applied_once_single_line_qty_two(self):
++        # Subtotal 20.00; one 10% promotion -> 20.00 * 0.90 = 18.00.
++        # Double-applied discount would yield 20.00 * 0.81 = 16.20.
++        self.assertEqual(checkout([{'price': '10.00', 'qty': 2}], '0.10'), '18.00')
++
++
++class TestMultipleLinesAllQuantityOne(unittest.TestCase):
++    def test_promotion_applied_once_multiple_lines(self):
++        # Subtotal 3.33 + 5.05 = 8.38; one 20% promotion -> 8.38 * 0.80
++        # = 6.704, rounded HALF_UP -> 6.70.
++        # Double-applied discount would yield 8.38 * 0.64 = 5.3632 -> 5.36.
++        lines = [{'price': '3.33', 'qty': 1}, {'price': '5.05', 'qty': 1}]
++        self.assertEqual(checkout(lines, '0.20'), '6.70')
++
++
++if __name__ == '__main__':
++    unittest.main()

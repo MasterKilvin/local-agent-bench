@@ -1,0 +1,46 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..adf5876
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..9a3ad60
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..f5521f9
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..f31fe02
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,28 @@
++import unittest
++
++from shop.checkout import checkout
++
++
++class CheckoutPromotionAppliedOnceTest(unittest.TestCase):
++    """The promotion must be applied exactly once to the subtotal."""
++
++    def test_single_line_quantity_above_one(self):
++        # Subtotal 20.00 * 2 = 40.00; one promotion at rate 0.10 -> 40.00 * 0.9 = 36.00.
++        # Double application of the promotion would yield 40.00 * 0.9 * 0.9 = 32.40.
++        result = checkout([{'price': '20.00', 'qty': 2}], '0.10')
++        self.assertEqual(result, '36.00')
++
++    def test_multiple_lines_all_quantity_one(self):
++        # Subtotal 10.00 + 15.25 = 25.25; one promotion at rate 0.10 -> 25.25 * 0.9 = 22.725.
++        # Rounded with ROUND_HALF_UP -> 22.73.
++        # Double application of the promotion would yield 25.25 * 0.9 * 0.9 = 20.4525 -> 20.45.
++        lines = [
++            {'price': '10.00', 'qty': 1},
++            {'price': '15.25', 'qty': 1},
++        ]
++        result = checkout(lines, '0.10')
++        self.assertEqual(result, '22.73')
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -1,0 +1,55 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..827c521
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..b41e3a3
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..72bc37d
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..fd32605
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..8327dc4 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,26 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
+-        if inject is not None:
+-            inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+-            inject('after_credit')
+-            inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
++
++        balances_snapshot = dict(balances)
++        audit_snapshot = list(self.ledger.audit)
++
++        def restore():
++            balances.clear()
++            balances.update(balances_snapshot)
++            del self.ledger.audit[:]
++            self.ledger.audit.extend(audit_snapshot)
++
++        try:
++            balances[source] -= amount
++            if inject is not None:
++                inject('after_debit')
++            balances[target] += amount
++            if inject is not None:
++                inject('after_credit')
++                inject('before_audit')
++            self.ledger.audit.append(event(source, target, amount))
++        except Exception:
++            restore()
++            raise
+         return True

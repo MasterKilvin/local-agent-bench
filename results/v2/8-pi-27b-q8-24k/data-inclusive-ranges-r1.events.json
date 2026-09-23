@@ -1,0 +1,153 @@
+{
+"peak_prompt_tokens": 11815,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 2.0,
+"prompt": 1681,
+"completion": 47,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 5.4,
+"prompt": 2162,
+"completion": 164,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 28.4,
+"prompt": 2588,
+"completion": 1173,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 49.4,
+"prompt": 3783,
+"completion": 1067,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 61.1,
+"prompt": 4911,
+"completion": 575,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 74.9,
+"prompt": 6788,
+"completion": 682,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 86.2,
+"prompt": 7858,
+"completion": 562,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 110.3,
+"prompt": 8442,
+"completion": 1212,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 119.7,
+"prompt": 9990,
+"completion": 464,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 143.8,
+"prompt": 10479,
+"completion": 1205,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 155.9,
+"prompt": 11815,
+"completion": 597,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 2.0,
+"name": "bash",
+"args_hash": "19c8cce8c30759fa",
+"error": null
+},
+{
+"t": 5.4,
+"name": "bash",
+"args_hash": "868e8a921770a3a0",
+"error": null
+},
+{
+"t": 28.4,
+"name": "write",
+"args_hash": "2ba60e6eb617755e",
+"error": null
+},
+{
+"t": 49.4,
+"name": "edit",
+"args_hash": "85ee7185710651e3",
+"error": null
+},
+{
+"t": 49.4,
+"name": "edit",
+"args_hash": "425e5e68dd22f6ba",
+"error": null
+},
+{
+"t": 61.1,
+"name": "bash",
+"args_hash": "c4a4d3744bb7127e",
+"error": null
+},
+{
+"t": 74.9,
+"name": "read",
+"args_hash": "640d0886d19f28da",
+"error": null
+},
+{
+"t": 86.2,
+"name": "write",
+"args_hash": "d8bec9d2d4585c33",
+"error": null
+},
+{
+"t": 110.3,
+"name": "bash",
+"args_hash": "59c96004df943957",
+"error": null
+},
+{
+"t": 119.7,
+"name": "edit",
+"args_hash": "43af3143480ff57e",
+"error": null
+},
+{
+"t": 143.8,
+"name": "bash",
+"args_hash": "56690acf681e6174",
+"error": null
+}
+]
+}

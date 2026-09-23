@@ -1,0 +1,303 @@
+{
+"peak_prompt_tokens": 10055,
+"thinking_tokens": 0,
+"tool_errors": 3,
+"repeated_calls": 4,
+"steps_detail": [
+{
+"t": 1.2,
+"prompt": 1696,
+"completion": 89,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 1.3,
+"prompt": 1824,
+"completion": 36,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 1.5,
+"prompt": 2002,
+"completion": 32,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 1.7,
+"prompt": 2242,
+"completion": 33,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 1.8,
+"prompt": 2359,
+"completion": 37,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 2.0,
+"prompt": 2421,
+"completion": 34,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 4.6,
+"prompt": 2534,
+"completion": 677,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 6.5,
+"prompt": 3736,
+"completion": 491,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 7.7,
+"prompt": 4752,
+"completion": 280,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 9.5,
+"prompt": 5052,
+"completion": 443,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 9.7,
+"prompt": 5514,
+"completion": 39,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 10.1,
+"prompt": 5699,
+"completion": 78,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 14.2,
+"prompt": 5809,
+"completion": 998,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 14.4,
+"prompt": 6827,
+"completion": 27,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 18.2,
+"prompt": 7025,
+"completion": 887,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 18.3,
+"prompt": 7931,
+"completion": 26,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 19.7,
+"prompt": 8082,
+"completion": 325,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 21.0,
+"prompt": 8439,
+"completion": 330,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 22.2,
+"prompt": 8784,
+"completion": 284,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 22.4,
+"prompt": 9262,
+"completion": 25,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 22.6,
+"prompt": 9489,
+"completion": 23,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 23.7,
+"prompt": 9749,
+"completion": 274,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 24.6,
+"prompt": 10055,
+"completion": 201,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 1.2,
+"name": "bash",
+"args_hash": "6d94482a551ca3f6",
+"error": null
+},
+{
+"t": 1.3,
+"name": "read",
+"args_hash": "19b4e2f4c9a2ed43",
+"error": null
+},
+{
+"t": 1.5,
+"name": "read",
+"args_hash": "0246d794277816d3",
+"error": null
+},
+{
+"t": 1.7,
+"name": "read",
+"args_hash": "c29327c0aa8a3258",
+"error": null
+},
+{
+"t": 1.8,
+"name": "read",
+"args_hash": "ce9cf183225c1a8c",
+"error": null
+},
+{
+"t": 2.0,
+"name": "read",
+"args_hash": "3bc969dc8f2d9f8c",
+"error": null
+},
+{
+"t": 4.6,
+"name": "edit",
+"args_hash": "f387a4e5f55d1653",
+"error": "isError"
+},
+{
+"t": 6.5,
+"name": "edit",
+"args_hash": "f387a4e5f55d1653",
+"error": "isError"
+},
+{
+"t": 7.7,
+"name": "write",
+"args_hash": "7e203a038d4b435b",
+"error": null
+},
+{
+"t": 9.5,
+"name": "write",
+"args_hash": "a037789b12483861",
+"error": null
+},
+{
+"t": 9.7,
+"name": "bash",
+"args_hash": "6ff1efae032e3692",
+"error": "isError"
+},
+{
+"t": 10.1,
+"name": "bash",
+"args_hash": "f83477758a7fe883",
+"error": null
+},
+{
+"t": 14.2,
+"name": "write",
+"args_hash": "79128a81fc16ecc2",
+"error": null
+},
+{
+"t": 14.4,
+"name": "bash",
+"args_hash": "51a2ceeb6614679c",
+"error": null
+},
+{
+"t": 18.2,
+"name": "write",
+"args_hash": "92702384531d3faa",
+"error": null
+},
+{
+"t": 18.3,
+"name": "bash",
+"args_hash": "cd500a505caf4494",
+"error": null
+},
+{
+"t": 19.7,
+"name": "bash",
+"args_hash": "f83477758a7fe883",
+"error": null
+},
+{
+"t": 21.0,
+"name": "bash",
+"args_hash": "7a49d5f055b23b48",
+"error": null
+},
+{
+"t": 22.2,
+"name": "bash",
+"args_hash": "b55ac4d187b75d63",
+"error": null
+},
+{
+"t": 22.4,
+"name": "bash",
+"args_hash": "0673ca04afe4f3e1",
+"error": null
+},
+{
+"t": 22.6,
+"name": "read",
+"args_hash": "0246d794277816d3",
+"error": null
+},
+{
+"t": 23.7,
+"name": "bash",
+"args_hash": "f83477758a7fe883",
+"error": null
+}
+]
+}

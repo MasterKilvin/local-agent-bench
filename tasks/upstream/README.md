@@ -1,0 +1,7 @@
+Upstream bundle fetched from the host on 2026-09-22 (the task-authoring sandbox had no network). File pairs are the PRE-FIX and
+FIXED versions of the module the fix touched, plus the exact diff and the project licence:
+- python-dotenv: issue #360 / PR #361; dotenv-main-v0.19.1-prefix.py -> dotenv-main-v0.19.2-fixed.py; diff dotenv-v0.19.1..v0.19.2.diff (contains other changes too: take only the #361 hunk); parser.py included for imports.
+- python-pathspec: issues #93 (leading space) and #98 (RegexPattern(None)); pattern.py and gitwildmatch.py at v0.12.1 (prefix) and v1.0.0 (fixed); the compare diff is large (a big release): take only the relevant hunks; util.py for imports.
+- boltons: 18.0.0 -> 18.0.1 atomic-save fix in boltons/fileutils.py; diff boltons-18.0.0..18.0.1.diff has the fileutils hunk (the two raw fileutils files came back identical from the tag URLs - trust the diff, reconstruct pre-fix from fixed minus the hunk if needed).
+- pypa/packaging: issue #683, PR #712 "Fix specifier matching when the specifier is long and has an epoch"; packaging-specifiers.py-prefix.py (base cc0c65cb) -> packaging-specifiers.py-fixed.py (merge); diff packaging-pr712.diff (includes the upstream test change - do NOT copy their test verbatim; write the hidden test from the issue's reproduction, then check it against the upstream test's intent).
+Licences: dotenv BSD-3, pathspec MPL-2.0, boltons BSD, packaging BSD/Apache dual. Record attribution in PROVENANCE.md.

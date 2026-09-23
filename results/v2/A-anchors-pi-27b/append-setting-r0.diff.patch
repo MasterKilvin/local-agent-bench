@@ -1,0 +1,21 @@
+diff --git c/settings/editor.py i/settings/editor.py
+index ff7afa8..780e2ba 100644
+--- c/settings/editor.py
++++ i/settings/editor.py
+@@ -49,12 +49,16 @@ def store_value(settings_path: Union[str, _FilePath], name_to_store: str, text_t
+         new_record = '{}={}\n'.format(name_to_store, encoded_value)
+     with staged_edit(settings_path) as (incoming, outgoing):
+         updated = False
++        last_preserved = None
+         for record in report_invalid_records(scan_records(incoming)):
+             if record.name == name_to_store:
+                 outgoing.write(new_record)
+                 updated = True
+             else:
+                 outgoing.write(record.source_text.text)
++                last_preserved = record.source_text.text
+         if not updated:
++            if last_preserved is not None and last_preserved[-1] not in '\r\n':
++                outgoing.write('\n')
+             outgoing.write(new_record)
+     return (True, name_to_store, text_to_store)

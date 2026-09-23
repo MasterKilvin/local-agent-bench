@@ -1,0 +1,90 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..1971b65
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..a521f0b
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..709602d
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..bf4beef 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,40 @@
+-def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
++import re
++
++_DIGITS = r'[0-9]+'
++# Exactly one of: bytes=D-D, bytes=D-, or bytes=-D, where each D is one or
++# more ASCII digits (0-9) with optional leading zeros. Nothing else is
++# allowed: no whitespace, signs, underscores, Unicode digits, extra
++# separators, multiple ranges, or both endpoints omitted.
++_GRAMMAR = rf'bytes=(?:{_DIGITS}-{_DIGITS}|{_DIGITS}-|-{_DIGITS})'
++
++
++def parse_range(header, length):
++    """Validate a single-range header against data of ``length`` bytes.
++
++    Returns an inclusive ``(start, end)`` pair, or ``None`` when the header
++    has bad syntax or the range is unsatisfiable (start beyond EOF, zero
++    suffix, reverse bounds, or any range on empty data), in which case the
++    caller must answer with 416.
++    """
++    if not isinstance(header, str) or not re.fullmatch(_GRAMMAR, header):
++        return None
++    spec = header[6:]
++    if spec.startswith('-'):
++        # Suffix: the last N bytes. Zero suffix or empty data is unsatisfiable.
++        count = int(spec[1:])
++        if length == 0 or count == 0:
++            return None
++        return max(length - count, 0), length - 1
++    start_str, end_str = spec.split('-', 1)
++    start = int(start_str)
++    if length == 0 or start >= length:
++        return None
++    if end_str == '':
++        # No end: run to EOF.
++        return start, length - 1
++    end = int(end_str)
++    if end >= length:
++        end = length - 1  # clamp an end past EOF
++    if end < start:  # reverse bounds
++        return None
+     return start, end
+diff --git c/download/service.py i/download/service.py
+index 72a053d..e1b56c6 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,18 @@
+-from .ranges import bounds
++from .ranges import parse_range
++
+ 
+ def serve(data, range_header=None):
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++
++    bounds = parse_range(range_header, len(data))
++    if bounds is None:
++        headers = {'Content-Length': '0',
++                   'Content-Range': f'bytes */{len(data)}'}
++        return 416, headers, b''
++
++    start, end = bounds
++    body = data[start:end + 1]  # end is inclusive
++    headers = {'Content-Length': str(len(body)),
++               'Content-Range': f'bytes {start}-{end}/{len(data)}'}
++    return 206, headers, body

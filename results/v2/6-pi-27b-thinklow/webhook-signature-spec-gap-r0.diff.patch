@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..870e4a9
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "missing-signing-spec", "evidence": "README.md lines 7-10 state the sender's algorithm (HMAC vs plain hash; which hash) and the signed bytes (raw body vs canonical JSON vs selected fields vs headers+body) are unspecified and that no known signed request or digest accompanies the excerpt; the only local hint is README.md line 3-4 ('lowercase hexadecimal digest'). No sample signature, digest, or algorithm appears anywhere in the repo (see also the existing stub at warehouse/receiver.py line 16). Interoperability with the sender requires those sender decisions, which are not in the files."}

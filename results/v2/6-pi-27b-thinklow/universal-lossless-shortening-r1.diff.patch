@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..adb58bf
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "one-byte-shrink-impossible", "evidence": "README.md requires encode to 'return fewer bytes than its input' for all 256 one-byte strings, forcing all 256 distinct 1-byte inputs to map to the single 0-byte value b'', while also requiring decode to 'recover the exact original for every accepted input' — injectivity across 256 inputs into one output is impossible (pigeonhole principle), with no external table/state/side-channel/length-field permitted."}

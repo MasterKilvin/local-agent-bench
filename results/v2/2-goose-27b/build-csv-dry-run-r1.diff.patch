@@ -1,0 +1,79 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..0f4a141
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..0e0269e
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..2173465
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..6286a7e 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,55 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_DECIMAL_DIGITS = set('0123456789')
++
++
++class _SimStore:
++    """Dry-run stand-in for Store: same get/put interface, local backing."""
++
++    def __init__(self, items):
++        self._items = {k: v.copy() for k, v in items.items()}
++
++    def get(self, sku):
++        value = self._items.get(sku)
++        return None if value is None else value.copy()
++
++    def put(self, item):
++        self._items[item['sku']] = item.copy()
++
++
++def _validate_row(row):
++    if row.get('sku') is None or row.get('name') is None or row.get('qty') is None:
++        raise ValueError('row is missing required fields sku,name,qty')
++    sku = row['sku'].strip()
++    name = row['name'].strip()
++    qty_raw = row['qty'].strip()
++    if not sku:
++        raise ValueError('sku must not be empty')
++    if not name:
++        raise ValueError('name must not be empty')
++    if not qty_raw or not all(c in _DECIMAL_DIGITS for c in qty_raw):
++        raise ValueError('qty must contain only decimal digits')
++    return {'sku': sku, 'name': name, 'qty': int(qty_raw)}
++
++
++def import_text(text, store, dry_run=False):
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
+-        before = store.get(item['sku'])
++
++    # Parse and validate every row before committing anything.
++    items = [_validate_row(row) for row in csv.DictReader(io.StringIO(text))]
++
++    if dry_run:
++        target = _SimStore(store.items)
++    else:
++        target = store
++
++    for item in items:
++        before = target.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+-        result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        result['changes'].append({'sku': item['sku'], 'before': before, 'after': item.copy()})
++        target.put(item)
+     return result

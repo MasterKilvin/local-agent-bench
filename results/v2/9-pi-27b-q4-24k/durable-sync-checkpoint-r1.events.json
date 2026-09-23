@@ -1,0 +1,151 @@
+{
+"peak_prompt_tokens": 5739,
+"thinking_tokens": 0,
+"tool_errors": 2,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 1.6,
+"prompt": 1680,
+"completion": 67,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 2.2,
+"prompt": 2151,
+"completion": 74,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 3.0,
+"prompt": 2513,
+"completion": 126,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 13.5,
+"prompt": 3046,
+"completion": 1248,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 14.2,
+"prompt": 4330,
+"completion": 46,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 15.6,
+"prompt": 4490,
+"completion": 172,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 20.0,
+"prompt": 4686,
+"completion": 632,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 21.5,
+"prompt": 5425,
+"completion": 191,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 24.8,
+"prompt": 5739,
+"completion": 410,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 1.6,
+"name": "bash",
+"args_hash": "b55ac4d187b75d63",
+"error": null
+},
+{
+"t": 1.6,
+"name": "read",
+"args_hash": "19b4e2f4c9a2ed43",
+"error": null
+},
+{
+"t": 2.2,
+"name": "read",
+"args_hash": "3bc969dc8f2d9f8c",
+"error": null
+},
+{
+"t": 2.2,
+"name": "bash",
+"args_hash": "50b0931b97d45ce8",
+"error": null
+},
+{
+"t": 3.0,
+"name": "read",
+"args_hash": "0c54c594d0604c64",
+"error": null
+},
+{
+"t": 3.0,
+"name": "read",
+"args_hash": "ddbbb2eaa49bd743",
+"error": null
+},
+{
+"t": 3.0,
+"name": "read",
+"args_hash": "89231e7b75a029b6",
+"error": null
+},
+{
+"t": 3.0,
+"name": "read",
+"args_hash": "0a884ee16cc22de5",
+"error": null
+},
+{
+"t": 13.5,
+"name": "edit",
+"args_hash": "b5aee171d5f80beb",
+"error": "isError"
+},
+{
+"t": 14.2,
+"name": "bash",
+"args_hash": "57dec2d5182f65bb",
+"error": null
+},
+{
+"t": 15.6,
+"name": "edit",
+"args_hash": "11c04f0992a10a4a",
+"error": null
+},
+{
+"t": 20.0,
+"name": "bash",
+"args_hash": "818241a00cab65e5",
+"error": "isError"
+},
+{
+"t": 21.5,
+"name": "bash",
+"args_hash": "78278fb6e3885644",
+"error": null
+}
+]
+}

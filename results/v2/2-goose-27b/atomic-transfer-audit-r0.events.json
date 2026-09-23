@@ -1,0 +1,57 @@
+{
+"peak_prompt_tokens": null,
+"thinking_tokens": null,
+"tool_errors": null,
+"repeated_calls": null,
+"steps_detail": [],
+"tools_detail": [
+{
+"t": 3.4,
+"name": "tree",
+"args_hash": null,
+"error": null
+},
+{
+"t": 3.4,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 3.9,
+"name": "read_image",
+"args_hash": null,
+"error": null
+},
+{
+"t": 4.6,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 20.5,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 34.6,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 38.0,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 43.2,
+"name": "shell",
+"args_hash": null,
+"error": null
+}
+]
+}

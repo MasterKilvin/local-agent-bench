@@ -1,0 +1,30 @@
+diff --git c/catalog/__pycache__/__init__.cpython-312.pyc i/catalog/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..c479188
+Binary files /dev/null and i/catalog/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/catalog/__pycache__/cache.cpython-312.pyc i/catalog/__pycache__/cache.cpython-312.pyc
+new file mode 100644
+index 0000000..d281bd1
+Binary files /dev/null and i/catalog/__pycache__/cache.cpython-312.pyc differ
+diff --git c/catalog/__pycache__/store.cpython-312.pyc i/catalog/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..c8f5743
+Binary files /dev/null and i/catalog/__pycache__/store.cpython-312.pyc differ
+diff --git c/catalog/cache.py i/catalog/cache.py
+index 65938de..bcd197d 100644
+--- c/catalog/cache.py
++++ i/catalog/cache.py
+@@ -4,6 +4,10 @@ class CatalogCache:
+         self.entries = {}
+ 
+     def get(self, id):
+-        if id not in self.entries:
+-            self.entries[id] = self.catalog.read(id)
+-        return self.entries[id]
++        version = self.catalog.versions.get(id, 0)
++        entry = self.entries.get(id)
++        if entry is None or entry[0] != version:
++            entry = (version, self.catalog.read(id))
++            self.entries[id] = entry
++        value = entry[1]
++        return None if value is None else value.copy()

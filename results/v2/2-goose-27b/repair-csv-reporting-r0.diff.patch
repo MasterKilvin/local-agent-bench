@@ -1,0 +1,93 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..29acb9f
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..2d1e2b4
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/parser.cpython-312.pyc i/stock/__pycache__/parser.cpython-312.pyc
+new file mode 100644
+index 0000000..8d75a0f
+Binary files /dev/null and i/stock/__pycache__/parser.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..a485828
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index 76fcd00..c6bc819 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,18 +1,42 @@
++import re
++
+ from .parser import rows
+ 
++# A nonnegative base-10 integer: one or more decimal digits and nothing else.
++# This rejects negatives ("not nonnegative"), floats, signs, and Python's
++# underscore- or exponent-style int() forms, so qty validation is strict and
++# unambiguous.
++_QTY_RE = re.compile(r'^[0-9]+$')
++
++
+ def import_text(text, store):
+     report = {'seen': 0, 'imported': 0, 'rejected': 0, 'quantity': 0}
+     for parts in rows(text):
++        # Every data row counts as seen, valid or invalid. The header is
++        # excluded by rows().
+         report['seen'] += 1
+-        if len(parts) != 3 or not parts[0] or not parts[1]:
++
++        if len(parts) != 3:
+             report['rejected'] += 1
+             continue
+-        try:
+-            qty = int(parts[2])
+-        except ValueError:
++
++        # Trim surrounding whitespace from each field before validation and
++        # before storage.
++        sku = parts[0].strip()
++        name = parts[1].strip()
++        qty = parts[2].strip()
++
++        # A valid row: nonempty sku, nonempty name, nonnegative base-10 int qty.
++        if not sku or not name or not _QTY_RE.match(qty):
+             report['rejected'] += 1
+             continue
+-        store.put(parts[0], parts[1], qty)
++
++        qty = int(qty)
++
++        # Duplicate SKUs update the stored item, but this still counts as an
++        # imported row and contributes its quantity.
++        store.put(sku, name, qty)
+         report['imported'] += 1
+         report['quantity'] += qty
++
+     return report
+diff --git c/stock/parser.py i/stock/parser.py
+index 005ca5d..be3a56c 100644
+--- c/stock/parser.py
++++ i/stock/parser.py
+@@ -1,3 +1,18 @@
++import csv
++import io
++
++
+ def rows(text):
+-    for line in text.splitlines()[1:]:
+-        yield line.split(',')
++    """Return the data rows of *text* as a list of lists of fields.
++
++    Fields follow standard CSV rules (RFC 4180): a comma or newline inside a
++    double-quoted field stays part of the field, and a doubled double quote
++    ("") is an escaped quote. The first record is the header row and is
++    excluded from the result.
++    """
++    reader = csv.reader(io.StringIO(text))
++    records = list(reader)
++    if not records:
++        return []
++    # Drop the header record (e.g. sku,name,qty).
++    return records[1:]

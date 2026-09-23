@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..8a6c469
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossible", "evidence": "README.md lines 4-5 require decode(encode(x))==x for every nonempty x (so encode must be injective), and README.md line 4 + line 9 require len(encode(x)) < len(x) for EVERY input, 'including all 256 one-byte strings, not an average ratio', with lines 6-7 forbidding external tables, shared state, side channels, and length fields. Contradiction by the pigeonhole principle: all 256 one-byte inputs would have to encode to the single 0-byte string, and in general the 256^n length-n strings would have to inject into only (256^n-256)/255 shorter strings. No codec can satisfy the stated spec."}

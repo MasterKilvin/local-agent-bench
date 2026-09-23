@@ -1,0 +1,43 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..14fb0b9
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..d48052b
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..7874961
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..6d32fe3
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..46aadd5
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,21 @@
++import unittest
++
++from shop.checkout import checkout
++
++
++class DoubleDiscountRegressionTest(unittest.TestCase):
++    def test_single_line_quantity_above_one_discount_applied_once(self):
++        # 10.00 * 2 = 20.00; 10% promotion applied exactly once -> 18.00.
++        # Double-application bug would give 20.00 * 0.9 * 0.9 = 16.20.
++        lines = [{'price': '10.00', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_multiple_lines_all_quantity_one_discount_applied_once(self):
++        # (5.00 * 1) + (3.00 * 1) = 8.00; 25% promotion applied exactly once -> 6.00.
++        # Double-application bug would give 8.00 * 0.75 * 0.75 = 4.50.
++        lines = [{'price': '5.00', 'qty': 1}, {'price': '3.00', 'qty': 1}]
++        self.assertEqual(checkout(lines, '0.25'), '6.00')
++
++
++if __name__ == '__main__':
++    unittest.main()

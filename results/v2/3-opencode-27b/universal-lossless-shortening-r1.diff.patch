@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..e2c8c36
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "impossible-lossless-contraction", "evidence": "README.md:lines 3-9 require encode to return strictly fewer bytes for EVERY nonempty input while decode restores the exact original with no external table or shared state; by the pigeonhole principle an injective mapping is impossible (for length n: 2^n inputs vs only 2^n-2 strictly shorter candidate outputs; for n=1: 256 inputs vs only the empty output), so the stated guarantees contradict each other"}

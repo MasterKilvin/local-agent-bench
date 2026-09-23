@@ -1,0 +1,64 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..0ce286d
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..96cfe6f
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..19a9db3
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..c7791d5 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,40 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_DECIMAL_DIGITS = set('0123456789')
++
++
++def _parse_row(row, position):
++    sku = (row.get('sku') or '').strip()
++    name = (row.get('name') or '').strip()
++    qty_raw = (row.get('qty') or '').strip()
++    if not sku:
++        raise ValueError('row %d: sku must not be empty' % position)
++    if not name:
++        raise ValueError('row %d: name must not be empty' % position)
++    if not qty_raw or not all(c in _DECIMAL_DIGITS for c in qty_raw):
++        raise ValueError('row %d: qty must be a nonnegative integer' % position)
++    return {'sku': sku, 'name': name, 'qty': int(qty_raw)}
++
++
++def import_text(text, store, dry_run=False):
++    rows = list(csv.DictReader(io.StringIO(text)))
++    # Validate every row before committing anything.
++    items = [_parse_row(row, i + 1) for i, row in enumerate(rows)]
++
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
+-        before = store.get(item['sku'])
++    simulated = {k: v.copy() for k, v in store.items.items()}
++    for item in items:
++        before = simulated.get(item['sku'])
++        before = None if before is None else before.copy()
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+-        result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        result['changes'].append(
++            {'sku': item['sku'], 'before': before, 'after': item.copy()})
++        simulated[item['sku']] = item.copy()
++
++    if not dry_run:
++        store.items = {k: v.copy() for k, v in simulated.items()}
+     return result

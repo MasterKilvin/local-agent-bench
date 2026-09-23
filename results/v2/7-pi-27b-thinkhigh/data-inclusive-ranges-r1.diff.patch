@@ -1,0 +1,121 @@
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..581d373 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,48 @@
+-def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++"""Strict single-range header parsing for byte downloads.
++
++Per README.md the header must exactly match one of
++
++    bytes=D-D
++    bytes=D-
++    bytes=-D
++
++where each D is one or more ASCII digits 0 through 9. Leading zeros are
++allowed. Whitespace (including trailing newlines), signs on numbers,
++underscores (e.g. Python's ``1_000``), Unicode digits, extra separators,
++multiple ranges, and an omitted pair of endpoints are all rejected.
++"""
++import re
++
++
++class MalformedRange(ValueError):
++    """The range header does not exactly match the README grammar."""
++
++
++# [0-9] is a literal character range: unlike \d, and unlike int(), it
++# matches only ASCII digits, so Unicode decimal digits never validate.
++_RANGE = re.compile(
++    r'bytes=([0-9]+)-([0-9]+)'   # bytes=start-end
++    r'|bytes=([0-9]+)-'          # bytes=start-  (end omitted: EOF)
++    r'|bytes=-([0-9]+)'          # bytes=-N      (last N bytes)
++)
++
++
++def parse(header):
++    """Parse a range header into ``(start, end)``.
++
++    An omitted end (``bytes=D-``) is returned as ``end is None``; a
++    suffix (``bytes=-N``) is indicated by ``start is None`` with the
++    number of trailing bytes in ``end``. Everything that does not
++    exactly match the allowed forms raises :class:`MalformedRange`.
++    """
++    if not isinstance(header, str):
++        raise MalformedRange('range header must be a string')
++    match = _RANGE.fullmatch(header)
++    if match is None:
++        raise MalformedRange(
++            'range header must exactly match bytes=D-D, bytes=D-, or bytes=-D')
++    if match.group(1) is not None:
++        return int(match.group(1)), int(match.group(2))
++    if match.group(3) is not None:
++        return int(match.group(3)), None
++    return None, int(match.group(4))
+diff --git c/download/service.py i/download/service.py
+index 72a053d..2b338be 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,53 @@
+-from .ranges import bounds
++"""Single-range byte-range serving as specified in README.md."""
++from .ranges import MalformedRange, parse
++
+ 
+ def serve(data, range_header=None):
++    """Serve ``data`` (bytes) with an optional single byte range.
++
++    Returns ``(status, headers, body)``. Headers include
++    ``Content-Length``; a selected range also carries ``Content-Range``.
++    """
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
++
++    length = len(data)
++    try:
++        start, end = parse(range_header)
++    except MalformedRange:
++        return _not_satisfiable(length)
++
++    # Every range on empty data returns 416.
++    if length == 0:
++        return _not_satisfiable(length)
++
++    if start is None and end is not None:
++        # bytes=-N: the last N bytes; bytes=-0 is a zero-length suffix.
++        if end == 0:
++            return _not_satisfiable(length)
++        first = length - end if end < length else 0
++        return _satisfiable(length, first, length - 1, data[first:length])
++
++    if start is not None and end is None:
++        # bytes=D-: from D to EOF.
++        if start >= length:
++            return _not_satisfiable(length)
++        return _satisfiable(length, start, length - 1, data[start:length])
++
++    # bytes=D-D: inclusive end.
++    if start >= length:
++        return _not_satisfiable(length)
++    if end < start:
++        return _not_satisfiable(length)
++    last = end if end < length else length - 1
++    return _satisfiable(length, start, last, data[start:last + 1])
++
++
++def _not_satisfiable(length):
++    return 416, {'Content-Length': '0',
++                 'Content-Range': f'bytes */{length}'}, b''
++
++
++def _satisfiable(length, start, end, body):
+     return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++                 'Content-Range': f'bytes {start}-{end}/{length}'}, body

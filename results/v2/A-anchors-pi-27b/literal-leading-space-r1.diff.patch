@@ -1,0 +1,37 @@
+diff --git c/selection/__pycache__/__init__.cpython-312.pyc i/selection/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..133555b
+Binary files /dev/null and i/selection/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/selection/__pycache__/globs.cpython-312.pyc i/selection/__pycache__/globs.cpython-312.pyc
+new file mode 100644
+index 0000000..f0e2edb
+Binary files /dev/null and i/selection/__pycache__/globs.cpython-312.pyc differ
+diff --git c/selection/__pycache__/rules.cpython-312.pyc i/selection/__pycache__/rules.cpython-312.pyc
+new file mode 100644
+index 0000000..9ad7637
+Binary files /dev/null and i/selection/__pycache__/rules.cpython-312.pyc differ
+diff --git c/selection/globs.py i/selection/globs.py
+index b408ddb..d4554ae 100644
+--- c/selection/globs.py
++++ i/selection/globs.py
+@@ -20,10 +20,16 @@ class PathRule(TextRule):
+         else:
+             raise TypeError(f'expression {expression!r} must be text or bytes.')
+         original_expression = expression
+-        if expression.endswith('\\ '):
+-            expression = expression.lstrip()
+-        else:
+-            expression = expression.strip()
++        stripped_expression = expression.rstrip()
++        if stripped_expression != expression:
++            backslashes = 0
++            for char in reversed(stripped_expression):
++                if char == '\\':
++                    backslashes += 1
++                else:
++                    break
++            if backslashes % 2 == 0:
++                expression = stripped_expression
+         if expression.startswith('#'):
+             compiled = None
+             decision = None

@@ -1,0 +1,11 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..200aa1d
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "blocked",
++  "blocker": "pigeonhole-principle",
++  "evidence": "README.md lines 3-5: encode must return fewer bytes than its input for EVERY nonempty byte string, explicitly 'including all 256 one-byte strings, not an average ratio', and decode must recover the exact original with no external table or shared state. Exact restoration forces encode to be injective, but every 1-byte input must encode to strictly fewer than 1 byte, i.e. the single 0-byte string; by the pigeonhole principle two of the 256 distinct inputs must share one encoding and cannot both restore exactly. No codec can satisfy all stated rules."
++}

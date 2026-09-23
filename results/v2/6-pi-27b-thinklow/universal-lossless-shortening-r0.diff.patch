@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..76bd0eb
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "cardinality-contradiction", "evidence": "README.md demands len(encode(x)) < len(x) AND lossless decode(encode(x)) == x for every nonempty input, 'including all 256 one-byte strings'; each one-byte input must therefore encode to the only zero-length code b'', so the 256 distinct inputs collide into one codeword, breaking injectivity (pigeonhole) and no decoder function decode(b'') can return 256 distinct values."}

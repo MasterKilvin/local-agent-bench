@@ -1,0 +1,16 @@
+{
+"peak_prompt_tokens": 1695,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 1.3,
+"prompt": 1695,
+"completion": 58,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": []
+}

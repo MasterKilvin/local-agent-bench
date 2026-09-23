@@ -1,0 +1,42 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..eb2b4b5
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..5d12557
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..adfe9a6
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..62ed3b3
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..9b62a85
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,20 @@
++import unittest
++
++from shop.checkout import checkout
++
++
++class CheckoutRegressionTest(unittest.TestCase):
++    def test_single_line_quantity_above_one(self):
++        # Subtotal 20.00, one 10% promotion: 20.00 * 0.90 = 18.00.
++        # (Double application of the promotion gives 16.20.)
++        self.assertEqual(checkout([{'price': '10.00', 'qty': 2}], '0.10'), '18.00')
++
++    def test_multiple_lines_all_quantity_one(self):
++        # Subtotal 12.55, one 20% promotion: 12.55 * 0.80 = 10.04.
++        # (Double application of the promotion gives 8.03.)
++        lines = [{'price': '5.25', 'qty': 1}, {'price': '7.30', 'qty': 1}]
++        self.assertEqual(checkout(lines, '0.20'), '10.04')
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -1,0 +1,161 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..e68db11
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,155 @@
++"""Regression tests for the retry wrapper's public API, as documented in README.md.
++
++Contract under test (README.md):
++- ``run(operation, attempts=3)`` calls a zero-argument operation.
++- ``TransientError`` is retried for at most ``attempts`` total calls, returning
++  the first success or raising the last transient error.
++- ``PermanentError`` must propagate immediately on any attempt, including after
++  a transient failure: the operation must never be called again after it.
++- No other exception is retried.
++- ``attempts`` is positive.
++
++Only the public API is used here (``run``, ``TransientError``, ``PermanentError``),
++and both outcomes and call counts are asserted, as the README requires.
++
++The permanent-error cases pin the known regression: with the current wrapper a
++``PermanentError`` raised on a non-final attempt is swallowed and the operation
++is called again (so those tests fail against the current code), while the
++transient-error cases pass, showing retry behavior works as specified.
++"""
++
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++class Operation:
++    """Zero-argument operation that records calls and replays scripted outcomes.
++
++    ``script`` lists one outcome per expected call: either a value to return or
++    an exception instance to raise.  Calls beyond the script raise
++    ``AssertionError`` so a wrapper that repeats a failure cannot do so
++    silently.
++    """
++
++    def __init__(self, script):
++        self.script = tuple(script)
++        self.calls = 0
++
++    def __call__(self):
++        self.calls += 1
++        if self.calls > len(self.script):
++            raise AssertionError(
++                "operation called %d times, but only %d were expected"
++                % (self.calls, len(self.script))
++            )
++        outcome = self.script[self.calls - 1]
++        if isinstance(outcome, BaseException):
++            raise outcome
++        return outcome
++
++
++class PermanentErrorRegressionTests(unittest.TestCase):
++    """A PermanentError must propagate immediately; the operation must not run again."""
++
++    def test_permanent_error_on_first_attempt_stops_immediately(self):
++        first = PermanentError("permanent-1")
++        operation = Operation([first])
++
++        with self.assertRaises(PermanentError) as caught:
++            run(operation, attempts=3)
++
++        self.assertEqual(1, operation.calls, "wrapper repeated a permanent failure")
++        self.assertIs(caught.exception, first)
++
++    def test_permanent_error_after_transient_failures_stops_immediately(self):
++        permanent = PermanentError("permanent-3")
++        operation = Operation([
++            TransientError("transient-1"),
++            TransientError("transient-2"),
++            permanent,
++        ])
++
++        with self.assertRaises(PermanentError) as caught:
++            run(operation, attempts=5)
++
++        self.assertEqual(3, operation.calls, "wrapper repeated a permanent failure")
++        self.assertIs(caught.exception, permanent)
++
++    def test_permanent_error_on_final_attempt_stops_immediately(self):
++        operation = Operation([
++            TransientError("transient-1"),
++            PermanentError("permanent-2"),
++        ])
++
++        with self.assertRaises(PermanentError) as caught:
++            run(operation, attempts=2)
++
++        self.assertEqual(2, operation.calls)
++        self.assertIs(caught.exception, operation.script[1])
++
++
++class TransientErrorRegressionTests(unittest.TestCase):
++    """TransientError must be retried up to 'attempts' total calls."""
++
++    def test_transient_failures_are_retried_and_last_one_is_raised(self):
++        last = TransientError("transient-3")
++        operation = Operation([
++            TransientError("transient-1"),
++            TransientError("transient-2"),
++            last,
++        ])
++
++        with self.assertRaises(TransientError) as caught:
++            run(operation, attempts=3)
++
++        self.assertEqual(3, operation.calls)
++        self.assertIs(caught.exception, last)
++
++    def test_first_success_after_transient_failures_is_returned(self):
++        operation = Operation([
++            TransientError("transient-1"),
++            TransientError("transient-2"),
++            "ok",
++        ])
++
++        self.assertEqual("ok", run(operation, attempts=3))
++        self.assertEqual(3, operation.calls)
++
++    def test_transient_error_with_single_attempt_is_raised(self):
++        solo = TransientError("transient-1")
++        operation = Operation([solo])
++
++        with self.assertRaises(TransientError) as caught:
++            run(operation, attempts=1)
++
++        self.assertEqual(1, operation.calls)
++        self.assertIs(caught.exception, solo)
++
++    def test_transient_errors_retry_with_default_attempts(self):
++        operation = Operation([TransientError("transient-1"), "ok"])
++
++        self.assertEqual("ok", run(operation))
++        self.assertEqual(2, operation.calls)
++
++
++class OtherErrorRegressionTests(unittest.TestCase):
++    """No exception other than TransientError is retried; successes are not repeated."""
++
++    def test_non_transient_exception_propagates_immediately(self):
++        operation = Operation([ValueError("unhandled")])
++
++        with self.assertRaises(ValueError):
++            run(operation, attempts=3)
++
++        self.assertEqual(1, operation.calls)
++
++    def test_success_is_returned_after_a_single_call(self):
++        operation = Operation(["ok", "never-again"])
++
++        self.assertEqual("ok", run(operation, attempts=3))
++        self.assertEqual(1, operation.calls)
++
++
++if __name__ == "__main__":
++    unittest.main()

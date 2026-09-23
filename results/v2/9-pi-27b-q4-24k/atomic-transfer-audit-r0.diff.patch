@@ -1,0 +1,43 @@
+diff --git c/__pycache__/main.cpython-312.pyc i/__pycache__/main.cpython-312.pyc
+new file mode 100644
+index 0000000..b34208f
+Binary files /dev/null and i/__pycache__/main.cpython-312.pyc differ
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..5b8f6ac
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..62a5b05
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..d5b76b8
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..75764d7
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..3854a3b 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,15 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
++        # Commit audit and balances together: write the audit event first,
++        # then apply both balances atomically. A failure at any phase above
++        # (or in the audit append) leaves balances and the audit log
++        # exactly as they were before the transfer.
+         self.ledger.audit.append(event(source, target, amount))
++        balances[source] -= amount
++        balances[target] += amount
+         return True

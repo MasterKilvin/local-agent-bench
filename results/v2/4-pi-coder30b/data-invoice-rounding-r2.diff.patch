@@ -1,0 +1,30 @@
+diff --git c/invoice/pricing.py i/invoice/pricing.py
+index bd5f11f..691b907 100644
+--- c/invoice/pricing.py
++++ i/invoice/pricing.py
+@@ -1,4 +1,22 @@
++import decimal
++
+ def invoice(lines, tax_rate):
+-    subtotal = sum(float(row['unit_price']) * row['qty'] for row in lines)
+-    tax = round(sum(float(row['unit_price']) * row['qty'] for row in lines if row['taxable']) * float(tax_rate), 2)
+-    return {'subtotal': f'{subtotal:.2f}', 'tax': f'{tax:.2f}', 'total': f'{subtotal + tax:.2f}'}
++    # Round each line item to cents and sum for subtotal
++    subtotal = decimal.Decimal('0')
++    tax = decimal.Decimal('0')
++    
++    for row in lines:
++        extended_line = decimal.Decimal(str(row['unit_price'])) * decimal.Decimal(str(row['qty']))
++        # Round each extended line to cents with ROUND_HALF_UP
++        rounded_line = extended_line.quantize(decimal.Decimal('0.01'), rounding=decimal.ROUND_HALF_UP)
++        subtotal += rounded_line
++        
++        # Calculate tax for taxable lines
++        if row['taxable']:
++            line_tax = rounded_line * decimal.Decimal(str(tax_rate))
++            # Round tax to cents with ROUND_HALF_UP
++            rounded_tax = line_tax.quantize(decimal.Decimal('0.01'), rounding=decimal.ROUND_HALF_UP)
++            tax += rounded_tax
++    
++    total = subtotal + tax
++    return {'subtotal': f'{subtotal:.2f}', 'tax': f'{tax:.2f}', 'total': f'{total:.2f}'}

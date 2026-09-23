@@ -1,0 +1,45 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..1d71991
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,39 @@
++"""Regression tests for the double-discount bug.
++
++The promotion (rate) must be applied exactly once to the basket subtotal:
++    total = round(subtotal * (1 - rate), 2, ROUND_HALF_UP)
++
++A buggy implementation squares the discount factor (subtotal * (1 - rate)**2)
++and returns a smaller total. These tests encode the correct single-application
++behavior, so they FAIL while the double-discount bug is present and PASS once
++the checkout applies the promotion exactly once.
++
++Scenarios (per README.md, exercised separately and not combined):
++  1. A single line with quantity above one.
++  2. A multiple-line basket with every quantity equal to one.
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class TestPromotionAppliedExactlyOnce(unittest.TestCase):
++    def test_single_line_with_quantity_above_one(self):
++        # Subtotal: 10.00 * 2 = 20.00; promotion 10% applied once:
++        # 20.00 * 0.90 = 18.00. Double application would give 16.20.
++        lines = [{'price': '10.00', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_multiple_lines_with_all_quantities_one(self):
++        # Subtotal: 3.33 * 1 + 4.07 * 1 = 7.40; promotion 10% applied once:
++        # 7.40 * 0.90 = 6.66. Double application would give 5.99.
++        lines = [
++            {'price': '3.33', 'qty': 1},
++            {'price': '4.07', 'qty': 1},
++        ]
++        self.assertEqual(checkout(lines, '0.10'), '6.66')
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -1,0 +1,68 @@
+[
+ {
+  "agent_model": "Pi + Qwen3.8-27B",
+  "task_set": "single-file (21x3)",
+  "passed": 60,
+  "attempts": 63,
+  "pass_rate": 0.952,
+  "median_seconds": 7.8,
+  "median_steps": 5,
+  "timeouts": 0,
+  "edited_tests": 0
+ },
+ {
+  "agent_model": "OpenCode + Qwen3.8-27B",
+  "task_set": "single-file (21x3)",
+  "passed": 59,
+  "attempts": 63,
+  "pass_rate": 0.937,
+  "median_seconds": 9.2,
+  "median_steps": 5,
+  "timeouts": 0,
+  "edited_tests": 0
+ },
+ {
+  "agent_model": "Pi + Qwen3-Coder-30B",
+  "task_set": "single-file (21x3)",
+  "passed": 40,
+  "attempts": 63,
+  "pass_rate": 0.635,
+  "median_seconds": 4.7,
+  "median_steps": 7,
+  "timeouts": 0,
+  "edited_tests": 0
+ },
+ {
+  "agent_model": "OpenCode + Qwen3-Coder-30B",
+  "task_set": "single-file (21x3)",
+  "passed": 41,
+  "attempts": 63,
+  "pass_rate": 0.651,
+  "median_seconds": 5.1,
+  "median_steps": 6,
+  "timeouts": 0,
+  "edited_tests": 0
+ },
+ {
+  "agent_model": "Pi + Qwen3.8-27B",
+  "task_set": "multi-file (12x3)",
+  "passed": 33,
+  "attempts": 36,
+  "pass_rate": 0.917,
+  "median_seconds": 57.8,
+  "median_steps": 9,
+  "timeouts": 1,
+  "edited_tests": 0
+ },
+ {
+  "agent_model": "OpenCode + Qwen3.8-27B",
+  "task_set": "multi-file (12x3)",
+  "passed": 25,
+  "attempts": 36,
+  "pass_rate": 0.694,
+  "median_seconds": 78.9,
+  "median_steps": 8,
+  "timeouts": 0,
+  "edited_tests": 0
+ }
+]

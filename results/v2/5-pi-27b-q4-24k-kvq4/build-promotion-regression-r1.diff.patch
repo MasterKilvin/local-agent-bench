@@ -1,0 +1,41 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..ebebf53
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,35 @@
++"""Regression test: a promotion must be applied exactly once at checkout.
++
++The reported bug is that `checkout` applies the promotion twice
++(discount squared), which under-discounts the payable total.
++
++Expected values below are computed per the README spec:
++sum extended line prices, apply the promotion exactly once to the
++subtotal, then round with ROUND_HALF_UP.
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class ApplyPromotionOnceTest(unittest.TestCase):
++    def test_single_line_quantity_above_one(self):
++        # subtotal 30.00 * (1 - 0.10) = 27.00; double-applied gives 24.30
++        lines = [{'price': '10.00', 'qty': 3}]
++        rate = '0.10'
++        self.assertEqual(checkout(lines, rate), '27.00')
++
++    def test_multiple_lines_each_quantity_one(self):
++        # subtotal 17.79 * (1 - 0.25) = 13.34; double-applied gives 10.01
++        lines = [
++            {'price': '5.55', 'qty': 1},
++            {'price': '2.25', 'qty': 1},
++            {'price': '9.99', 'qty': 1},
++        ]
++        rate = '0.25'
++        self.assertEqual(checkout(lines, rate), '13.34')
++
++
++if __name__ == '__main__':
++    unittest.main()

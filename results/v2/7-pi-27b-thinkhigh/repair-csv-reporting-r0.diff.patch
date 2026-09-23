@@ -1,0 +1,79 @@
+diff --git c/__pycache__/main.cpython-312.pyc i/__pycache__/main.cpython-312.pyc
+new file mode 100644
+index 0000000..37491a4
+Binary files /dev/null and i/__pycache__/main.cpython-312.pyc differ
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..b27cfd9
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..08528ce
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/parser.cpython-312.pyc i/stock/__pycache__/parser.cpython-312.pyc
+new file mode 100644
+index 0000000..0efc318
+Binary files /dev/null and i/stock/__pycache__/parser.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..bccd579
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index 76fcd00..72a31d8 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,18 +1,26 @@
++import re
++
+ from .parser import rows
+ 
++_QTY_RE = re.compile(r'[+-]?[0-9]+')
++
++
+ def import_text(text, store):
+     report = {'seen': 0, 'imported': 0, 'rejected': 0, 'quantity': 0}
+     for parts in rows(text):
+         report['seen'] += 1
+-        if len(parts) != 3 or not parts[0] or not parts[1]:
++        if len(parts) != 3:
+             report['rejected'] += 1
+             continue
+-        try:
+-            qty = int(parts[2])
+-        except ValueError:
++        sku, name, qty_text = (field.strip() for field in parts)
++        if not sku or not name or _QTY_RE.fullmatch(qty_text) is None:
+             report['rejected'] += 1
+             continue
+-        store.put(parts[0], parts[1], qty)
++        qty = int(qty_text)
++        if qty < 0:
++            report['rejected'] += 1
++            continue
++        store.put(sku, name, qty)
+         report['imported'] += 1
+         report['quantity'] += qty
+     return report
+diff --git c/stock/parser.py i/stock/parser.py
+index 005ca5d..71c6263 100644
+--- c/stock/parser.py
++++ i/stock/parser.py
+@@ -1,3 +1,16 @@
++import csv
++import io
++
++
+ def rows(text):
+-    for line in text.splitlines()[1:]:
+-        yield line.split(',')
++    """Yield each data record (list of fields), skipping the header.
++
++    Fields are parsed using standard CSV rules (quoted fields, embedded
++    commas, backslashed/doubled quotes) via the csv module.
++    """
++    text = text.replace('\r\n', '\n').replace('\r', '\n')
++    reader = csv.reader(io.StringIO(text, newline=''))
++    for index, record in enumerate(reader):
++        if index == 0:
++            continue  # header
++        yield record

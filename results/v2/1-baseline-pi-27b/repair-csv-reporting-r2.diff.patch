@@ -1,0 +1,68 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..2296fa8
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..c05efda
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/parser.cpython-312.pyc i/stock/__pycache__/parser.cpython-312.pyc
+new file mode 100644
+index 0000000..e6b6243
+Binary files /dev/null and i/stock/__pycache__/parser.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..603df1b
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index 76fcd00..d7e1162 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,18 +1,23 @@
++import re
++
+ from .parser import rows
+ 
++_QTY = re.compile(r'[0-9]+\Z')
++
++
+ def import_text(text, store):
+     report = {'seen': 0, 'imported': 0, 'rejected': 0, 'quantity': 0}
+     for parts in rows(text):
+         report['seen'] += 1
+-        if len(parts) != 3 or not parts[0] or not parts[1]:
++        if len(parts) != 3:
+             report['rejected'] += 1
+             continue
+-        try:
+-            qty = int(parts[2])
+-        except ValueError:
++        sku, name, qty = (field.strip() for field in parts)
++        if not sku or not name or not _QTY.match(qty):
+             report['rejected'] += 1
+             continue
+-        store.put(parts[0], parts[1], qty)
++        qty = int(qty)
++        store.put(sku, name, qty)
+         report['imported'] += 1
+         report['quantity'] += qty
+     return report
+diff --git c/stock/parser.py i/stock/parser.py
+index 005ca5d..72b37dc 100644
+--- c/stock/parser.py
++++ i/stock/parser.py
+@@ -1,3 +1,12 @@
++import csv
++import io
++
++
+ def rows(text):
+-    for line in text.splitlines()[1:]:
+-        yield line.split(',')
++    reader = csv.reader(io.StringIO(text))
++    try:
++        next(reader)  # skip header
++    except StopIteration:
++        return
++    for record in reader:
++        yield record

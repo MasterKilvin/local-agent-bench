@@ -1,0 +1,39 @@
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..46f11ae 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,27 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
+-        if inject is not None:
+-            inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+-            inject('after_credit')
+-            inject('before_audit')
++
++        def rollback():
++            balances[source] = original_source
++            balances[target] = original_target
++
++        original_source = balances[source]
++        original_target = balances[target]
++        try:
++            balances[source] -= amount
++            if inject is not None:
++                inject('after_debit')
++            balances[target] += amount
++            if inject is not None:
++                inject('after_credit')
++                inject('before_audit')
++        except Exception:
++            # Audit was not appended: restore both balances so the
++            # ledger is left exactly as it was before the transfer.
++            rollback()
++            raise
++        # All phases succeeded: balance change and audit event commit
++        # together.
+         self.ledger.audit.append(event(source, target, amount))
+         return True

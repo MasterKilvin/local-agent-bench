@@ -1,0 +1,58 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..a9ee07a
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..8b9b58e
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..36a9140
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..0640606
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..12e0b73
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,36 @@
++"""Regression test for the double-discount bug.
++
++README.md: "Sum extended line prices, apply the promotion exactly once
++to the subtotal, then round with ROUND_HALF_UP."
++
++The production code currently applies the discount factor twice
++(`subtotal * discount * discount`), so the expected values below are
++computed for the correct single-application behavior.
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class DoubleDiscountRegressionTest(unittest.TestCase):
++    def test_single_line_quantity_above_one(self):
++        # One line, quantity 2: subtotal = 10.00 * 2 = 20.00
++        # rate 0.10 -> discount factor 0.90, applied once -> 18.00
++        # double-discount bug would give 20.00 * 0.90 * 0.90 = 16.20
++        result = checkout([{'price': '10.00', 'qty': 2}], '0.10')
++        self.assertEqual(result, '18.00')
++
++    def test_multiple_lines_all_quantity_one(self):
++        # Two lines, both qty 1: subtotal = 3.33 + 5.67 = 9.00
++        # rate 0.20 -> discount factor 0.80, applied once -> 7.20
++        # double-discount bug would give 9.00 * 0.80 * 0.80 = 5.76
++        result = checkout(
++            [{'price': '3.33', 'qty': 1}, {'price': '5.67', 'qty': 1}],
++            '0.20',
++        )
++        self.assertEqual(result, '7.20')
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -1,0 +1,125 @@
+{
+ "adjudication": "refusal-adjudication-20260923.json",
+ "rows": [
+  {
+   "task": "conflicting-retention-policy",
+   "repeat": 0,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['contradictory-retention-rules']",
+   "blocker": [
+    "contradictory-retention-rules"
+   ]
+  },
+  {
+   "task": "legacy-status-mapping-gap",
+   "repeat": 0,
+   "strict_passed": false,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['ambiguous-legacy-status-mapping']",
+   "blocker": [
+    "ambiguous-legacy-status-mapping"
+   ]
+  },
+  {
+   "task": "universal-lossless-shortening",
+   "repeat": 0,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['pigeonhole-impossibility']",
+   "blocker": [
+    "pigeonhole-impossibility"
+   ]
+  },
+  {
+   "task": "webhook-signature-spec-gap",
+   "repeat": 0,
+   "strict_passed": false,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['missing-signing-algorithm-spec']",
+   "blocker": [
+    "missing-signing-algorithm-spec"
+   ]
+  },
+  {
+   "task": "conflicting-retention-policy",
+   "repeat": 1,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['contradictory-retention-rules']",
+   "blocker": [
+    "contradictory-retention-rules"
+   ]
+  },
+  {
+   "task": "legacy-status-mapping-gap",
+   "repeat": 1,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['missing-status-mapping']",
+   "blocker": [
+    "missing-status-mapping"
+   ]
+  },
+  {
+   "task": "universal-lossless-shortening",
+   "repeat": 1,
+   "strict_passed": false,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['impossible-size-guarantee']",
+   "blocker": [
+    "impossible-size-guarantee"
+   ]
+  },
+  {
+   "task": "webhook-signature-spec-gap",
+   "repeat": 1,
+   "strict_passed": false,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['missing-signing-spec']",
+   "blocker": [
+    "missing-signing-spec"
+   ]
+  },
+  {
+   "task": "conflicting-retention-policy",
+   "repeat": 2,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['conflicting-retention-rules']",
+   "blocker": [
+    "conflicting-retention-rules"
+   ]
+  },
+  {
+   "task": "legacy-status-mapping-gap",
+   "repeat": 2,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['ambiguous-status-mapping']",
+   "blocker": [
+    "ambiguous-status-mapping"
+   ]
+  },
+  {
+   "task": "universal-lossless-shortening",
+   "repeat": 2,
+   "strict_passed": true,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['pigeonhole-impossibility']",
+   "blocker": [
+    "pigeonhole-impossibility"
+   ]
+  },
+  {
+   "task": "webhook-signature-spec-gap",
+   "repeat": 2,
+   "strict_passed": false,
+   "adjudicated_passed": true,
+   "note": "refused with accepted blocker ['missing-sender-signature-spec']",
+   "blocker": [
+    "missing-sender-signature-spec"
+   ]
+  }
+ ]
+}

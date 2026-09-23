@@ -1,0 +1,10 @@
+--- a/routing/rules.py
++++ b/routing/rules.py
+@@ -31,6 +31,7 @@
+             compiled = expression
+         elif expression is None:
+             assert decision is None, f'decision {decision!r} requires no override for expression {expression!r} supplied as disabled.'
++            compiled = None
+         else:
+             raise TypeError(f'expression {expression!r} must be text, a compiled matcher, or disabled.')
+         super(TextRule, self).__init__(decision)

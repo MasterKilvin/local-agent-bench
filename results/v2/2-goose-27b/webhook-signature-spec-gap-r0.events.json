@@ -1,0 +1,39 @@
+{
+"peak_prompt_tokens": null,
+"thinking_tokens": null,
+"tool_errors": null,
+"repeated_calls": null,
+"steps_detail": [],
+"tools_detail": [
+{
+"t": 3.2,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 3.2,
+"name": "tree",
+"args_hash": null,
+"error": null
+},
+{
+"t": 3.8,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 8.8,
+"name": "write",
+"args_hash": null,
+"error": null
+},
+{
+"t": 9.3,
+"name": "shell",
+"args_hash": null,
+"error": null
+}
+]
+}

@@ -1,0 +1,94 @@
+diff --git c/retry/__pycache__/__init__.cpython-312.pyc i/retry/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..ac05ec8
+Binary files /dev/null and i/retry/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/retry/__pycache__/wrapper.cpython-312.pyc i/retry/__pycache__/wrapper.cpython-312.pyc
+new file mode 100644
+index 0000000..a71f264
+Binary files /dev/null and i/retry/__pycache__/wrapper.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..919c4db
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..ea57b6e
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..d90ba08
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,72 @@
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++class PermanentErrorRegression(unittest.TestCase):
++    def test_permanent_error_on_first_attempt_stops_immediately(self):
++        calls = []
++
++        def operation():
++            calls.append(1)
++            raise PermanentError('fatal')
++
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=5)
++        self.assertEqual(len(calls), 1)
++
++    def test_permanent_error_after_transient_stops_immediately(self):
++        calls = []
++
++        def operation():
++            calls.append(1)
++            if len(calls) == 1:
++                raise TransientError('bump')
++            raise PermanentError('fatal')
++
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=5)
++        self.assertEqual(len(calls), 2)
++
++
++class TransientErrorRegression(unittest.TestCase):
++    def test_transient_error_is_retried_until_success(self):
++        calls = []
++
++        def operation():
++            calls.append(1)
++            if len(calls) < 3:
++                raise TransientError('not yet')
++            return 'ok'
++
++        self.assertEqual(run(operation, attempts=3), 'ok')
++        self.assertEqual(len(calls), 3)
++
++    def test_transient_error_last_error_raised_after_all_attempts(self):
++        calls = []
++
++        def operation():
++            calls.append(1)
++            raise TransientError('bump %d' % len(calls))
++
++        with self.assertRaises(TransientError) as ctx:
++            run(operation, attempts=3)
++        self.assertEqual(len(calls), 3)
++        self.assertEqual(str(ctx.exception), 'bump 3')
++
++
++class OtherExceptionRegression(unittest.TestCase):
++    def test_other_exceptions_are_not_retried(self):
++        calls = []
++
++        def operation():
++            calls.append(1)
++            raise ValueError('boom')
++
++        with self.assertRaises(ValueError):
++            run(operation, attempts=3)
++        self.assertEqual(len(calls), 1)
++
++
++if __name__ == '__main__':
++    unittest.main()

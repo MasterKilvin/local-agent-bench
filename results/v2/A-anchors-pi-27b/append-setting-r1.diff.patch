@@ -1,0 +1,36 @@
+diff --git c/settings/__pycache__/__init__.cpython-312.pyc i/settings/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..9677297
+Binary files /dev/null and i/settings/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/settings/__pycache__/editor.cpython-312.pyc i/settings/__pycache__/editor.cpython-312.pyc
+new file mode 100644
+index 0000000..86a07ae
+Binary files /dev/null and i/settings/__pycache__/editor.cpython-312.pyc differ
+diff --git c/settings/__pycache__/records.cpython-312.pyc i/settings/__pycache__/records.cpython-312.pyc
+new file mode 100644
+index 0000000..b45a87e
+Binary files /dev/null and i/settings/__pycache__/records.cpython-312.pyc differ
+diff --git c/settings/editor.py i/settings/editor.py
+index ff7afa8..8819fa7 100644
+--- c/settings/editor.py
++++ i/settings/editor.py
+@@ -49,12 +49,18 @@ def store_value(settings_path: Union[str, _FilePath], name_to_store: str, text_t
+         new_record = '{}={}\n'.format(name_to_store, encoded_value)
+     with staged_edit(settings_path) as (incoming, outgoing):
+         updated = False
++        last_char = ''
+         for record in report_invalid_records(scan_records(incoming)):
+             if record.name == name_to_store:
+                 outgoing.write(new_record)
+                 updated = True
+             else:
+-                outgoing.write(record.source_text.text)
++                text = record.source_text.text
++                if text:
++                    last_char = text[-1]
++                outgoing.write(text)
+         if not updated:
++            if last_char and last_char not in ('\r', '\n'):
++                outgoing.write('\n')
+             outgoing.write(new_record)
+     return (True, name_to_store, text_to_store)

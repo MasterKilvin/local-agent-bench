@@ -1,0 +1,153 @@
+{
+"peak_prompt_tokens": 4266,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 1,
+"steps_detail": [
+{
+"t": 1.1,
+"prompt": 1682,
+"completion": 61,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 1.8,
+"prompt": 1924,
+"completion": 170,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 3.5,
+"prompt": 2110,
+"completion": 480,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 3.9,
+"prompt": 2608,
+"completion": 92,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 4.6,
+"prompt": 2981,
+"completion": 172,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 4.7,
+"prompt": 3352,
+"completion": 21,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 4.8,
+"prompt": 3414,
+"completion": 24,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 5.0,
+"prompt": 3458,
+"completion": 32,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 5.6,
+"prompt": 3800,
+"completion": 144,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 5.7,
+"prompt": 4124,
+"completion": 23,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 5.9,
+"prompt": 4266,
+"completion": 23,
+"thinking": 0,
+"stop": "toolUse"
+}
+],
+"tools_detail": [
+{
+"t": 1.1,
+"name": "read",
+"args_hash": "19b4e2f4c9a2ed43",
+"error": null
+},
+{
+"t": 1.8,
+"name": "bash",
+"args_hash": "df73ee174a48806f",
+"error": null
+},
+{
+"t": 3.5,
+"name": "write",
+"args_hash": "c1a95aaa80c0d05f",
+"error": null
+},
+{
+"t": 3.9,
+"name": "read",
+"args_hash": "19b4e2f4c9a2ed43",
+"error": null
+},
+{
+"t": 4.6,
+"name": "bash",
+"args_hash": "b55ac4d187b75d63",
+"error": null
+},
+{
+"t": 4.7,
+"name": "read",
+"args_hash": "3bc969dc8f2d9f8c",
+"error": null
+},
+{
+"t": 4.8,
+"name": "read",
+"args_hash": "256657d7c9b9cb3e",
+"error": null
+},
+{
+"t": 5.0,
+"name": "bash",
+"args_hash": "fda175cab7130260",
+"error": null
+},
+{
+"t": 5.6,
+"name": "bash",
+"args_hash": "d3fa4260578d2e1d",
+"error": null
+},
+{
+"t": 5.7,
+"name": "read",
+"args_hash": "7363d3284910b48f",
+"error": null
+},
+{
+"t": 5.9,
+"name": "read",
+"args_hash": "04949d2f810722c2",
+"error": null
+}
+]
+}

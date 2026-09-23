@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..c6f5657
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "conflicting-retention-rules", "evidence": "README.md rules A+B: Rule A requires deletion at age >= 7 and Rule B requires retention at age <= 30, so ages 7-30 require both deletion and retention; README.md further states both rules apply with 'no exception or priority rule' and that the implementation 'must satisfy both rules for every age'."}

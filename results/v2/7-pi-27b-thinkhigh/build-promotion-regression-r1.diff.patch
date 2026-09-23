@@ -1,0 +1,38 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..1760cbd
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,32 @@
++import sys
++import unittest
++from pathlib import Path
++
++# Ensure the project root is importable regardless of how the test is launched.
++sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
++
++from shop.checkout import checkout
++
++
++class CheckoutPromotionAppliedOnceTest(unittest.TestCase):
++    def test_single_line_basket_with_quantity_above_one(self):
++        # 10.00 * 2 = 20.00 subtotal. A '0.10' promo applied exactly once
++        # yields 20.00 * (1 - 0.10) = 18.00.
++        # The double-discount bug computes 20.00 * 0.90 * 0.90 = 16.20.
++        lines = [{'price': '10.00', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_multiple_line_basket_with_all_quantities_one(self):
++        # distinct scenario: several lines, every quantity equal to one.
++        # 10.00 + 15.00 = 25.00 subtotal. A '0.10' promo applied exactly once
++        # yields 25.00 * (1 - 0.10) = 22.50.
++        # The double-discount bug computes 25.00 * 0.90 * 0.90 = 20.25.
++        lines = [
++            {'price': '10.00', 'qty': 1},
++            {'price': '15.00', 'qty': 1},
++        ]
++        self.assertEqual(checkout(lines, '0.10'), '22.50')
++
++
++if __name__ == '__main__':
++    unittest.main()

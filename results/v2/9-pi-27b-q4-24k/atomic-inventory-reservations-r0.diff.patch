@@ -1,0 +1,66 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..1294e1a
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/inventory.cpython-312.pyc i/shop/__pycache__/inventory.cpython-312.pyc
+new file mode 100644
+index 0000000..acde18d
+Binary files /dev/null and i/shop/__pycache__/inventory.cpython-312.pyc differ
+diff --git c/shop/__pycache__/report.cpython-312.pyc i/shop/__pycache__/report.cpython-312.pyc
+new file mode 100644
+index 0000000..2556507
+Binary files /dev/null and i/shop/__pycache__/report.cpython-312.pyc differ
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..08dc2c1 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -1,21 +1,39 @@
++import threading
++
++
+ class Inventory:
+     def __init__(self, stock):
+         self.available = dict(stock)
+         self.reservations = {}
++        self._locks = {}  # sku -> reentrant lock
+         self._next_id = 1
+ 
++    def _lock_for(self, sku):
++        # Per-SKU reentrant lock: on_attempt may synchronously submit another
++        # reservation (possibly for the same SKU) which must not deadlock,
++        # while still making the check-and-reserve transition atomic so that
++        # competing requests can never oversell the stock invariant.
++        return self._locks.setdefault(sku, threading.RLock())
++
+     def reserve(self, sku, quantity, on_attempt=None):
+         if sku not in self.available:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
+-        remaining = self.available[sku]
+-        if on_attempt is not None:
+-            on_attempt()
+-        if remaining < quantity:
+-            return None
+-        reservation_id = self._next_id
+-        self._next_id += 1
+-        self.available[sku] = remaining - quantity
+-        self.reservations[reservation_id] = (sku, quantity)
+-        return reservation_id
++
++        with self._lock_for(sku):
++            # on_attempt runs before this request's state transition. Nested
++            # reservations submitted from it take the same lock (reentrant)
++            # and are checked against the current stock.
++            if on_attempt is not None:
++                on_attempt()
++            # Decide using the stock *after* any nested reservations have
++            # been applied, then apply the decrement atomically.
++            remaining = self.available[sku]
++            if remaining < quantity:
++                return None
++            reservation_id = self._next_id
++            self._next_id += 1
++            self.available[sku] = remaining - quantity
++            self.reservations[reservation_id] = (sku, quantity)
++            return reservation_id

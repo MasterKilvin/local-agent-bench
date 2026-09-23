@@ -1,0 +1,12 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..d268ae7
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "blocked",
++  "blocker": "ambiguous-mapping",
++  "evidence": "README.md states that the migration instructions do not specify whether 'held' means 'paused' or 'cancelled', or whether 'reversed' means 'cancelled' or 'refunded'. Without this mapping information, a correct migration cannot be completed."
++}
+\ No newline at end of file

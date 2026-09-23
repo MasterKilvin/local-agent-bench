@@ -1,0 +1,14 @@
+--- a/selection/globs.py
++++ b/selection/globs.py
+@@ -21,9 +21,9 @@
+             raise TypeError(f'expression {expression!r} must be text or bytes.')
+         original_expression = expression
+         if expression.endswith('\\ '):
+-            expression = expression.lstrip()
++            pass
+         else:
+-            expression = expression.strip()
++            expression = expression.rstrip()
+         if expression.startswith('#'):
+             compiled = None
+             decision = None

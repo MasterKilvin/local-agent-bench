@@ -1,0 +1,66 @@
+diff --git c/main.py i/main.py
+index 4811001..1c7c98b 100644
+--- c/main.py
++++ i/main.py
+@@ -4,4 +4,5 @@ from stock.importer import import_text
+ from stock.store import Store
+ 
+ if __name__ == '__main__':
+-    print(json.dumps(import_text(sys.stdin.read(), Store())))
++    dry_run = '--dry-run' in sys.argv[1:]
++    print(json.dumps(import_text(sys.stdin.read(), Store(), dry_run=dry_run)))
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..a5a6ad2 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,44 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_DIGITS = set('0123456789')
++
++
++def _clean(row, key):
++    value = row.get(key)
++    if value is None:
++        raise ValueError('missing field %r' % key)
++    value = value.strip()
++    if not value:
++        raise ValueError('field %r must not be empty' % key)
++    return value
++
++
++def _parse(text):
++    items = []
++    for row in csv.DictReader(io.StringIO(text)):
++        sku = _clean(row, 'sku')
++        name = _clean(row, 'name')
++        qty_text = _clean(row, 'qty')
++        if not all(ch in _DIGITS for ch in qty_text):
++            raise ValueError('invalid quantity %r' % qty_text)
++        items.append({'sku': sku, 'name': name, 'qty': int(qty_text)})
++    return items
++
++
++def import_text(text, store, dry_run=False):
++    items = _parse(text)
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
+-        before = store.get(item['sku'])
++    state = dict(store.items)
++    for item in items:
++        raw = state.get(item['sku'])
++        before = None if raw is None else raw.copy()
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        state[item['sku']] = item.copy()
++        if not dry_run:
++            store.put(item)
+     return result

@@ -1,0 +1,85 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..5929e97
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,79 @@
++"""Regression tests for the retry wrapper's public API (see README.md).
++
++PermanentError must propagate immediately on any attempt, including after
++a transient failure. TransientError is retried up to `attempts` total
++calls. No other exception type is retried.
++"""
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++class Calls:
++    def __init__(self, outcomes):
++        self.outcomes = list(outcomes)
++        self.calls = 0
++
++    def __call__(self):
++        self.calls += 1
++        outcome = self.outcomes.pop(0)
++        if isinstance(outcome, type) and issubclass(outcome, Exception):
++            raise outcome('failure %d' % self.calls)
++        return outcome
++
++
++class TransientSuccessTests(unittest.TestCase):
++    def test_success_after_transient_failure(self):
++        op = Calls([TransientError, 'ok'])
++        self.assertEqual(run(op, attempts=3), 'ok')
++        self.assertEqual(op.calls, 2)
++
++    def test_immediate_success_needs_no_retry(self):
++        op = Calls(['ok'])
++        self.assertEqual(run(op, attempts=3), 'ok')
++        self.assertEqual(op.calls, 1)
++
++    def test_transient_errors_retried_until_attempts_exhausted(self):
++        op = Calls([TransientError] * 3)
++        with self.assertRaises(TransientError):
++            run(op, attempts=3)
++        self.assertEqual(op.calls, 3)
++
++    def test_transient_exhaustion_honours_attempts(self):
++        op = Calls([TransientError] * 10)
++        with self.assertRaises(TransientError):
++            run(op, attempts=2)
++        self.assertEqual(op.calls, 2)
++
++
++class PermanentTests(unittest.TestCase):
++    def test_permanent_error_stops_on_first_attempt(self):
++        op = Calls([PermanentError] * 10)
++        with self.assertRaises(PermanentError):
++            run(op, attempts=3)
++        self.assertEqual(op.calls, 1)
++
++    def test_permanent_error_after_transient_stops_immediately(self):
++        op = Calls([TransientError, PermanentError, 'ok'])
++        with self.assertRaises(PermanentError):
++            run(op, attempts=3)
++        self.assertEqual(op.calls, 2)
++
++    def test_permanent_error_is_the_error_raised(self):
++        op = Calls([TransientError, PermanentError] + [PermanentError] * 10)
++        with self.assertRaises(PermanentError) as ctx:
++            run(op, attempts=5)
++        self.assertEqual(op.calls, 2)
++        self.assertIsInstance(ctx.exception, PermanentError)
++
++
++class OtherErrorTests(unittest.TestCase):
++    def test_unrelated_error_is_not_retried(self):
++        op = Calls([ValueError] * 10)
++        with self.assertRaises(ValueError):
++            run(op, attempts=3)
++        self.assertEqual(op.calls, 1)
++
++
++if __name__ == '__main__':
++    unittest.main()

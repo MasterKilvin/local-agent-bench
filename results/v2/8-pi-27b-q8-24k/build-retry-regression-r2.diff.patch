@@ -1,0 +1,101 @@
+diff --git c/retry/__pycache__/__init__.cpython-312.pyc i/retry/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..1a4b8a0
+Binary files /dev/null and i/retry/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/retry/__pycache__/wrapper.cpython-312.pyc i/retry/__pycache__/wrapper.cpython-312.pyc
+new file mode 100644
+index 0000000..0fbb172
+Binary files /dev/null and i/retry/__pycache__/wrapper.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..f99f699
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..ee78332
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..03fd6b8
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,79 @@
++"""Regression tests for the retry wrapper contract documented in README.md.
++
++Verifies that permanent errors propagate immediately (the operation is not
++called again), while transient errors are retried up to `attempts` total
++calls.
++"""
++
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++class RetryRegressionTests(unittest.TestCase):
++    def test_permanent_error_stops_immediately_on_first_attempt(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            raise PermanentError('boom')
++
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=5)
++
++        self.assertEqual(len(calls), 1, 'operation must not be retried after a permanent error')
++
++    def test_permanent_error_stops_immediately_after_transient_failures(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            if len(calls) == 3:
++                raise PermanentError('boom')
++            raise TransientError('temporary')
++
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=5)
++
++        self.assertEqual(len(calls), 3, 'operation must stop immediately once a permanent error occurs')
++
++    def test_transient_errors_are_retried_until_success(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            if len(calls) < 3:
++                raise TransientError('temporary')
++            return 'ok'
++
++        self.assertEqual(run(operation, attempts=5), 'ok')
++        self.assertEqual(len(calls), 3)
++
++    def test_transient_errors_raise_last_error_after_all_attempts(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            raise TransientError('temporary %d' % len(calls))
++
++        with self.assertRaises(TransientError) as ctx:
++            run(operation, attempts=3)
++
++        self.assertEqual(len(calls), 3)
++        self.assertEqual(str(ctx.exception), 'temporary 3')
++
++    def test_default_attempts_is_three(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            raise TransientError('temporary')
++
++        with self.assertRaises(TransientError):
++            run(operation)
++
++        self.assertEqual(len(calls), 3)
++
++
++if __name__ == '__main__':
++    unittest.main()

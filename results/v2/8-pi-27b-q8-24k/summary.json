@@ -1,0 +1,18 @@
+{
+ "agent": "pi",
+ "model": "qwen3.8:27b-q8-24k",
+ "passed": 48,
+ "n": 60,
+ "pass_rate": 0.8,
+ "by_kind": {
+  "patch": "0/0",
+  "repro": "0/0",
+  "unittest": "42/48",
+  "blocked": "6/12"
+ },
+ "median_seconds": 44.1,
+ "median_steps": 6,
+ "timeouts": 0,
+ "edited_tests": [],
+ "finished": "2026-09-23 02:20:33"
+}

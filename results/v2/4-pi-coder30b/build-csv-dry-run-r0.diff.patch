@@ -1,0 +1,144 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..5dc321b
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "success", "blocker": null, "evidence": "Successfully implemented dry-run option for the stock CSV importer without internet access"}
+\ No newline at end of file
+diff --git c/main.py i/main.py
+index 4811001..9a0837b 100644
+--- c/main.py
++++ i/main.py
+@@ -4,4 +4,5 @@ from stock.importer import import_text
+ from stock.store import Store
+ 
+ if __name__ == '__main__':
+-    print(json.dumps(import_text(sys.stdin.read(), Store())))
++    dry_run = '--dry-run' in sys.argv
++    print(json.dumps(import_text(sys.stdin.read(), Store(), dry_run=dry_run)))
+\ No newline at end of file
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..edcfeeb
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..8d310ed
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..18ab0da
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..194590c 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,7 +1,7 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++def import_text(text, store, dry_run=False):
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+     rows = csv.DictReader(io.StringIO(text))
+     for row in rows:
+@@ -12,5 +12,6 @@ def import_text(text, store):
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
+-    return result
++        if not dry_run:
++            store.put(item)
++    return result
+\ No newline at end of file
+diff --git c/test_dry_run.py i/test_dry_run.py
+new file mode 100644
+index 0000000..a24807d
+--- /dev/null
++++ i/test_dry_run.py
+@@ -0,0 +1,82 @@
++import json
++from stock.importer import import_text
++from stock.store import Store
++
++# Test data
++test_csv = """sku,name,qty
++A001,Product A,10
++A002,Product B,5
++A003,Product C,15"""
++
++def test_normal_import():
++    store = Store()
++    result = import_text(test_csv, store)
++    
++    # Check that normal import works
++    assert result['created'] == 3
++    assert result['updated'] == 0
++    assert result['unchanged'] == 0
++    assert len(result['changes']) == 3
++    
++    print("Normal import test passed")
++
++def test_dry_run():
++    store = Store()
++    
++    # Get what would happen with dry run
++    dry_run_result = import_text(test_csv, store, dry_run=True)
++    
++    # Check that dry run result is correct
++    assert dry_run_result['created'] == 3
++    assert dry_run_result['updated'] == 0
++    assert dry_run_result['unchanged'] == 0
++    assert len(dry_run_result['changes']) == 3
++    
++    # Check that store is unchanged after dry run
++    assert len(store.items) == 0
++    
++    # Check that actual import still works after dry run
++    actual_result = import_text(test_csv, store)
++    assert len(store.items) == 3
++    assert actual_result['created'] == 3
++    assert actual_result['updated'] == 0
++    assert actual_result['unchanged'] == 0
++    
++    print("Dry run test passed")
++
++def test_mixed_scenario():
++    # Start with a store that has some items
++    store = Store({'A001': {'sku': 'A001', 'name': 'Product A', 'qty': 10}})
++    
++    # Import new data
++    csv_data = """sku,name,qty
++A001,Product A,15
++A002,Product B,5"""
++
++    # Dry run
++    dry_result = import_text(csv_data, store, dry_run=True)
++    
++    # Verify results 
++    assert dry_result['created'] == 1  # A002 is new
++    assert dry_result['updated'] == 1  # A001 changed quantity
++    assert dry_result['unchanged'] == 0
++    
++    # Store should be unchanged after dry run
++    assert store.get('A001')['qty'] == 10
++    
++    # Now do real import
++    real_result = import_text(csv_data, store)
++    
++    # Verify actual changes
++    assert real_result['created'] == 1
++    assert real_result['updated'] == 1
++    assert real_result['unchanged'] == 0
++    assert len(store.items) == 2  # A001 and A002
++    
++    print("Mixed scenario test passed")
++
++if __name__ == '__main__':
++    test_normal_import()
++    test_dry_run() 
++    test_mixed_scenario()
++    print("All tests passed!")
+\ No newline at end of file

@@ -1,0 +1,77 @@
+diff --git c/main.py i/main.py
+index 4811001..b5822d7 100644
+--- c/main.py
++++ i/main.py
+@@ -4,4 +4,8 @@ from stock.importer import import_text
+ from stock.store import Store
+ 
+ if __name__ == '__main__':
+-    print(json.dumps(import_text(sys.stdin.read(), Store())))
++    args = [a for a in sys.argv[1:] if a != '--dry-run']
++    if args:
++        sys.exit('usage: main.py [--dry-run] < stock.csv')
++    dry_run = '--dry-run' in sys.argv[1:]
++    print(json.dumps(import_text(sys.stdin.read(), Store(), dry_run=dry_run)))
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..72a3f9c
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..0dcf3c9
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..5051c81
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..5b3684b 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,39 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_DECIMAL_DIGITS = set('0123456789')
++
++
++def _clean(field):
++    return field.strip() if isinstance(field, str) else ''
++
++
++def import_text(text, store, dry_run=False):
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
+-        before = store.get(item['sku'])
++    pending = []
++
++    for row in csv.DictReader(io.StringIO(text)):
++        sku = _clean(row['sku'])
++        name = _clean(row['name'])
++        qty = _clean(row['qty'])
++        if not sku:
++            raise ValueError('empty sku')
++        if not name:
++            raise ValueError('empty name')
++        if not qty or not all(c in _DECIMAL_DIGITS for c in qty):
++            raise ValueError('invalid quantity')
++        item = {'sku': sku, 'name': name, 'qty': int(qty)}
++
++        before = store.get(sku)
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+-        result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        pending.append({'sku': sku, 'before': before, 'after': item})
++
++    if pending:
++        result['changes'] = pending
++        if not dry_run:
++            for change in pending:
++                store.put(change['after'])
+     return result

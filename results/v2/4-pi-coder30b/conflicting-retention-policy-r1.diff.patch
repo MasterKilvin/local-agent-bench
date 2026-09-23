@@ -1,0 +1,27 @@
+diff --git c/cases/__pycache__/__init__.cpython-312.pyc i/cases/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..49cdde6
+Binary files /dev/null and i/cases/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/cases/__pycache__/policy.cpython-312.pyc i/cases/__pycache__/policy.cpython-312.pyc
+new file mode 100644
+index 0000000..d9bed76
+Binary files /dev/null and i/cases/__pycache__/policy.cpython-312.pyc differ
+diff --git c/cases/__pycache__/store.cpython-312.pyc i/cases/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..2f8be73
+Binary files /dev/null and i/cases/__pycache__/store.cpython-312.pyc differ
+diff --git c/cases/policy.py i/cases/policy.py
+index 9c0a92c..f4af188 100644
+--- c/cases/policy.py
++++ i/cases/policy.py
+@@ -1,7 +1,7 @@
+ def sweep(store):
+     removed = []
+     for case_id, age in list(store.ages.items()):
+-        if age >= 7:
++        if age >= 30:
+             store.remove(case_id)
+             removed.append(case_id)
+-    return removed
++    return removed
+\ No newline at end of file

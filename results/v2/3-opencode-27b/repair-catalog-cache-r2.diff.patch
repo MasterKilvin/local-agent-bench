@@ -1,0 +1,33 @@
+diff --git c/catalog/__pycache__/__init__.cpython-312.pyc i/catalog/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..ec1a9cc
+Binary files /dev/null and i/catalog/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/catalog/__pycache__/cache.cpython-312.pyc i/catalog/__pycache__/cache.cpython-312.pyc
+new file mode 100644
+index 0000000..48c73d9
+Binary files /dev/null and i/catalog/__pycache__/cache.cpython-312.pyc differ
+diff --git c/catalog/__pycache__/store.cpython-312.pyc i/catalog/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..8f38bdc
+Binary files /dev/null and i/catalog/__pycache__/store.cpython-312.pyc differ
+diff --git c/catalog/cache.py i/catalog/cache.py
+index 65938de..2136123 100644
+--- c/catalog/cache.py
++++ i/catalog/cache.py
+@@ -3,7 +3,13 @@ class CatalogCache:
+         self.catalog = catalog
+         self.entries = {}
+ 
++    def _current_version(self, id):
++        return self.catalog.versions.get(id, 0)
++
+     def get(self, id):
+-        if id not in self.entries:
+-            self.entries[id] = self.catalog.read(id)
+-        return self.entries[id]
++        entry = self.entries.get(id)
++        if entry is None or entry['version'] != self._current_version(id):
++            entry = {'version': self._current_version(id),
++                     'value': self.catalog.read(id)}
++            self.entries[id] = entry
++        return entry['value'].copy() if entry['value'] is not None else None

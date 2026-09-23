@@ -1,0 +1,171 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..bd6d2e0
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..62c3e04
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..7459764
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..d51bb4c 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,67 @@
+-def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++"""Single-range parsing for the download service.
++
++The Range header must exactly match one of:
++
++    bytes=D-D   (both endpoints present; end is inclusive)
++    bytes=D-    (end omitted; range runs to EOF)
++    bytes=-D    (suffix; last D bytes)
++
++where each D is one or more ASCII digits 0 through 9. Leading zeros are
++allowed. Any deviation from this grammar is bad syntax, including
++whitespace (even trailing newlines), signs, underscores, Unicode digits,
++both endpoints omitted ("bytes=-"), multiple ranges, and extra separators.
++Python-style numeric spellings such as "0x10", "1_000", "+5", and "5.0"
++are all rejected as well.
++"""
++
++import re
++
++# The header must fullmatch exactly one of three forms. D is one or more
++# ASCII digits: the [0-9] character class rejects signs, underscores, and
++# Unicode digits. Leading zeros are allowed by the grammar; int() ignores
++# them. Anything else (whitespace, "bytes=-", multiple ranges, extra
++# separators, ...) fails to match and is reported as bad syntax.
++_PATTERN = re.compile(
++    r'bytes='
++    r'(?:'
++    r'(?P<b>[0-9]+)-(?P<e>[0-9]+)'   # form 1: bytes=D-D   (end inclusive)
++    r'|(?P<sp>[0-9]+)-'              # form 2: bytes=D-    (run to EOF)
++    r'|-(?P<sfx>[0-9]+)'             # form 3: bytes=-D    (last D bytes)
++    r')'
++)
++
++
++def parse_header(header):
++    """Parse a single range header against the strict grammar.
++
++    Returns one of:
++        ('both', start, end)     for bytes=D-D
++        ('prefix', start, None)  for bytes=D-
++        ('suffix', n, None)      for bytes=-D
++
++    Raises ValueError on any header that does not exactly match the
++    grammar, and on non-string / non-ASCII values.
++    """
++    if isinstance(header, (bytes, bytearray)):
++        try:
++            header = bytes(header).decode('ascii')
++        except UnicodeDecodeError as exc:
++            raise ValueError('non-ASCII range header') from exc
++    if not isinstance(header, str):
++        raise ValueError('range header must be a string')
++    match = _PATTERN.fullmatch(header)
++    if match is None:
++        raise ValueError('bad range syntax: %r' % (header,))
++    named = match.groupdict()
++    try:
++        if named['b'] is not None:
++            return ('both', int(named['b']), int(named['e']))
++        if named['sp'] is not None:
++            return ('prefix', int(named['sp']), None)
++        return ('suffix', int(named['sfx']), None)
++    except ValueError:
++        # A digits-only string only fails int() when it is absurdly long
++        # (Python's integer literal digit limit on some builds). Such a
++        # range could well still be unsatisfiable, so propagate it as an
++        # error that the service maps to 416.
++        raise ValueError('range is out of bounds') from None
+diff --git c/download/service.py i/download/service.py
+index 72a053d..3854b0c 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,71 @@
+-from .ranges import bounds
++"""Byte-range download service (single range only).
++
++Implements the behavior described in README.md:
++
++- No Range header:        200, full body, Content-Length = length.
++- One valid, satisfiable range:
++                         206, Content-Range: bytes <start>-<end>/<length>,
++                         Content-Length = length of the returned body.
++  Ranges are inclusive of the end; an end past EOF is clamped;
++  bytes=-N means the last N bytes.
++- Range with start beyond EOF, zero suffix, reverse bounds, bad syntax,
++  or any range on empty data:
++                         416, empty body, Content-Range: bytes */<length>.
++"""
++
++from .ranges import parse_header
++
+ 
+ def serve(data, range_header=None):
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++
++    length = len(data)
++    try:
++        kind, a, b = parse_header(range_header)
++    except (TypeError, ValueError):
++        return _not_satisfiable(length)
++
++    if kind == 'both':      # bytes=D-D (end inclusive, clamped at EOF-1)
++        start, end = a, b
++        if start >= length:          # start beyond EOF
++            return _not_satisfiable(length)
++        if end >= length:            # clamp an end past EOF
++            end = length - 1
++        if start > end:              # reverse bounds
++            return _not_satisfiable(length)
++    elif kind == 'prefix':  # bytes=D-
++        start = a
++        if start >= length:          # start beyond EOF (incl. empty data)
++            return _not_satisfiable(length)
++        end = length - 1
++    else:                    # bytes=-D (suffix)
++        if a == 0:                  # zero suffix
++            return _not_satisfiable(length)
++        start = length - a
++        if start < 0:               # suffix longer than the data
++            start = 0
++        end = length - 1
++        if start > end:             # guarantees 416 on empty data
++            return _not_satisfiable(length)
++
++    body = data[start:end + 1]
++    return (
++        206,
++        {
++            'Content-Length': str(len(body)),
++            'Content-Range': 'bytes %d-%d/%d' % (start, end, length),
++        },
++        body,
++    )
++
++
++def _not_satisfiable(length):
++    return (
++        416,
++        {
++            'Content-Length': '0',
++            'Content-Range': 'bytes */%d' % length,
++        },
++        b'',
++    )

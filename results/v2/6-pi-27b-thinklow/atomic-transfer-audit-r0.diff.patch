@@ -1,0 +1,60 @@
+diff --git c/__pycache__/main.cpython-312.pyc i/__pycache__/main.cpython-312.pyc
+new file mode 100644
+index 0000000..d44c522
+Binary files /dev/null and i/__pycache__/main.cpython-312.pyc differ
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..34bbe84
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..95db310
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..6cbcf09
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..d65a5a2
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..946efb4 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,27 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
+-        if inject is not None:
+-            inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+-            inject('after_credit')
+-            inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
++
++        # Commit balances and the audit log together. Snapshot the prior
++        # state up front so a fault at any phase rolls everything back, leaving
++        # both balances and the audit log exactly as before. The dict is
++        # mutated in place (clear + update) to preserve object identity for
++        # any external references; the audit list is truncated back to its
++        # original length.
++        old_balances = dict(balances)
++        old_audit_len = len(self.ledger.audit)
++        try:
++            balances[source] -= amount
++            if inject is not None:
++                inject('after_debit')
++            balances[target] += amount
++            if inject is not None:
++                inject('after_credit')
++                inject('before_audit')
++            self.ledger.audit.append(event(source, target, amount))
++        except BaseException:
++            balances.clear()
++            balances.update(old_balances)
++            del self.ledger.audit[old_audit_len:]
++            raise
+         return True

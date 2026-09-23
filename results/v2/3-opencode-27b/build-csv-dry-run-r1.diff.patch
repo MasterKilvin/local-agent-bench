@@ -1,0 +1,71 @@
+diff --git c/main.py i/main.py
+index 4811001..1c7c98b 100644
+--- c/main.py
++++ i/main.py
+@@ -4,4 +4,5 @@ from stock.importer import import_text
+ from stock.store import Store
+ 
+ if __name__ == '__main__':
+-    print(json.dumps(import_text(sys.stdin.read(), Store())))
++    dry_run = '--dry-run' in sys.argv[1:]
++    print(json.dumps(import_text(sys.stdin.read(), Store(), dry_run=dry_run)))
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..278aa9c
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..77a0f0d
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..11578d3
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..9a56aef 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,38 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_DIGITS = set('0123456789')
++
++
++def _field(row, key):
++    value = row.get(key)
++    if value is None:
++        raise ValueError('missing %s field' % key)
++    return value.strip()
++
++
++def import_text(text, store, dry_run=False):
++    items = []
++    for row in csv.DictReader(io.StringIO(text)):
++        sku = _field(row, 'sku')
++        name = _field(row, 'name')
++        qty = _field(row, 'qty')
++        if not sku:
++            raise ValueError('sku must not be empty')
++        if not name:
++            raise ValueError('name must not be empty')
++        if not qty or not _DIGITS.issuperset(qty):
++            raise ValueError('qty must contain only decimal digits')
++        items.append({'sku': sku, 'name': name, 'qty': int(qty)})
++
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
++    for item in items:
+         before = store.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        if not dry_run:
++            store.put(item)
+     return result

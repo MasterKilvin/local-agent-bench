@@ -1,0 +1,153 @@
+{
+"peak_prompt_tokens": 8299,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 6.6,
+"prompt": 1699,
+"completion": 58,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 7.4,
+"prompt": 2170,
+"completion": 104,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 17.4,
+"prompt": 2781,
+"completion": 1015,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 21.2,
+"prompt": 3827,
+"completion": 599,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 22.6,
+"prompt": 4451,
+"completion": 239,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 23.2,
+"prompt": 4742,
+"completion": 58,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 35.3,
+"prompt": 5265,
+"completion": 1904,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 37.1,
+"prompt": 7191,
+"completion": 168,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 38.2,
+"prompt": 7381,
+"completion": 141,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 39.1,
+"prompt": 8193,
+"completion": 84,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 42.0,
+"prompt": 8299,
+"completion": 359,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 6.6,
+"name": "bash",
+"args_hash": "ba4426ea14dd7be0",
+"error": null
+},
+{
+"t": 7.4,
+"name": "read",
+"args_hash": "dfc188c410571047",
+"error": null
+},
+{
+"t": 7.4,
+"name": "bash",
+"args_hash": "0d0eee3a5e1801cf",
+"error": null
+},
+{
+"t": 17.4,
+"name": "bash",
+"args_hash": "e62fa7c5342651df",
+"error": null
+},
+{
+"t": 21.2,
+"name": "write",
+"args_hash": "1a914fce84e242d6",
+"error": null
+},
+{
+"t": 22.6,
+"name": "edit",
+"args_hash": "590a5b9976f79b87",
+"error": null
+},
+{
+"t": 23.2,
+"name": "read",
+"args_hash": "68c8d34719ed1fd8",
+"error": null
+},
+{
+"t": 35.3,
+"name": "write",
+"args_hash": "c473cbd662742932",
+"error": null
+},
+{
+"t": 37.1,
+"name": "bash",
+"args_hash": "27d6bc8431c4972c",
+"error": null
+},
+{
+"t": 38.2,
+"name": "bash",
+"args_hash": "a6ddd5eb8121d892",
+"error": null
+},
+{
+"t": 39.1,
+"name": "bash",
+"args_hash": "7b8b56942a5c8e11",
+"error": null
+}
+]
+}

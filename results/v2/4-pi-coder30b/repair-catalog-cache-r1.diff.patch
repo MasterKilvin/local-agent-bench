@@ -1,0 +1,32 @@
+diff --git c/catalog/__pycache__/__init__.cpython-312.pyc i/catalog/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..2b9ff9d
+Binary files /dev/null and i/catalog/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/catalog/__pycache__/cache.cpython-312.pyc i/catalog/__pycache__/cache.cpython-312.pyc
+new file mode 100644
+index 0000000..9731b05
+Binary files /dev/null and i/catalog/__pycache__/cache.cpython-312.pyc differ
+diff --git c/catalog/__pycache__/store.cpython-312.pyc i/catalog/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..3eaf93c
+Binary files /dev/null and i/catalog/__pycache__/store.cpython-312.pyc differ
+diff --git c/catalog/cache.py i/catalog/cache.py
+index 65938de..e636759 100644
+--- c/catalog/cache.py
++++ i/catalog/cache.py
+@@ -2,8 +2,12 @@ class CatalogCache:
+     def __init__(self, catalog):
+         self.catalog = catalog
+         self.entries = {}
++        self.versions = {}
+ 
+     def get(self, id):
+-        if id not in self.entries:
++        # Check if we should invalidate cache for this id (catalog version changed)
++        catalog_version = self.catalog.versions.get(id, 0)
++        if id not in self.entries or self.versions.get(id, -1) != catalog_version:
+             self.entries[id] = self.catalog.read(id)
+-        return self.entries[id]
++            self.versions[id] = catalog_version
++        return self.entries[id]
+\ No newline at end of file

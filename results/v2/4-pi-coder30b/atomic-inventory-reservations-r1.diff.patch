@@ -1,0 +1,46 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..b819d6d
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/inventory.cpython-312.pyc i/shop/__pycache__/inventory.cpython-312.pyc
+new file mode 100644
+index 0000000..75a2cd3
+Binary files /dev/null and i/shop/__pycache__/inventory.cpython-312.pyc differ
+diff --git c/shop/__pycache__/report.cpython-312.pyc i/shop/__pycache__/report.cpython-312.pyc
+new file mode 100644
+index 0000000..051874d
+Binary files /dev/null and i/shop/__pycache__/report.cpython-312.pyc differ
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..24eac80 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -9,13 +9,25 @@ class Inventory:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
++        
++        # Check stock availability before calling on_attempt to prevent race conditions
+         remaining = self.available[sku]
+-        if on_attempt is not None:
+-            on_attempt()
+         if remaining < quantity:
+             return None
++            
++        # Now call the on_attempt callback (this should happen after the check)
++        if on_attempt is not None:
++            on_attempt()
++            
++        # Only proceed with reservation if we're still in a valid state.
++        # If someone else reserved items between our check and this point, 
++        # we'll catch it by rechecking availability
++        remaining = self.available[sku]
++        if remaining < quantity:
++            return None
++            
+         reservation_id = self._next_id
+         self._next_id += 1
+         self.available[sku] = remaining - quantity
+         self.reservations[reservation_id] = (sku, quantity)
+-        return reservation_id
++        return reservation_id
+\ No newline at end of file

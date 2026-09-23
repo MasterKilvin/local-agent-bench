@@ -1,0 +1,81 @@
+{
+ "agent": "opencode",
+ "agent_version": "1.18.32",
+ "model": "qwen3.8:27b-64k",
+ "model_info": {
+  "num_ctx": 65536,
+  "manifest_sha256": "67a1c5bfe600",
+  "modified_at": "2026-09-21T22:34:45.77700174-04:00",
+  "details": {
+   "parent_model": "qwen3.8:27b",
+   "format": "gguf",
+   "family": "qwen35",
+   "families": [
+    "qwen35"
+   ],
+   "parameter_size": "27.3B",
+   "quantization_level": "Q4_K_M"
+  },
+  "capabilities": [
+   "completion",
+   "vision",
+   "tools",
+   "thinking"
+  ]
+ },
+ "endpoint": "http://127.0.0.1:11435/v1",
+ "ctx": 65536,
+ "max_output": 8192,
+ "steps": 30,
+ "timeout": 900,
+ "repeats": 3,
+ "thinking": "medium",
+ "protocol": "v2",
+ "image": "localhost/bench-agentroom-deps:1",
+ "image_id": "1203913142c72c18fc3",
+ "workroom_sha": "ea01f440cb10",
+ "tasks_sha": "7c8fddf11146",
+ "run_py_sha": "5563a27b3811",
+ "n_tasks": 20,
+ "started": "2026-09-23 00:34:26",
+ "agent_config": {
+  "$schema": "https://opencode.ai/config.json",
+  "autoupdate": false,
+  "share": "disabled",
+  "provider": {
+   "ollama": {
+    "npm": "@ai-sdk/openai-compatible",
+    "name": "Ollama (local)",
+    "options": {
+     "baseURL": "http://127.0.0.1:11435/v1",
+     "apiKey": "ollama"
+    },
+    "models": {
+     "qwen3.8:27b-64k": {
+      "name": "qwen3.8:27b-64k",
+      "tool_call": true,
+      "limit": {
+       "context": 65536,
+       "output": 8192
+      }
+     }
+    }
+   }
+  },
+  "model": "ollama/qwen3.8:27b-64k",
+  "small_model": "ollama/qwen3.8:27b-64k",
+  "agent": {
+   "build": {
+    "steps": 30
+   }
+  },
+  "permission": {
+   "edit": "allow",
+   "bash": "allow",
+   "webfetch": "deny",
+   "websearch": "deny",
+   "external_directory": "deny",
+   "doom_loop": "deny"
+  }
+ }
+}

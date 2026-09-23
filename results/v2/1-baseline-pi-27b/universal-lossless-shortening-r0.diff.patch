@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..39da686
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossibility", "evidence": "README.md requires encode of every nonempty input (\"including all 256 one-byte strings\") to be strictly shorter with decode restoring the exact original, and forbids any external table, shared state, or side channel; but for every n there are 2^n distinct length-n inputs and only 2^n-1 shorter byte strings, so two distinct inputs must share one encoding and cannot both round-trip — the spec contradicts itself (archive/codec.py is the only interface and has no mechanism to escape this)."}

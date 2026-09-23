@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..264eaef
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-principle-impossible", "evidence": "README.md requires len(encode(x)) < len(x) for EVERY nonempty byte x and exact round-trip (decode(encode(x)) == x), forcing encode to be injective; but the 2^n inputs of length n would have to map injectively into only 2^n - 1 byte strings of length < n, which is impossible. README.md explicitly forbids the usual escapes (no external table, no shared state, no side channel, no length field, headers count toward length)."}

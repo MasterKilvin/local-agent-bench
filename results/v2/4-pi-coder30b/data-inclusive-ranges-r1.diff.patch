@@ -1,0 +1,110 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..a421fd4
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..18f3d3b
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..6eecd56
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..a659448 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,66 @@
++import re
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++    """Parse range header according to specification.
++    
++    Returns (start, end) tuple where:
++    - start is the first byte (inclusive)  
++    - end is the last byte (inclusive) for response headers
++    - Python slicing uses exclusive end so we convert appropriately
++    
++    Raises ValueError for invalid ranges that should return 416 status.
++    """
++    
++    # Validate header starts with 'bytes='
++    if not header.startswith('bytes='):
++        raise ValueError('Invalid range header')
++    
++    spec = header[6:]  # Remove 'bytes=' prefix
++    
++    # Check proper format: D-D, D-, or -D where D is ASCII digits only
++    # Note: We do this via regex with exact matching to enforce no leading spaces, etc.
++    if not re.fullmatch(r'\d*-\d*', spec):
++        raise ValueError('Invalid range syntax')
++        
++    # Parse the parts
++    parts = spec.split('-', 1)
++    first, last = parts[0], parts[1]
++    
++    # Validate no leading zeros (except for single zero)
++    if first and len(first) > 1 and first[0] == '0':
++        raise ValueError('Leading zeros not allowed')
++    if last and len(last) > 1 and last[0] == '0':
++        raise ValueError('Leading zeros not allowed')
++    
++    # Handle the three main cases:
++    # Case 1: bytes=D-D (both start and end specified)
++    # Case 2: bytes=D-   (start to end of file)
++    # Case 3: bytes=-D   (last D bytes) 
++    
++    if first and last:  
++        # bytes=D-D case
++        start = int(first)
++        end = int(last)
++        
++        # Check if we have reverse bounds or invalid range 
++        if start >= length:
++            raise ValueError('Start out of bounds')
++        if end < start:
++            raise ValueError('Reverse bounds not allowed') 
++        if end >= length:
++            end = length - 1  # Clamp to end
++            
++    elif first and not last:
++        # bytes=D- case  
++        start = int(first)
++        end = length - 1  # End of file
++        
++        if start >= length:
++            raise ValueError('Start out of bounds')
++        
++    else:
++        # bytes=-D case (suffix range)
++        start = max(0, length - int(last))  # From this position to end
++        end = length - 1
++        
++    return start, end
+\ No newline at end of file
+diff --git c/download/service.py i/download/service.py
+index 72a053d..c81d212 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -3,7 +3,11 @@ from .ranges import bounds
+ def serve(data, range_header=None):
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++    try:
++        start, end = bounds(range_header, len(data))
++        body = data[start:end+1]  # +1 because range in headers is inclusive and Python slicing is exclusive
++        return 206, {'Content-Length': str(len(body)),
++                     'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++    except ValueError:
++        # Return 416 for invalid ranges
++        return 416, {'Content-Range': f'bytes */{len(data)}'}, b''
+\ No newline at end of file

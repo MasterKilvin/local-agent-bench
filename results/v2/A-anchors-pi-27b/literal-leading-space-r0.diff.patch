@@ -1,0 +1,32 @@
+diff --git c/__pycache__/main.cpython-312.pyc i/__pycache__/main.cpython-312.pyc
+new file mode 100644
+index 0000000..1ca11d1
+Binary files /dev/null and i/__pycache__/main.cpython-312.pyc differ
+diff --git c/selection/__pycache__/__init__.cpython-312.pyc i/selection/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..4bf74b0
+Binary files /dev/null and i/selection/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/selection/__pycache__/globs.cpython-312.pyc i/selection/__pycache__/globs.cpython-312.pyc
+new file mode 100644
+index 0000000..6247b50
+Binary files /dev/null and i/selection/__pycache__/globs.cpython-312.pyc differ
+diff --git c/selection/__pycache__/rules.cpython-312.pyc i/selection/__pycache__/rules.cpython-312.pyc
+new file mode 100644
+index 0000000..06287be
+Binary files /dev/null and i/selection/__pycache__/rules.cpython-312.pyc differ
+diff --git c/selection/globs.py i/selection/globs.py
+index b408ddb..5393bd5 100644
+--- c/selection/globs.py
++++ i/selection/globs.py
+@@ -21,9 +21,9 @@ class PathRule(TextRule):
+             raise TypeError(f'expression {expression!r} must be text or bytes.')
+         original_expression = expression
+         if expression.endswith('\\ '):
+-            expression = expression.lstrip()
++            expression = expression[:-1].rstrip(' ') + ' '
+         else:
+-            expression = expression.strip()
++            expression = expression.rstrip()
+         if expression.startswith('#'):
+             compiled = None
+             decision = None

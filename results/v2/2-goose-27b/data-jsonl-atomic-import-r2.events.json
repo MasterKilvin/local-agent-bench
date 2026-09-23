@@ -1,0 +1,93 @@
+{
+"peak_prompt_tokens": null,
+"thinking_tokens": null,
+"tool_errors": null,
+"repeated_calls": null,
+"steps_detail": [],
+"tools_detail": [
+{
+"t": 3.0,
+"name": "tree",
+"args_hash": null,
+"error": null
+},
+{
+"t": 3.0,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 3.4,
+"name": "read_image",
+"args_hash": null,
+"error": null
+},
+{
+"t": 4.1,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 20.0,
+"name": "write",
+"args_hash": null,
+"error": null
+},
+{
+"t": 28.9,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 32.4,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 34.4,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 40.1,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 46.6,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 53.5,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 56.2,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 63.1,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 64.3,
+"name": "shell",
+"args_hash": null,
+"error": null
+}
+]
+}

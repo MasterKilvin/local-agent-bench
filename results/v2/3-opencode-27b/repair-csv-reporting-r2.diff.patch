@@ -1,0 +1,64 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..4e7f480
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..4006971
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/parser.cpython-312.pyc i/stock/__pycache__/parser.cpython-312.pyc
+new file mode 100644
+index 0000000..526e40f
+Binary files /dev/null and i/stock/__pycache__/parser.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..15b8510
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index 76fcd00..e77c4fb 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,18 +1,24 @@
++import re
++
+ from .parser import rows
+ 
++_QTY = re.compile('[0-9]+')
++
+ def import_text(text, store):
+     report = {'seen': 0, 'imported': 0, 'rejected': 0, 'quantity': 0}
+     for parts in rows(text):
+         report['seen'] += 1
+-        if len(parts) != 3 or not parts[0] or not parts[1]:
++        if len(parts) != 3:
+             report['rejected'] += 1
+             continue
+-        try:
+-            qty = int(parts[2])
+-        except ValueError:
++        sku = parts[0].strip()
++        name = parts[1].strip()
++        qty_text = parts[2].strip()
++        if not sku or not name or not _QTY.fullmatch(qty_text):
+             report['rejected'] += 1
+             continue
+-        store.put(parts[0], parts[1], qty)
++        qty = int(qty_text, 10)
++        store.put(sku, name, qty)
+         report['imported'] += 1
+         report['quantity'] += qty
+     return report
+diff --git c/stock/parser.py i/stock/parser.py
+index 005ca5d..551d262 100644
+--- c/stock/parser.py
++++ i/stock/parser.py
+@@ -1,3 +1,7 @@
++import csv
++import io
++
+ def rows(text):
+-    for line in text.splitlines()[1:]:
+-        yield line.split(',')
++    records = list(csv.reader(io.StringIO(text)))
++    for record in records[1:]:
++        yield record

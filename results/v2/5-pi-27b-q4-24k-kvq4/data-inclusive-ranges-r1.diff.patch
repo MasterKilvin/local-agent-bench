@@ -1,0 +1,72 @@
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..16ad301 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,41 @@
++import re
++
++
++class BadRange(ValueError):
++    """Raised when a header does not describe a valid single range."""
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
++    """Return the inclusive (start, end) byte positions for a single range.
++
++    Raises BadRange for any invalid header: bad syntax, start beyond EOF,
++    zero suffix, or reverse bounds.
++    """
++    if not isinstance(header, str):
++        raise BadRange(header)
++    m = re.fullmatch(r'bytes=([0-9]+)-([0-9]+)|bytes=([0-9]+)-|bytes=-([0-9]+)',
++                     header)
++    if m is None:
++        raise BadRange(header)
++    if m.group(1) is not None:
++        first, last = m.group(1), m.group(2)
++    elif m.group(3) is not None:
++        first, last = m.group(3), None
++    else:
++        first, last = None, m.group(4)
++
++    if first is None:
++        # Suffix range: the last N bytes. Zero suffix is invalid.
++        n = int(last)
++        if n == 0:
++            raise BadRange(header)
++        if length == 0:
++            raise BadRange(header)
++        start = length - n if n < length else 0
++        return start, length - 1
++
++    start = int(first)
++    end = length - 1 if last is None else min(int(last), length - 1)
++    if length == 0 or start >= length or start > end:
++        raise BadRange(header)
+     return start, end
+diff --git c/download/service.py i/download/service.py
+index 72a053d..cba6b4f 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,14 @@
+-from .ranges import bounds
++from .ranges import BadRange, bounds
++
+ 
+ def serve(data, range_header=None):
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
++    try:
++        start, end = bounds(range_header, len(data))
++    except BadRange:
++        return 416, {'Content-Range': f'bytes */{len(data)}',
++                     'Content-Length': '0'}, b''
++    body = data[start:end + 1]
+     return 206, {'Content-Length': str(len(body)),
+                  'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body

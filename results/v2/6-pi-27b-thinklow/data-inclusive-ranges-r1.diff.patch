@@ -1,0 +1,96 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..3181bef
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..328f39b
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..9421c38
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..ca3f056 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,49 @@
++import re
++
++# A single Range value must be exactly one of:
++#   bytes=D-D     (start and inclusive end, both present)
++#   bytes=D-      (start present, end is EOF)
++#   bytes=-D      (suffix: last D bytes)
++# where every D is one or more ASCII digits 0-9 (leading zeros allowed).
++# No whitespace, signs, underscores, unicode digits, extra separators,
++# multiple ranges, or a "bytes=" with both endpoints omitted are permitted.
++_RANGE = re.compile(r'bytes=(?:([0-9]+)-([0-9]+)|([0-9]+)-|-([0-9]+))')
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++    """Resolve a single range value against a body of `length` bytes.
++
++    Returns an inclusive ``(start, end)`` pair on success, or ``None`` when
++    the range is bad-syntax or unsatisfiable (the caller replies 416).
++    """
++    if not isinstance(header, str):
++        return None
++    matched = _RANGE.fullmatch(header)
++    if matched is None:
++        return None
++    if length == 0:
++        # Every range on empty data is unsatisfiable.
++        return None
++
++    if matched.group(1) is not None:
++        # bytes=start-end (inclusive end)
++        start = int(matched.group(1))
++        end = int(matched.group(2))
++        if start >= length or end < start:
++            return None
++        if end >= length:
++            end = length - 1
++        return start, end
++
++    if matched.group(3) is not None:
++        # bytes=start- (end is EOF)
++        start = int(matched.group(3))
++        if start >= length:
++            return None
++        return start, length - 1
++
++    # bytes=-suffix (last `suffix` bytes)
++    suffix = int(matched.group(4))
++    if suffix == 0:
++        return None
++    return max(0, length - suffix), length - 1
+diff --git c/download/service.py i/download/service.py
+index 72a053d..e82c660 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,16 @@
+ from .ranges import bounds
+ 
+ def serve(data, range_header=None):
++    length = len(data)
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
++        return 200, {'Content-Length': str(length)}, data
++
++    result = bounds(range_header, length)
++    if result is None:
++        return 416, {'Content-Length': '0',
++                     'Content-Range': f'bytes */{length}'}, b''
++
++    start, end = result
++    body = data[start:end + 1]
+     return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++                 'Content-Range': f'bytes {start}-{end}/{length}'}, body

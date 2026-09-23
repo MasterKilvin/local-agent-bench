@@ -1,0 +1,100 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..deb86c8
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..26e4453
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..f28786e
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..eeedf53 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,50 @@
++"""Single-range parsing per README.md.
++
++Grammar: the header must exactly match one of `bytes=D-D`, `bytes=D-`, or
++`bytes=-D`, where each D is one or more ASCII digits 0-9 (leading zeros
++allowed). Anything else is a syntax error.
++"""
++
++_DIGITS = frozenset('0123456789')
++
++
++class RangeError(ValueError):
++    """Raised for invalid syntax and unsatisfiable ranges."""
++
++
++def _digits(s):
++    """Validate one or more ASCII decimal digits; return the int value."""
++    if not s or any(c not in _DIGITS for c in s):
++        raise RangeError('digits required: %r' % (s,))
++    # int() on a pre-validated ASCII string is safe (no underscores,
++    # no Unicode digits, no signs).
++    return int(s)
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
++    """Return the inclusive (start, end) byte bounds for a range header."""
++    if not isinstance(header, str) or not header.startswith('bytes='):
++        raise RangeError('missing bytes= prefix: %r' % (header,))
++    parts = header[len('bytes='):].split('-')
++    if len(parts) != 2:
++        raise RangeError('bad range syntax: %r' % (header,))
++    first, last = parts
++    if first == '' and last == '':
++        raise RangeError('both endpoints omitted: %r' % (header,))
++    if length == 0:
++        raise RangeError('range on empty data: %r' % (header,))
++
++    if first == '':
++        # Suffix form: last N bytes.
++        n = _digits(last)
++        if n == 0:
++            raise RangeError('zero suffix: %r' % (header,))
++        return max(length - n, 0), length - 1
++
++    start = _digits(first)
++    if start >= length:
++        raise RangeError('start beyond EOF: %r' % (header,))
++    end = length - 1 if last == '' else min(_digits(last), length - 1)
++    if end < start:
++        raise RangeError('reverse bounds: %r' % (header,))
+     return start, end
+diff --git c/download/service.py i/download/service.py
+index 72a053d..f1618b5 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,18 @@
+-from .ranges import bounds
++from .ranges import RangeError, bounds
++
+ 
+ def serve(data, range_header=None):
++    length = len(data)
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++        return 200, {'Content-Length': str(length)}, data
++    try:
++        start, end = bounds(range_header, length)
++    except RangeError:
++        return (416,
++                {'Content-Length': '0', 'Content-Range': 'bytes */%d' % length},
++                b'')
++    body = data[start:end + 1]
++    return (206,
++            {'Content-Length': str(len(body)),
++             'Content-Range': 'bytes %d-%d/%d' % (start, end, length)},
++            body)

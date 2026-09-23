@@ -1,0 +1,126 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..4f4cee7
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..1550ff2
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/parser.cpython-312.pyc i/stock/__pycache__/parser.cpython-312.pyc
+new file mode 100644
+index 0000000..f1079c8
+Binary files /dev/null and i/stock/__pycache__/parser.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..4ecd892
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index 76fcd00..cb345c1 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,18 +1,26 @@
+ from .parser import rows
+ 
++
++def _valid_qty(value):
++    # A nonnegative base-10 integer written in plain decimal digits.
++    return bool(value) and all('0' <= c <= '9' for c in value)
++
++
+ def import_text(text, store):
+     report = {'seen': 0, 'imported': 0, 'rejected': 0, 'quantity': 0}
+     for parts in rows(text):
+         report['seen'] += 1
+-        if len(parts) != 3 or not parts[0] or not parts[1]:
++        if len(parts) != 3:
+             report['rejected'] += 1
+             continue
+-        try:
+-            qty = int(parts[2])
+-        except ValueError:
++        sku = parts[0].strip()
++        name = parts[1].strip()
++        qty = parts[2].strip()
++        if not sku or not name or not _valid_qty(qty):
+             report['rejected'] += 1
+             continue
+-        store.put(parts[0], parts[1], qty)
++        amount = int(qty)
++        store.put(sku, name, amount)
+         report['imported'] += 1
+-        report['quantity'] += qty
++        report['quantity'] += amount
+     return report
+diff --git c/stock/parser.py i/stock/parser.py
+index 005ca5d..14b08ae 100644
+--- c/stock/parser.py
++++ i/stock/parser.py
+@@ -1,3 +1,66 @@
++"""CSV record parsing following standard CSV rules.
++
++Quoted fields may contain commas and newlines, and doubled double-quotes
++(``""``) represent a single quote character.  A record ends at a line break
++found outside of quotes, so one record may span several physical lines.
++"""
++
++
++def _parse(text):
++    records = []
++    fields = []
++    field = []
++    in_quotes = False
++    i = 0
++    n = len(text)
++
++    def close_field():
++        fields.append(''.join(field))
++        del field[:]
++
++    def close_record():
++        close_field()
++        records.append(list(fields))
++        del fields[:]
++
++    while i < n:
++        c = text[i]
++        if in_quotes:
++            if c == '"':
++                if i + 1 < n and text[i + 1] == '"':
++                    field.append('"')
++                    i += 2
++                    continue
++                in_quotes = False
++                i += 1
++            else:
++                field.append(c)
++                i += 1
++        elif c == '"':
++            # Opening quote when the field is empty; otherwise keep it
++            # as a literal character.
++            in_quotes = not bool(field)
++            i += 1
++        elif c == ',':
++            close_field()
++            i += 1
++        elif c == '\r' or c == '\n':
++            if c == '\r' and i + 1 < n and text[i + 1] == '\n':
++                i += 1
++            close_record()
++            i += 1
++        else:
++            field.append(c)
++            i += 1
++
++    if field or fields:
++        close_record()
++    return records
++
++
+ def rows(text):
+-    for line in text.splitlines()[1:]:
+-        yield line.split(',')
++    records = _parse(text)
++    if not records:
++        return
++    for record in records[1:]:
++        yield record

@@ -1,0 +1,35 @@
+diff --git c/reports/export.py i/reports/export.py
+index 6f79688..11eb983 100644
+--- c/reports/export.py
++++ i/reports/export.py
+@@ -1,13 +1,21 @@
+ import csv
+ import io
++import json
+ from .model import FIELDS
+ 
+ def render(rows, format='csv'):
+-    if format != 'csv':
+-        raise ValueError(format)
+-    out = io.StringIO(newline='')
+-    writer = csv.writer(out, lineterminator='\n')
+-    writer.writerow(FIELDS)
+-    for row in rows:
+-        writer.writerow([row[field] for field in FIELDS])
+-    return out.getvalue()
++    if format == 'csv':
++        out = io.StringIO(newline='')
++        writer = csv.writer(out, lineterminator='\n')
++        writer.writerow(FIELDS)
++        for row in rows:
++            writer.writerow([row[field] for field in FIELDS])
++        return out.getvalue()
++    elif format == 'jsonl':
++        result = []
++        for row in rows:
++            obj = {field: row[field] for field in FIELDS}
++            result.append(json.dumps(obj, separators=(',', ':')))
++        return '\n'.join(result) + '\n' if result else ''
++    else:
++        raise ValueError(format)
+\ No newline at end of file

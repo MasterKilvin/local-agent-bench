@@ -1,0 +1,22 @@
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..6add2a1 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,14 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
++        new_source = balances[source] - amount
++        new_target = balances[target] + amount
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
++        # Commit balances and audit together, with no fault point between.
++        balances[source] = new_source
++        balances[target] = new_target
+         self.ledger.audit.append(event(source, target, amount))
+         return True

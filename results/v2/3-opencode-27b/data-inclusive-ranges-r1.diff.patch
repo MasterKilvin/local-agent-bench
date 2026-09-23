@@ -1,0 +1,85 @@
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..075f7b4 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,47 @@
++import re
++
++_BOTH = re.compile(r'([0-9]+)-([0-9]+)')
++_FIRST = re.compile(r'([0-9]+)-')
++_SUFFIX = re.compile(r'-([0-9]+)')
++
++
++class InvalidRange(ValueError):
++    """Range header is invalid in syntax or cannot be satisfied."""
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++    if length < 0:
++        raise InvalidRange('negative length')
++    if length == 0:
++        raise InvalidRange('empty data')
++    if not isinstance(header, str) or not header.startswith('bytes='):
++        raise InvalidRange('bad prefix')
++    spec = header[len('bytes='):]
++
++    m = _BOTH.fullmatch(spec)
++    if m is not None:
++        start = int(m.group(1))
++        end = int(m.group(2))
++        if start > end:
++            raise InvalidRange('reversed bounds')
++        if start >= length:
++            raise InvalidRange('start beyond end of data')
++        if end >= length:
++            end = length - 1
++        return start, end
++
++    m = _FIRST.fullmatch(spec)
++    if m is not None:
++        start = int(m.group(1))
++        if start >= length:
++            raise InvalidRange('start beyond end of data')
++        return start, length - 1
++
++    m = _SUFFIX.fullmatch(spec)
++    if m is not None:
++        size = int(m.group(1))
++        if size == 0:
++            raise InvalidRange('zero suffix')
++        return max(length - size, 0), length - 1
++
++    raise InvalidRange('bad syntax')
+diff --git c/download/service.py i/download/service.py
+index 72a053d..1650d95 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,16 @@
+-from .ranges import bounds
++from .ranges import bounds, InvalidRange
++
+ 
+ def serve(data, range_header=None):
+-    if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++    if range_header is not None:
++        length = len(data)
++        try:
++            start, end = bounds(range_header, length)
++        except InvalidRange:
++            return 416, {'Content-Range': f'bytes */{length}'}, b''
++        body = data[start:end + 1]
++        return 206, {
++            'Content-Range': f'bytes {start}-{end}/{length}',
++            'Content-Length': str(len(body)),
++        }, body
++    return 200, {'Content-Length': str(len(data))}, data

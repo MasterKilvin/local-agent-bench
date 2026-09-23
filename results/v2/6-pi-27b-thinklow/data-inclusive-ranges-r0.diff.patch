@@ -1,0 +1,113 @@
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..ff59719 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,61 @@
++"""Resolve a single byte-range header into inclusive byte bounds.
++
++The header must exactly match one of ``bytes=D-D``, ``bytes=D-``, or
++``bytes=-D``, where each ``D`` is one or more ASCII digits 0 through 9
++(README.md). Leading zeros are allowed; whitespace, signs, underscores,
++Unicode digits, extra separators, and multiple ranges are not.
++"""
++
++import re
++
++_RANGE = re.compile(r'bytes=([0-9]+)-([0-9]+)')
++_PREFIX = re.compile(r'bytes=([0-9]+)-')
++_SUFFIX = re.compile(r'bytes=-([0-9]+)')
++
++
++def _parse(header):
++    """Return (mode, a, b) for a valid header, else None.
++
++    mode is 'range' (bytes=D-D), 'prefix' (bytes=D-), or 'suffix'
++    (bytes=-D).  a and b are the digit strings that matched (b is None
++    when absent).
++    """
++    if not isinstance(header, str):
++        return None
++    m = _RANGE.fullmatch(header)
++    if m is not None:
++        return 'range', m[1], m[2]
++    m = _PREFIX.fullmatch(header)
++    if m is not None:
++        return 'prefix', m[1], None
++    m = _SUFFIX.fullmatch(header)
++    if m is not None:
++        return 'suffix', m[1], None
++    return None
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
++    """Return the inclusive (start, end) for *header* over *length* bytes.
++
++    Returns None when the header does not exactly match the grammar or
++    the range is unsatisfiable: start beyond EOF, reversed bounds,
++    zero-length suffix, or empty data.
++    """
++    parsed = _parse(header)
++    if parsed is None:
++        return None
++    mode, a, b = parsed
++    if mode == 'suffix':
++        count = int(a)
++        if count == 0:
++            return None
++        start = max(length - count, 0)
++        end = length - 1
++    else:
++        start = int(a)
++        end = int(b) if b is not None else length - 1
++        if end > length - 1:
++            end = length - 1
++    if start > end:
++        return None
+     return start, end
+diff --git c/download/service.py i/download/service.py
+index 72a053d..8a9ab39 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,33 @@
+ from .ranges import bounds
+ 
++
+ def serve(data, range_header=None):
++    """Serve *data*, honoring *range_header* when given.
++
++    Returns (status, headers, body) as documented in README.md:
++      - 200 and the full body when no range header is given;
++      - 206 with ``Content-Range: bytes <start>-<end>/<length>`` for a
++        satisfied single range (end is inclusive, clamped at EOF);
++      - 416 with an empty body and ``Content-Range: bytes */<length>``
++        for bad syntax, a start beyond EOF, a zero-length suffix,
++        reversed bounds, or empty data.
++    """
++    length = len(data)
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++        return 200, {'Content-Length': str(length)}, data
++
++    resolved = bounds(range_header, length)
++    if resolved is None:
++        return (
++            416,
++            {'Content-Length': '0', 'Content-Range': f'bytes */{length}'},
++            b'',
++        )
++    start, end = resolved
++    body = data[start:end + 1]
++    return (
++        206,
++        {'Content-Length': str(len(body)),
++         'Content-Range': f'bytes {start}-{end}/{length}'},
++        body,
++    )

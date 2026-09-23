@@ -1,0 +1,63 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..7f805ac
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..04c6a9f
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/parser.cpython-312.pyc i/stock/__pycache__/parser.cpython-312.pyc
+new file mode 100644
+index 0000000..0c10aa1
+Binary files /dev/null and i/stock/__pycache__/parser.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..3eff718
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index 76fcd00..00e35a8 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,17 +1,18 @@
++import re
++
+ from .parser import rows
+ 
++_QTY_RE = re.compile(r'\d+\Z')
++
++
+ def import_text(text, store):
+     report = {'seen': 0, 'imported': 0, 'rejected': 0, 'quantity': 0}
+     for parts in rows(text):
+         report['seen'] += 1
+-        if len(parts) != 3 or not parts[0] or not parts[1]:
+-            report['rejected'] += 1
+-            continue
+-        try:
+-            qty = int(parts[2])
+-        except ValueError:
++        if len(parts) != 3 or not parts[0] or not parts[1] or not _QTY_RE.match(parts[2]):
+             report['rejected'] += 1
+             continue
++        qty = int(parts[2])
+         store.put(parts[0], parts[1], qty)
+         report['imported'] += 1
+         report['quantity'] += qty
+diff --git c/stock/parser.py i/stock/parser.py
+index 005ca5d..e1476f0 100644
+--- c/stock/parser.py
++++ i/stock/parser.py
+@@ -1,3 +1,11 @@
++import csv
++import io
++
++
+ def rows(text):
+-    for line in text.splitlines()[1:]:
+-        yield line.split(',')
++    """Yield each CSV record after the header, per standard CSV rules."""
++    reader = csv.reader(io.StringIO(text, newline=''))
++    for index, record in enumerate(reader):
++        if index == 0:
++            continue  # header
++        yield [field.strip() for field in record]

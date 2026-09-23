@@ -1,0 +1,192 @@
+diff --git c/retry/__pycache__/__init__.cpython-312.pyc i/retry/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..4bdc9aa
+Binary files /dev/null and i/retry/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/retry/__pycache__/wrapper.cpython-312.pyc i/retry/__pycache__/wrapper.cpython-312.pyc
+new file mode 100644
+index 0000000..97cad33
+Binary files /dev/null and i/retry/__pycache__/wrapper.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..2a01dc6
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..9db4ba2
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..9d83782
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,170 @@
++"""Regression tests for the retry wrapper's public API (see README.md).
++
++Contract:
++- `run(operation, attempts=3)` calls a zero-argument operation.
++- `TransientError` is retried up to `attempts` total calls, returning the
++  first success or raising the last transient error.
++- `PermanentError` must propagate immediately on any attempt, including
++  after a transient failure.
++- No other exception is retried.
++
++These tests verify both the outcome (which exception / value is returned)
++and the exact number of operation calls.
++
++Run with:  python -m unittest -v
++"""
++
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++class CallCounter:
++    """Records the number of times a wrapped operation is invoked."""
++
++    def __init__(self):
++        self.calls = 0
++
++    def __call__(self):
++        self.calls += 1
++
++
++class PermanentErrorPropagationTests(unittest.TestCase):
++    """PermanentError must stop retrying immediately."""
++
++    def test_permanent_error_on_first_attempt_raises_immediately(self):
++        counter = CallCounter()
++
++        def operation():
++            counter()
++            raise PermanentError('fatal')
++
++        with self.assertRaises(PermanentError) as ctx:
++            run(operation, attempts=5)
++
++        self.assertEqual(str(ctx.exception), 'fatal')
++        # Must not be retried: exactly one call, despite attempts=5.
++        self.assertEqual(counter.calls, 1)
++
++    def test_permanent_error_after_transient_failures_stops_immediately(self):
++        # Two transient failures, then a permanent failure. With attempts=5
++        # a buggy wrapper would call the operation 5 times; the documented
++        # contract stops at the 3rd call.
++        transient_seen = 0
++        counter = CallCounter()
++
++        def operation():
++            nonlocal transient_seen
++            counter()
++            if transient_seen < 2:
++                transient_seen += 1
++                raise TransientError('flake %d' % transient_seen)
++            raise PermanentError('fatal')
++
++        with self.assertRaises(PermanentError) as ctx:
++            run(operation, attempts=5)
++
++        self.assertEqual(str(ctx.exception), 'fatal')
++        self.assertEqual(counter.calls, 3)
++        self.assertEqual(transient_seen, 2)
++
++    def test_permanent_error_propagates_with_last_transient(self):
++        # A permanent error raised on the final allowed attempt must still
++        # propagate as PermanentError, never masked by the transient errors.
++        counter = CallCounter()
++
++        def operation():
++            counter()
++            if counter.calls < 3:
++                raise TransientError('flake')
++            raise PermanentError('fatal')
++
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=3)
++
++        self.assertEqual(counter.calls, 3)
++
++
++class TransientErrorRetryTests(unittest.TestCase):
++    """TransientError is retried up to `attempts` total calls."""
++
++    def test_all_attempts_transient_raises_last_transient(self):
++        counter = CallCounter()
++
++        def operation():
++            counter()
++            raise TransientError('flake %d' % counter.calls)
++
++        with self.assertRaises(TransientError) as ctx:
++            run(operation, attempts=4)
++
++        # The LAST transient error is the one raised, not the first.
++        self.assertEqual(str(ctx.exception), 'flake 4')
++        self.assertEqual(counter.calls, 4)
++
++    def test_transient_then_success_returns_value(self):
++        counter = CallCounter()
++
++        def operation():
++            counter()
++            if counter.calls < 3:
++                raise TransientError('flake')
++            return 'ok'
++
++        self.assertEqual(run(operation, attempts=3), 'ok')
++        self.assertEqual(counter.calls, 3)
++
++    def test_success_is_not_retried(self):
++        counter = CallCounter()
++
++        self.assertEqual(run(counter, attempts=5), None)
++        # Successful call short-circuits: exactly one invocation.
++        self.assertEqual(counter.calls, 1)
++
++
++class UnrelatedExceptionTests(unittest.TestCase):
++    """Exceptions other than TransientError are not retried."""
++
++    def test_unexpected_exception_propagates_after_single_call(self):
++        counter = CallCounter()
++
++        def operation():
++            counter()
++            raise ValueError('boom')
++
++        with self.assertRaises(ValueError):
++            run(operation, attempts=5)
++
++        self.assertEqual(counter.calls, 1)
++
++
++class DefaultAttemptsTests(unittest.TestCase):
++    """The documented default is attempts=3."""
++
++    def test_default_retries_transient_three_times(self):
++        counter = CallCounter()
++
++        def operation():
++            counter()
++            raise TransientError('flake')
++
++        with self.assertRaises(TransientError):
++            run(operation)
++
++        self.assertEqual(counter.calls, 3)
++
++    def test_default_stops_at_permanent_error(self):
++        counter = CallCounter()
++
++        def operation():
++            counter()
++            raise PermanentError('fatal')
++
++        with self.assertRaises(PermanentError):
++            run(operation)
++
++        self.assertEqual(counter.calls, 1)
++
++
++if __name__ == '__main__':
++    unittest.main()

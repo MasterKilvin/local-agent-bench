@@ -1,0 +1,33 @@
+diff --git c/reports/__pycache__/__init__.cpython-312.pyc i/reports/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..4c523b7
+Binary files /dev/null and i/reports/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/reports/__pycache__/export.cpython-312.pyc i/reports/__pycache__/export.cpython-312.pyc
+new file mode 100644
+index 0000000..ef1f820
+Binary files /dev/null and i/reports/__pycache__/export.cpython-312.pyc differ
+diff --git c/reports/__pycache__/model.cpython-312.pyc i/reports/__pycache__/model.cpython-312.pyc
+new file mode 100644
+index 0000000..79e6288
+Binary files /dev/null and i/reports/__pycache__/model.cpython-312.pyc differ
+diff --git c/reports/export.py i/reports/export.py
+index 6f79688..57a0389 100644
+--- c/reports/export.py
++++ i/reports/export.py
+@@ -1,8 +1,16 @@
+ import csv
+ import io
++import json
+ from .model import FIELDS
+ 
+ def render(rows, format='csv'):
++    if format == 'jsonl':
++        return ''.join(
++            json.dumps({field: row[field] for field in FIELDS},
++                       ensure_ascii=False,
++                       separators=(',', ':')) + '\n'
++            for row in rows
++        )
+     if format != 'csv':
+         raise ValueError(format)
+     out = io.StringIO(newline='')

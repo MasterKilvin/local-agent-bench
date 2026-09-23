@@ -1,0 +1,49 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..a0b762d
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..29af265
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..c66bd86
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..2d0a6d1
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..ccf90a7 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,24 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
++        
++        # Perform balance updates first
+         balances[source] -= amount
+         if inject is not None:
+             inject('after_debit')
+         balances[target] += amount
+         if inject is not None:
+             inject('after_credit')
+-            inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
+-        return True
++        
++        # Now attempt audit commit - if this fails, the balance changes will be rolled back
++        try:
++            if inject is not None:
++                inject('before_audit')
++            self.ledger.audit.append(event(source, target, amount))
++        except Exception:
++            # Roll back balance changes if audit fails
++            balances[source] += amount
++            balances[target] -= amount
++            raise
++        
++        return True
+\ No newline at end of file

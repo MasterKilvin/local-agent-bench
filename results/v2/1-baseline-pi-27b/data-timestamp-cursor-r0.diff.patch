@@ -1,0 +1,51 @@
+diff --git c/activity/__pycache__/__init__.cpython-312.pyc i/activity/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..93e643d
+Binary files /dev/null and i/activity/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/activity/__pycache__/paging.cpython-312.pyc i/activity/__pycache__/paging.cpython-312.pyc
+new file mode 100644
+index 0000000..955449a
+Binary files /dev/null and i/activity/__pycache__/paging.cpython-312.pyc differ
+diff --git c/activity/__pycache__/store.cpython-312.pyc i/activity/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..f9ec36f
+Binary files /dev/null and i/activity/__pycache__/store.cpython-312.pyc differ
+diff --git c/activity/paging.py i/activity/paging.py
+index e9fc2b8..7a6dcd7 100644
+--- c/activity/paging.py
++++ i/activity/paging.py
+@@ -1,9 +1,31 @@
++import base64
++import json
++
++
++def _encode(timestamp, rec_id):
++    raw = json.dumps([timestamp, rec_id]).encode('utf-8')
++    return base64.urlsafe_b64encode(raw).decode('ascii')
++
++
++def _decode(cursor):
++    try:
++        ts, rec_id = json.loads(base64.urlsafe_b64decode(cursor.encode('ascii')))
++    except Exception:
++        raise ValueError('invalid cursor')
++    return (ts, rec_id)
++
++
+ def page(records, cursor=None, limit=10):
+-    if limit < 1:
++    if not isinstance(limit, int) or limit < 1:
+         raise ValueError('limit')
+     ordered = sorted(records, key=lambda x: (x['timestamp'], x['id']))
+     if cursor is not None:
+-        ordered = [x for x in ordered if x['timestamp'] > cursor]
++        c = _decode(cursor)
++        ordered = [x for x in ordered if (x['timestamp'], x['id']) > c]
+     items = ordered[:limit]
+-    next_cursor = items[-1]['timestamp'] if len(ordered) > limit else None
++    next_cursor = (
++        _encode(items[-1]['timestamp'], items[-1]['id'])
++        if len(ordered) > limit
++        else None
++    )
+     return {'items': items, 'next_cursor': next_cursor}

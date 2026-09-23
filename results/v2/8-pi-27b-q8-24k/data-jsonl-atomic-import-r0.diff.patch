@@ -1,0 +1,50 @@
+diff --git c/events/__pycache__/__init__.cpython-312.pyc i/events/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..15d4235
+Binary files /dev/null and i/events/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/events/__pycache__/importer.cpython-312.pyc i/events/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..636ce21
+Binary files /dev/null and i/events/__pycache__/importer.cpython-312.pyc differ
+diff --git c/events/__pycache__/store.cpython-312.pyc i/events/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..a7eab53
+Binary files /dev/null and i/events/__pycache__/store.cpython-312.pyc differ
+diff --git c/events/importer.py i/events/importer.py
+index 4a941c5..1cd7580 100644
+--- c/events/importer.py
++++ i/events/importer.py
+@@ -6,16 +6,26 @@ class ImportProblem(Exception):
+         super().__init__(f'invalid line {line}')
+ 
+ def import_bytes(payload, store):
+-    count = 0
++    records = []
+     for line, raw in enumerate(payload.splitlines(), 1):
+         if not raw.strip():
+             continue
+         try:
+-            record = json.loads(raw.decode('utf-8'))
+-            if not isinstance(record, dict) or not isinstance(record.get('id'), str):
+-                raise ValueError()
+-        except (UnicodeDecodeError, ValueError):
++            text = raw.decode('utf-8')
++        except UnicodeDecodeError:
+             raise ImportProblem(line)
++        try:
++            record = json.loads(text)
++        except ValueError:
++            raise ImportProblem(line)
++        if not isinstance(record, dict):
++            raise ImportProblem(line)
++        if not isinstance(record.get('id'), str) or not record['id']:
++            raise ImportProblem(line)
++        count = record.get('count')
++        if isinstance(count, bool) or not isinstance(count, int):
++            raise ImportProblem(line)
++        records.append(record)
++    for record in records:
+         store.append(record)
+-        count += 1
+-    return count
++    return len(records)

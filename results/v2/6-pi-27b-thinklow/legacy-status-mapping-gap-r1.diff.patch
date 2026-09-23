@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..b395892
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "ambiguous-status-mapping", "evidence": "README.md states the mapping for 'held' (paused vs cancelled) and 'reversed' (cancelled vs refunded) is unspecified; no rule in any file disambiguates them"}

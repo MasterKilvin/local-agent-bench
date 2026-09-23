@@ -1,0 +1,35 @@
+diff --git c/activity/__pycache__/__init__.cpython-312.pyc i/activity/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..68b7a3e
+Binary files /dev/null and i/activity/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/activity/__pycache__/paging.cpython-312.pyc i/activity/__pycache__/paging.cpython-312.pyc
+new file mode 100644
+index 0000000..f7ede4d
+Binary files /dev/null and i/activity/__pycache__/paging.cpython-312.pyc differ
+diff --git c/activity/__pycache__/store.cpython-312.pyc i/activity/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..eaef69d
+Binary files /dev/null and i/activity/__pycache__/store.cpython-312.pyc differ
+diff --git c/activity/paging.py i/activity/paging.py
+index e9fc2b8..305fdc8 100644
+--- c/activity/paging.py
++++ i/activity/paging.py
+@@ -3,7 +3,14 @@ def page(records, cursor=None, limit=10):
+         raise ValueError('limit')
+     ordered = sorted(records, key=lambda x: (x['timestamp'], x['id']))
+     if cursor is not None:
+-        ordered = [x for x in ordered if x['timestamp'] > cursor]
++        # When cursor is provided, we need to filter records that are strictly greater than
++        # the cursor value. The cursor contains both timestamp and id.
++        # We parse the cursor string to extract timestamp and id components.
++        cursor_timestamp, cursor_id = cursor.split('|', 1)
++        ordered = [x for x in ordered if (x['timestamp'], x['id']) > (cursor_timestamp, cursor_id)]
+     items = ordered[:limit]
+-    next_cursor = items[-1]['timestamp'] if len(ordered) > limit else None
+-    return {'items': items, 'next_cursor': next_cursor}
++    next_cursor = None
++    if len(ordered) > limit:
++        # The next_cursor should be a string representation of (timestamp, id) tuple
++        next_cursor = f'{items[-1]["timestamp"]}|{items[-1]["id"]}'
++    return {'items': items, 'next_cursor': next_cursor}
+\ No newline at end of file

@@ -1,0 +1,46 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..7b87fc3
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..c20c29d
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..243ca5e
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..d943bcf
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..c327c7b 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,17 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
+-        if inject is not None:
+-            inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+-            inject('after_credit')
+-            inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
++        snapshot = (balances[source], balances[target])
++        try:
++            balances[source] -= amount
++            if inject is not None:
++                inject('after_debit')
++            balances[target] += amount
++            if inject is not None:
++                inject('after_credit')
++                inject('before_audit')
++            self.ledger.audit.append(event(source, target, amount))
++        except Exception:
++            balances[source], balances[target] = snapshot
++            raise
+         return True

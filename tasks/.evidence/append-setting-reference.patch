@@ -1,0 +1,19 @@
+--- a/settings/editor.py
++++ b/settings/editor.py
+@@ -49,12 +49,16 @@
+         new_record = '{}={}\n'.format(name_to_store, encoded_value)
+     with staged_edit(settings_path) as (incoming, outgoing):
+         updated = False
++        needs_separator = False
+         for record in report_invalid_records(scan_records(incoming)):
+             if record.name == name_to_store:
+                 outgoing.write(new_record)
+                 updated = True
+             else:
+                 outgoing.write(record.source_text.text)
++                needs_separator = not record.source_text.text.endswith('\n')
+         if not updated:
++            if needs_separator:
++                outgoing.write('\n')
+             outgoing.write(new_record)
+     return (True, name_to_store, text_to_store)

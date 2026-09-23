@@ -1,0 +1,20 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..740ba85
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "information-theory-impossibility", "evidence": "The requirement to compress all 256 possible one-byte strings into fewer bytes is impossible without either violating the 'every input' guarantee, losing information, or using external data - which contradicts the constraints that no external table, shared state, side channel or length fields are available."}
+\ No newline at end of file
+diff --git c/archive/__pycache__/__init__.cpython-312.pyc i/archive/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..1fa2900
+Binary files /dev/null and i/archive/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/archive/__pycache__/codec.cpython-312.pyc i/archive/__pycache__/codec.cpython-312.pyc
+new file mode 100644
+index 0000000..7e62ee1
+Binary files /dev/null and i/archive/__pycache__/codec.cpython-312.pyc differ
+diff --git c/archive/__pycache__/store.cpython-312.pyc i/archive/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..21734e2
+Binary files /dev/null and i/archive/__pycache__/store.cpython-312.pyc differ

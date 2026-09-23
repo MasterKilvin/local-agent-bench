@@ -1,0 +1,62 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..3f86a5d
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "success", "blocker": "none", "evidence": "Solution implemented successfully"}
+\ No newline at end of file
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..8212930
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/inventory.cpython-312.pyc i/shop/__pycache__/inventory.cpython-312.pyc
+new file mode 100644
+index 0000000..3b4c5d5
+Binary files /dev/null and i/shop/__pycache__/inventory.cpython-312.pyc differ
+diff --git c/shop/__pycache__/report.cpython-312.pyc i/shop/__pycache__/report.cpython-312.pyc
+new file mode 100644
+index 0000000..5f0a064
+Binary files /dev/null and i/shop/__pycache__/report.cpython-312.pyc differ
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..d9b9ac9 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -1,21 +1,26 @@
++import threading
++
+ class Inventory:
+     def __init__(self, stock):
+         self.available = dict(stock)
+         self.reservations = {}
+         self._next_id = 1
++        self._lock = threading.Lock()
+ 
+     def reserve(self, sku, quantity, on_attempt=None):
+         if sku not in self.available:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
+-        remaining = self.available[sku]
+-        if on_attempt is not None:
+-            on_attempt()
+-        if remaining < quantity:
+-            return None
+-        reservation_id = self._next_id
+-        self._next_id += 1
+-        self.available[sku] = remaining - quantity
+-        self.reservations[reservation_id] = (sku, quantity)
+-        return reservation_id
++        
++        with self._lock:
++            remaining = self.available[sku]
++            if on_attempt is not None:
++                on_attempt()
++            if remaining < quantity:
++                return None
++            reservation_id = self._next_id
++            self._next_id += 1
++            self.available[sku] = remaining - quantity
++            self.reservations[reservation_id] = (sku, quantity)
++            return reservation_id
+\ No newline at end of file

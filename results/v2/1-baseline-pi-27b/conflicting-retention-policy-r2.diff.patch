@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..ceab5a5
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "conflicting-retention-rules", "evidence": "README.md: Rule A requires deletion at age >= 7 days, while Rule B requires retention at age <= 30 days, and both must hold for every age with no exception or priority — impossible for any record aged 7-30 days (e.g. main.py's 'c2' at age 8: delete per Rule A, keep per Rule B)"}

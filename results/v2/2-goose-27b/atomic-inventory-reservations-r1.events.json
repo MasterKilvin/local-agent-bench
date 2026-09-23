@@ -1,0 +1,129 @@
+{
+"peak_prompt_tokens": null,
+"thinking_tokens": null,
+"tool_errors": null,
+"repeated_calls": null,
+"steps_detail": [],
+"tools_detail": [
+{
+"t": 2.7,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 3.4,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 27.7,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 27.7,
+"name": "todo_write todo",
+"args_hash": null,
+"error": null
+},
+{
+"t": 31.3,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 38.0,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 40.9,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 45.9,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 53.7,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 63.1,
+"name": "write",
+"args_hash": null,
+"error": null
+},
+{
+"t": 65.6,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 65.6,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 66.9,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 66.9,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 68.1,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 71.9,
+"name": "edit",
+"args_hash": null,
+"error": null
+},
+{
+"t": 73.0,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 76.3,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 77.9,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 77.9,
+"name": "todo_write todo",
+"args_hash": null,
+"error": null
+}
+]
+}

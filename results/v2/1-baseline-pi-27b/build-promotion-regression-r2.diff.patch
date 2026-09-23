@@ -1,0 +1,55 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..761cba7
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..cf5ac85
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..c1de581
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..76e5ee1
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..966a2ad
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,33 @@
++"""Regression tests for the double-discount checkout bug.
++
++The promotion rate must be applied exactly once to the subtotal:
++    payable = subtotal * (1 - rate), rounded to 2 dp with ROUND_HALF_UP
++A buggy implementation applies the factor twice:
++    payable = subtotal * (1 - rate) * (1 - rate)
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class CheckoutRegressionTests(unittest.TestCase):
++    def test_single_line_quantity_above_one(self):
++        # Subtotal = 10.00 * 2 = 20.00; one application of rate 0.10 -> 18.00.
++        # Buggy double application would give 20.00 * 0.81 = 16.20.
++        lines = [{"price": "10.00", "qty": 2}]
++        self.assertEqual(checkout(lines, "0.10"), "18.00")
++
++    def test_multiple_lines_each_quantity_one(self):
++        # Subtotal = 3.33 + 4.44 = 7.77; one application of rate 0.10 -> 6.99
++        # (7.77 * 0.90 = 6.993, ROUND_HALF_UP -> 6.99).
++        # Buggy double application would give 7.77 * 0.81 = 6.29 (6.2937).
++        lines = [
++            {"price": "3.33", "qty": 1},
++            {"price": "4.44", "qty": 1},
++        ]
++        self.assertEqual(checkout(lines, "0.10"), "6.99")
++
++
++if __name__ == "__main__":
++    unittest.main()

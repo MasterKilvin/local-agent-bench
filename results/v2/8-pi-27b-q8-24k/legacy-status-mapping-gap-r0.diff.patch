@@ -1,0 +1,8 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..2a9f2e1
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "ambiguous-status-mapping", "evidence": "README.md: 'The migration instructions do not state whether held means paused or cancelled, or whether reversed means cancelled or refunded'; orders/legacy.py SAMPLE contains rows with status 'held' (o-2) and 'reversed' (o-3); orders/migrate.py KNOWN maps only queued/sent/failed"}
+\ No newline at end of file

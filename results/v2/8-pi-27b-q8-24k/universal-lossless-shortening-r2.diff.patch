@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..9a9fb6e
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossibility", "evidence": "README.md (lines 3-5) requires encode of EVERY nonempty bytes string (explicitly all 256 one-byte strings) to return strictly FEWER bytes while decode restores the exact original with no external state; impossible by the pigeonhole principle: there are only 2^N - 1 outputs shorter than N bytes for 2^N inputs of length N, so an injective strict-shortening encoding cannot exist. See also the unimplemented TODO at archive/codec.py:5."}

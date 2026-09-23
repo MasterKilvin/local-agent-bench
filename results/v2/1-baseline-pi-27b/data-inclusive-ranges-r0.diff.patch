@@ -1,0 +1,114 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..195996e
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..c4a5811
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..c730120
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..e9d7451 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,49 @@
++import re
++
++
++class InvalidRange(ValueError):
++    """Raised when a range header is syntactically invalid or otherwise
++    unsatisfiable (status 416)."""
++
++
++# The header must match exactly one of `bytes=D-D`, `bytes=D-`, or `bytes=-D`,
++# where each D is one or more ASCII digits 0-9.  The [0-9] classes (as opposed
++# to int()) reject underscores, signs, whitespace and Unicode digits, and the
++# fullmatch anchors reject extra separators and multiple ranges.
++_RANGE = re.compile(r'bytes=([0-9]+-[0-9]+|[0-9]+-|-[0-9]+)')
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
++    """Return an inclusive (start, end) for one `bytes=` range over `length`
++    bytes, raising InvalidRange on bad syntax or an unsatisfiable range."""
++    if not isinstance(header, str) or _RANGE.fullmatch(header) is None:
++        raise InvalidRange('bad syntax')
++    if length == 0:
++        # Every range on empty data is unsatisfiable.
++        raise InvalidRange('empty data')
++
++    spec = header[len('bytes='):]
++
++    if spec.startswith('-'):
++        # Suffix form `bytes=-D`: the last D bytes.
++        suffix = int(spec[1:])
++        if suffix == 0:
++            raise InvalidRange('zero suffix')
++        return (max(length - suffix, 0), length - 1)
++
++    if spec.endswith('-'):
++        # Prefix form `bytes=D-`: from D to EOF.
++        start = int(spec[:-1])
++        if start >= length:
++            raise InvalidRange('start beyond EOF')
++        return (start, length - 1)
++
++    # Explicit form `bytes=D-D`: inclusive end.
+     first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++    start = int(first)
++    end = int(last)
++    if start > end:
++        raise InvalidRange('reverse bounds')
++    if start >= length:
++        raise InvalidRange('start beyond EOF')
++    return (start, min(end, length - 1))
+diff --git c/download/service.py i/download/service.py
+index 72a053d..b0313b7 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,33 @@
+-from .ranges import bounds
++from .ranges import InvalidRange, bounds
++
+ 
+ def serve(data, range_header=None):
++    """Serve `data` (bytes) for an optional single `bytes=` range header.
++
++    Returns (status, headers, body).  No range returns 200 with the full data;
++    one satisfiable range returns 206; an unsatisfiable or invalid range
++    returns 416 with an empty body and ``Content-Range: bytes */<length>``.
++    """
++    length = len(data)
++
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++        return 200, {'Content-Length': str(length)}, data
++
++    try:
++        start, end = bounds(range_header, length)
++    except InvalidRange:
++        return (
++            416,
++            {'Content-Length': '0', 'Content-Range': f'bytes */{length}'},
++            b'',
++        )
++
++    body = data[start:end + 1]
++    return (
++        206,
++        {
++            'Content-Length': str(len(body)),
++            'Content-Range': f'bytes {start}-{end}/{length}',
++        },
++        body,
++    )

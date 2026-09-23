@@ -1,0 +1,35 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..939daae
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/inventory.cpython-312.pyc i/shop/__pycache__/inventory.cpython-312.pyc
+new file mode 100644
+index 0000000..95be875
+Binary files /dev/null and i/shop/__pycache__/inventory.cpython-312.pyc differ
+diff --git c/shop/__pycache__/report.cpython-312.pyc i/shop/__pycache__/report.cpython-312.pyc
+new file mode 100644
+index 0000000..486e6cd
+Binary files /dev/null and i/shop/__pycache__/report.cpython-312.pyc differ
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..f41b71e 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -9,13 +9,15 @@ class Inventory:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
+-        remaining = self.available[sku]
+         if on_attempt is not None:
+             on_attempt()
++        # Check stock availability and reserve atomically
++        remaining = self.available[sku]
+         if remaining < quantity:
+             return None
+         reservation_id = self._next_id
+         self._next_id += 1
++        # Update available stock and reservations atomically
+         self.available[sku] = remaining - quantity
+         self.reservations[reservation_id] = (sku, quantity)
+-        return reservation_id
++        return reservation_id
+\ No newline at end of file

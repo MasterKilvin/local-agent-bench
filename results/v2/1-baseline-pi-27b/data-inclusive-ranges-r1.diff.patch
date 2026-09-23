@@ -1,0 +1,112 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..c91dbea
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..dcfcb90
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..db41e00
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..ea16fef 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,31 @@
+-def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++import re
++
++# Exactly one of: bytes=D-D, bytes=D-, or bytes=-D, with D being at least
++# one ASCII digit 0-9 (leading zeros allowed). No whitespace, signs,
++# underscores, Unicode digits, or multiple ranges.
++_RANGE = re.compile(
++    r'bytes='
++    r'(?:'
++    r'(?P<d1>[0-9]+)-(?P<d2>[0-9]+)'
++    r'|(?P<d3>[0-9]+)-'
++    r'|-(?P<n>[0-9]+)'
++    r')'
++)
++
++
++def parse_range(header):
++    """Parse a single-range header strictly per README.md grammar.
++
++    Returns ('range', start, end_or_None) or ('suffix', n, None),
++    or None if the header does not exactly match the required grammar.
++    """
++    if not isinstance(header, str):
++        return None
++    m = _RANGE.fullmatch(header)
++    if m is None:
++        return None
++    if m.group('d1') is not None:
++        return 'range', int(m.group('d1')), int(m.group('d2'))
++    if m.group('d3') is not None:
++        return 'range', int(m.group('d3')), None
++    return 'suffix', int(m.group('n')), None
+diff --git c/download/service.py i/download/service.py
+index 72a053d..267cde4 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,47 @@
+-from .ranges import bounds
++from .ranges import parse_range
++
++
++def _insufficient(length):
++    return 416, {
++        'Content-Length': '0',
++        'Content-Range': f'bytes */{length}',
++    }, b''
++
+ 
+ def serve(data, range_header=None):
++    length = len(data)
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++        return 200, {'Content-Length': str(length)}, data
++
++    parsed = parse_range(range_header)
++    if parsed is None:
++        return _insufficient(length)
++
++    kind, a, b = parsed
++
++    if kind == 'range':
++        start = a
++        end = b if b is not None else length - 1
++        if end >= length:  # clamp end past EOF
++            end = length - 1
++        if start >= length or start > end:
++            # empty data, start beyond EOF, or reverse bounds
++            return _insufficient(length)
++        body = data[start:end + 1]
++        return 206, {
++            'Content-Length': str(len(body)),
++            'Content-Range': f'bytes {start}-{end}/{length}',
++        }, body
++
++    # suffix: last n bytes
++    n = a
++    if n == 0 or length == 0:  # zero suffix or empty data
++        return _insufficient(length)
++    start = length - n
++    if start < 0:  # suffix larger than the data
++        start = 0
++    body = data[start:]
++    return 206, {
++        'Content-Length': str(len(body)),
++        'Content-Range': f'bytes {start}-{length - 1}/{length}',
++    }, body

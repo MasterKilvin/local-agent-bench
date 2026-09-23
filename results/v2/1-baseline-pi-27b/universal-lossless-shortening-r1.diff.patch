@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..c6e37fb
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "impossible-size-guarantee", "evidence": "README.md lines 3-8: encode must return strictly fewer bytes than input for every nonempty byte string (including all 256 one-byte strings) while decode recovers the exact original with no external table, shared state, side channel, or length field; this forces encode to be injective, which is impossible by the pigeonhole principle (256 distinct 1-byte inputs would all have to map to the single empty byte string)"}

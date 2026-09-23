@@ -1,0 +1,64 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..d34ed51
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..39511b4
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..f9d747a
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..2c2ad5e 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,45 @@
+ def bounds(header, length):
++    # Validate format: must start with 'bytes='
++    if not header.startswith('bytes='):
++        raise ValueError("Invalid range format")
++    
+     spec = header.removeprefix('bytes=')
++    
++    # Parse the range correctly according to README:
++    # bytes=D-D, bytes=D-, or bytes=-D where D is ASCII digits 0-9
++    
++    if spec.count('-') != 1:
++        raise ValueError("Invalid range format")
++        
+     first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
++    
++    # Validate that both parts are valid ASCII decimal strings (allowing leading zeros)
++    def is_ascii_decimal(s):
++        return all(c.isdigit() for c in s) and len(s) > 0
++    
++    if not is_ascii_decimal(first) and first != '':
++        raise ValueError("Invalid range syntax")
++    if not is_ascii_decimal(last) and last != '':
++        raise ValueError("Invalid range syntax")
++
++    # Calculate start and end indices based on the three valid formats
++    if first == '' and last != '':  # bytes=-N case (last N bytes)
++        n = int(last)
++        start = max(0, length - n)
++        end = length - 1
++    elif first != '' and last == '':  # bytes=D- case (from D to end)
++        start = int(first)
++        end = length - 1
++    else:  # bytes=D-D case (range from D to D)
++        start = int(first)
++        end = int(last)  # inclusive end as per README
++    
++    # Bounds checking and validation according to README
++    if start >= length:
++        raise ValueError("Start beyond EOF")
++    if start > end:
++        raise ValueError("Reverse bounds") 
++    if end >= length:
++        end = length - 1  # Clamp to EOF
++    
+     return start, end

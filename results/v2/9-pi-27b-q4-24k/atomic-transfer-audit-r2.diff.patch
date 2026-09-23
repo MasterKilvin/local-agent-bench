@@ -1,0 +1,41 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..0d3d854
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..c8dbcf4
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..ccd5c5e
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..4f233d6
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..867c9d6 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,18 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
++        # Prepare: compute the resulting balances without touching the
++        # ledger, running the fault-injection phases in order.
++        new_balances = dict(balances)
++        new_balances[source] -= amount
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
++        new_balances[target] += amount
+         if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
++        # Commit: balances and audit change together, only if every
++        # phase above completed without raising.
++        balances.update(new_balances)
+         self.ledger.audit.append(event(source, target, amount))
+         return True

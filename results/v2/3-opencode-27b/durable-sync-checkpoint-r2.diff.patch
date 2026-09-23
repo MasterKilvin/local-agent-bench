@@ -1,0 +1,31 @@
+diff --git c/__pycache__/main.cpython-312.pyc i/__pycache__/main.cpython-312.pyc
+new file mode 100644
+index 0000000..d00c2b6
+Binary files /dev/null and i/__pycache__/main.cpython-312.pyc differ
+diff --git c/sync/__pycache__/__init__.cpython-312.pyc i/sync/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..d808552
+Binary files /dev/null and i/sync/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/sync/__pycache__/checkpoint.cpython-312.pyc i/sync/__pycache__/checkpoint.cpython-312.pyc
+new file mode 100644
+index 0000000..b36b18c
+Binary files /dev/null and i/sync/__pycache__/checkpoint.cpython-312.pyc differ
+diff --git c/sync/__pycache__/job.cpython-312.pyc i/sync/__pycache__/job.cpython-312.pyc
+new file mode 100644
+index 0000000..a8c4097
+Binary files /dev/null and i/sync/__pycache__/job.cpython-312.pyc differ
+diff --git c/sync/__pycache__/sink.cpython-312.pyc i/sync/__pycache__/sink.cpython-312.pyc
+new file mode 100644
+index 0000000..177f7be
+Binary files /dev/null and i/sync/__pycache__/sink.cpython-312.pyc differ
+diff --git c/sync/job.py i/sync/job.py
+index 87be689..5cd2bd8 100644
+--- c/sync/job.py
++++ i/sync/job.py
+@@ -8,5 +8,5 @@ class SyncJob:
+             if record_id <= self.checkpoints.value:
+                 continue
+             self.sink.write((record_id, text))
+-            self.checkpoints.save(record_id)
+             self.sink.flush()
++            self.checkpoints.save(record_id)

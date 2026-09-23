@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..13cd281
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "contradictory-retention-rules", "evidence": "README.md rules A and B: README requires deletion of every closed case at age >= 7 (age 7) while also requiring retention through age <= 30; for ages 7-30 (example: c2 age 8 in main.py), deletion satisfies one rule and violates the other, and README states 'no exception or priority rule' and 'must satisfy both rules for every age'."}

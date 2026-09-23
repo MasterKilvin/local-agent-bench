@@ -1,0 +1,39 @@
+diff --git c/jobs/__pycache__/__init__.cpython-312.pyc i/jobs/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..33e2674
+Binary files /dev/null and i/jobs/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/jobs/__pycache__/queue.cpython-312.pyc i/jobs/__pycache__/queue.cpython-312.pyc
+new file mode 100644
+index 0000000..275142d
+Binary files /dev/null and i/jobs/__pycache__/queue.cpython-312.pyc differ
+diff --git c/jobs/__pycache__/worker.cpython-312.pyc i/jobs/__pycache__/worker.cpython-312.pyc
+new file mode 100644
+index 0000000..afb02bd
+Binary files /dev/null and i/jobs/__pycache__/worker.cpython-312.pyc differ
+diff --git c/jobs/queue.py i/jobs/queue.py
+index 7ed2e9f..b69ab1f 100644
+--- c/jobs/queue.py
++++ i/jobs/queue.py
+@@ -5,10 +5,13 @@ class JobQueue:
+ 
+     def claim(self, job_id, worker_id, on_attempt=None):
+         job = self.jobs[job_id]
+-        was_pending = job['state'] == 'pending'
++        # Check if job is still pending before proceeding
++        if job['state'] != 'pending':
++            return False
+         if on_attempt is not None:
+             on_attempt()
+-        if not was_pending:
++        # Double-check that job is still pending after callback
++        if job['state'] != 'pending':
+             return False
+         job['state'] = 'claimed'
+         job['owner'] = worker_id
+@@ -20,4 +23,4 @@ class JobQueue:
+             return False
+         job['state'] = 'complete'
+         job['completions'] += 1
+-        return True
++        return True
+\ No newline at end of file

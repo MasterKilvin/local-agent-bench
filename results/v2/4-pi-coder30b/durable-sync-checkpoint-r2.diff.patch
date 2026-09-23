@@ -1,0 +1,39 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..0a8ff5a
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "completed",
++  "blocker": "none",
++  "evidence": "No blockers identified. The fix successfully addresses the race condition in sync/job.py by ensuring checkpoints are only saved after data is flushed to the durable sink."
++}
+\ No newline at end of file
+diff --git c/sync/__pycache__/__init__.cpython-312.pyc i/sync/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..27a1f4e
+Binary files /dev/null and i/sync/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/sync/__pycache__/checkpoint.cpython-312.pyc i/sync/__pycache__/checkpoint.cpython-312.pyc
+new file mode 100644
+index 0000000..4a06a42
+Binary files /dev/null and i/sync/__pycache__/checkpoint.cpython-312.pyc differ
+diff --git c/sync/__pycache__/job.cpython-312.pyc i/sync/__pycache__/job.cpython-312.pyc
+new file mode 100644
+index 0000000..d9f6105
+Binary files /dev/null and i/sync/__pycache__/job.cpython-312.pyc differ
+diff --git c/sync/__pycache__/sink.cpython-312.pyc i/sync/__pycache__/sink.cpython-312.pyc
+new file mode 100644
+index 0000000..a59fea6
+Binary files /dev/null and i/sync/__pycache__/sink.cpython-312.pyc differ
+diff --git c/sync/job.py i/sync/job.py
+index 87be689..5cd2bd8 100644
+--- c/sync/job.py
++++ i/sync/job.py
+@@ -8,5 +8,5 @@ class SyncJob:
+             if record_id <= self.checkpoints.value:
+                 continue
+             self.sink.write((record_id, text))
+-            self.checkpoints.save(record_id)
+             self.sink.flush()
++            self.checkpoints.save(record_id)

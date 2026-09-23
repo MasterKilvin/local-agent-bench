@@ -1,0 +1,133 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..51fe4f3
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,127 @@
++"""Regression tests for ``retry.wrapper.run`` -- public API only.
++
++The public contract is documented in ``README.md`` and exposed through the
++package as ``run`` together with the two exception types ``TransientError``
++and ``PermanentError``.  Nothing private is imported here.
++
++Contract under test (from README.md):
++
++* ``run(operation, attempts=3)`` invokes a zero-argument ``operation``.
++* ``TransientError`` is retried up to ``attempts`` *total* calls, returning
++  the first successful result or re-raising the last transient error.
++* ``PermanentError`` must propagate immediately on the attempt in which it
++  occurs -- including right after a transient failure -- it is never retried.
++* Any other exception type is never retried either.
++* ``attempts`` is positive.
++
++These tests verify both the *outcome* (value returned or exception type
++raised) and the *number of times the operation is actually called*.
++
++Note on the permanent-error cases: they assert the documented
++"propagate immediately" behaviour.  Against a wrapper that repeats permanent
++failures (calling the operation ``attempts`` times before giving up) these
++call-count assertions are expected to fail while the bug is present, and they
++flip to passing as soon as production code stops retrying ``PermanentError``.
++"""
++
++import unittest
++
++from retry.wrapper import run, TransientError, PermanentError
++
++
++class _CallCounter(object):
++    """A mutable, single-slot holder for the number of operation invocations."""
++
++    def __init__(self):
++        self.calls = 0
++
++
++def build_operation(script, counter):
++    """Return a zero-argument operation that follows ``script``.
++
++    ``script[i]`` describes what the ``(i+1)``-th call does: a value is
++    returned, an ``Exception`` instance is raised.  Once the script is
++    exhausted the last entry is repeated so that a buggy, over-retrying
++    wrapper never trips over the script running out.
++    """
++    def operation():
++        index = counter.calls
++        counter.calls += 1
++        if index < len(script):
++            item = script[index]
++        else:
++            item = script[-1]
++        if isinstance(item, Exception):
++            raise item
++        return item
++
++    return operation
++
++
++class TransientErrorBehaviour(unittest.TestCase):
++    def test_success_on_first_attempt(self):
++        counter = _CallCounter()
++        result = run(build_operation(['ok'], counter), attempts=3)
++        self.assertEqual(result, 'ok')
++        # A successful first call ends immediately: exactly one invocation.
++        self.assertEqual(counter.calls, 1)
++
++    def test_transient_error_then_success(self):
++        # One transient failure, then success on the second call.
++        counter = _CallCounter()
++        result = run(
++            build_operation([TransientError('t'), 'ok'], counter), attempts=3)
++        self.assertEqual(result, 'ok')
++        self.assertEqual(counter.calls, 2)
++
++    def test_transient_error_retries_up_to_attempts(self):
++        attempts = 3
++        counter = _CallCounter()
++        with self.assertRaises(TransientError):
++            run(build_operation([TransientError('t')] * attempts, counter),
++                attempts=attempts)
++        # 'attempts' total calls == one per allowed attempt.
++        self.assertEqual(counter.calls, attempts)
++
++    def test_transient_error_with_single_attempt(self):
++        # 'attempts' is positive; the lower bound must still be one call.
++        attempts = 1
++        counter = _CallCounter()
++        with self.assertRaises(TransientError):
++            run(build_operation([TransientError('t')] * attempts, counter),
++                attempts=attempts)
++        self.assertEqual(counter.calls, attempts)
++
++
++class PermanentErrorBehaviour(unittest.TestCase):
++    def test_permanent_error_stops_immediately(self):
++        counter = _CallCounter()
++        with self.assertRaises(PermanentError):
++            run(build_operation([PermanentError('p')] * 3, counter), attempts=3)
++        # README: PermanentError must propagate immediately on any attempt --
++        # the operation is called exactly once and never retried.
++        self.assertEqual(counter.calls, 1)
++
++    def test_permanent_error_after_transient_failure(self):
++        # Transient first (so the loop has already survived a retry), then a
++        # permanent error that must stop execution immediately.
++        counter = _CallCounter()
++        script = [TransientError('t'), PermanentError('p'), PermanentError('p'),
++                  PermanentError('p')]
++        with self.assertRaises(PermanentError):
++            run(build_operation(script, counter), attempts=3)
++        # One transient (retried) + one permanent (must not be retried).
++        self.assertEqual(counter.calls, 2)
++
++
++class OtherExceptionBehaviour(unittest.TestCase):
++    def test_unlisted_exception_is_never_retried(self):
++        # README: "No other exception is retried."
++        counter = _CallCounter()
++        with self.assertRaises(ValueError):
++            run(build_operation([ValueError('v')] * 3, counter), attempts=3)
++        self.assertEqual(counter.calls, 1)
++
++
++if __name__ == '__main__':
++    unittest.main()

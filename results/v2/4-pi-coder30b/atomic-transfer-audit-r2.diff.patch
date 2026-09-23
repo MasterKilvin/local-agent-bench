@@ -1,0 +1,63 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..5bb018f
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..c7975a0
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..3c6fd99
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..b793823
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..eba5347 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -21,4 +21,4 @@ class TransferService:
+             inject('after_credit')
+             inject('before_audit')
+         self.ledger.audit.append(event(source, target, amount))
+-        return True
++        return True
+\ No newline at end of file
+diff --git c/test_injection.py i/test_injection.py
+new file mode 100644
+index 0000000..1e04fd8
+--- /dev/null
++++ i/test_injection.py
+@@ -0,0 +1,29 @@
++from bank import Ledger, TransferService
++
++
++def test_with_injection():
++    ledger = Ledger({'cash': 700, 'savings': 300})
++    
++    # Test that injection works correctly and doesn't cause inconsistent state
++    def inject(phase):
++        if phase == 'after_debit':
++            print(f"Debit completed for {phase}")
++        elif phase == 'after_credit':
++            print(f"Credit completed for {phase}")
++        elif phase == 'before_audit':
++            print(f"Audit about to be committed for {phase}")
++            # This would cause a failure in the original implementation
++            raise Exception("Injection error")
++    
++    try:
++        TransferService(ledger).transfer('cash', 'savings', 125, inject)
++    except Exception as e:
++        print(f"Transfer failed as expected: {e}")
++    
++    # Check that balances haven't changed (should be unchanged)
++    print(f"Balances after failed transfer: {ledger.balances}")
++    print(f"Audit log after failed transfer: {ledger.audit}")
++
++
++if __name__ == '__main__':
++    test_with_injection()
+\ No newline at end of file

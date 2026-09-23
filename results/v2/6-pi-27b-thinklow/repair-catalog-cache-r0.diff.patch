@@ -1,0 +1,37 @@
+diff --git c/catalog/cache.py i/catalog/cache.py
+index 65938de..9b94db3 100644
+--- c/catalog/cache.py
++++ i/catalog/cache.py
+@@ -1,9 +1,15 @@
++import copy
++
++
+ class CatalogCache:
+     def __init__(self, catalog):
+         self.catalog = catalog
+         self.entries = {}
+ 
+     def get(self, id):
+-        if id not in self.entries:
+-            self.entries[id] = self.catalog.read(id)
+-        return self.entries[id]
++        entry = self.entries.get(id)
++        if entry is None or entry[1] != self.catalog.version(id):
++            value = self.catalog.read(id)
++            entry = (value, self.catalog.version(id))
++            self.entries[id] = entry
++        return None if entry[0] is None else copy.copy(entry[0])
+diff --git c/catalog/store.py i/catalog/store.py
+index 32f4494..b9c82fa 100644
+--- c/catalog/store.py
++++ i/catalog/store.py
+@@ -4,6 +4,9 @@ class Catalog:
+         self.versions = {}
+         self.reads = 0
+ 
++    def version(self, id):
++        return self.versions.get(id, 0)
++
+     def put(self, id, title):
+         self.products[id] = {'id': id, 'title': title}
+         self.versions[id] = self.versions.get(id, 0) + 1

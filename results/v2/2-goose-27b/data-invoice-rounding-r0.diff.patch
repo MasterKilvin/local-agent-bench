@@ -1,0 +1,53 @@
+diff --git c/invoice/__pycache__/__init__.cpython-312.pyc i/invoice/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..464a1d5
+Binary files /dev/null and i/invoice/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/invoice/__pycache__/pricing.cpython-312.pyc i/invoice/__pycache__/pricing.cpython-312.pyc
+new file mode 100644
+index 0000000..da3e15b
+Binary files /dev/null and i/invoice/__pycache__/pricing.cpython-312.pyc differ
+diff --git c/invoice/pricing.py i/invoice/pricing.py
+index bd5f11f..213ffa4 100644
+--- c/invoice/pricing.py
++++ i/invoice/pricing.py
+@@ -1,4 +1,37 @@
++from decimal import Decimal, ROUND_HALF_UP
++
++CENT = Decimal('0.01')
++
++
++def _to_cents(value):
++    """Round a Decimal to two places with ROUND_HALF_UP (per README)."""
++    return value.quantize(CENT, rounding=ROUND_HALF_UP)
++
++
++def _fmt(value):
++    value = _to_cents(value)
++    # Guard against a negative zero (e.g. a self-cancelling refund) printing "-0.00".
++    if value == 0:
++        value = Decimal('0.00')
++    return f'{value:.2f}'
++
++
+ def invoice(lines, tax_rate):
+-    subtotal = sum(float(row['unit_price']) * row['qty'] for row in lines)
+-    tax = round(sum(float(row['unit_price']) * row['qty'] for row in lines if row['taxable']) * float(tax_rate), 2)
+-    return {'subtotal': f'{subtotal:.2f}', 'tax': f'{tax:.2f}', 'total': f'{subtotal + tax:.2f}'}
++    rate = Decimal(tax_rate)
++
++    subtotal = Decimal('0')
++    tax = Decimal('0')
++    for row in lines:
++        qty = int(row['qty'])
++        unit_price = Decimal(row['unit_price'])
++
++        # Extended line amount, rounded to cents, then summed.
++        rounded_line = _to_cents(unit_price * qty)
++        subtotal += rounded_line
++
++        # Tax follows the sign of its line; tax on non-taxable lines is excluded.
++        if row['taxable']:
++            tax += _to_cents(rounded_line * rate)
++
++    total = subtotal + tax
++    return {'subtotal': _fmt(subtotal), 'tax': _fmt(tax), 'total': _fmt(total)}

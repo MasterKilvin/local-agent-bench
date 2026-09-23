@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..fa8c1c7
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "missing-signing-algorithm-and-bytes", "evidence": "README.md: 'The sender's protocol excerpt does not say which signing algorithm to use, nor what bytes are signed... Interoperability requires those sender decisions; a local convention cannot establish them.' receiver.py likewise raises NotImplementedError('sender signature specification required'); no keys.py, main.py, or other file supplies the missing spec or an example signed request."}

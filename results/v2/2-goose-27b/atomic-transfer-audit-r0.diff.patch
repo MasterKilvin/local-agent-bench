@@ -1,0 +1,38 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..05a2cc6
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..6da4249
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..9bd9618
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..d3cfc4c
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..b5de5d7 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,14 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
++        # Run every fault-injection point first; the balance change and
++        # audit event are committed atomically only if all phases pass,
++        # so a failed callback always leaves state exactly as before.
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
++        balances[source] -= amount
++        balances[target] += amount
+         self.ledger.audit.append(event(source, target, amount))
+         return True

@@ -1,0 +1,53 @@
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..6f29d16 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,43 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++
++def _parse_row(row):
++    sku = row['sku']
++    name = row['name']
++    qty = row['qty']
++    if sku is None or name is None or qty is None:
++        raise ValueError('row is missing a field value')
++    sku = sku.strip()
++    name = name.strip()
++    qty = qty.strip()
++    if not sku:
++        raise ValueError('row has an empty SKU')
++    if not name:
++        raise ValueError('row has an empty name')
++    if not (qty.isascii() and qty.isdigit()):
++        raise ValueError('row has a non-integer quantity')
++    return {'sku': sku, 'name': name, 'qty': int(qty)}
++
++
++def import_text(text, store, dry_run=False):
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
++    reader = csv.DictReader(io.StringIO(text))
++    parsed = []
++    seen = set()
++    for row in reader:
++        item = _parse_row(row)
++        if item['sku'] in seen:
++            raise ValueError('duplicate SKU in input: %s' % item['sku'])
++        seen.add(item['sku'])
++        parsed.append(item)
++    for item in parsed:
+         before = store.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        if not dry_run:
++            store.put(item)
+     return result

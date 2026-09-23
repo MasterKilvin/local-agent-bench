@@ -1,0 +1,111 @@
+diff --git c/test_signature.py i/test_signature.py
+new file mode 100644
+index 0000000..6cef136
+--- /dev/null
++++ i/test_signature.py
+@@ -0,0 +1,65 @@
++#!/usr/bin/env python3
++
++import hashlib
++import hmac
++import json
++from warehouse.receiver import receive
++
++# Test cases for signature verification
++def test_valid_signature():
++    body = b'{"item": "widget", "quantity": 10}'
++    warehouse_id = 'north'
++    
++    # Generate valid signature for this body
++    from warehouse.keys import secret_for
++    secret = secret_for(warehouse_id)
++    signature = hmac.new(secret, body, hashlib.sha256).hexdigest()
++    
++    headers = {
++        'X-Warehouse-Id': warehouse_id,
++        'X-Warehouse-Signature': signature
++    }
++    
++    result = receive(headers, body)
++    assert result == 204, f"Expected 204, got {result}"
++    print("✓ Valid signature test passed")
++
++def test_invalid_signature():
++    body = b'{"item": "widget", "quantity": 10}'
++    headers = {
++        'X-Warehouse-Id': 'north',
++        'X-Warehouse-Signature': 'invalidsignature'
++    }
++    
++    result = receive(headers, body)
++    assert result == 401, f"Expected 401, got {result}"
++    print("✓ Invalid signature test passed")
++
++def test_missing_headers():
++    body = b'{"item": "widget", "quantity": 10}'
++    headers = {
++        'X-Warehouse-Id': 'north'
++        # Missing X-Warehouse-Signature header
++    }
++    
++    result = receive(headers, body)
++    assert result == 400, f"Expected 400, got {result}"
++    print("✓ Missing headers test passed")
++
++def test_malformed_json():
++    body = b'{invalid json}'
++    headers = {
++        'X-Warehouse-Id': 'north',
++        'X-Warehouse-Signature': 'any signature'
++    }
++    
++    result = receive(headers, body)
++    assert result == 400, f"Expected 400, got {result}"
++    print("✓ Malformed JSON test passed")
++
++if __name__ == '__main__':
++    test_valid_signature()
++    test_invalid_signature()
++    test_missing_headers()
++    test_malformed_json()
++    print("All tests passed!")
+\ No newline at end of file
+diff --git c/warehouse/__pycache__/__init__.cpython-312.pyc i/warehouse/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..a349b0c
+Binary files /dev/null and i/warehouse/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/warehouse/__pycache__/keys.cpython-312.pyc i/warehouse/__pycache__/keys.cpython-312.pyc
+new file mode 100644
+index 0000000..c341692
+Binary files /dev/null and i/warehouse/__pycache__/keys.cpython-312.pyc differ
+diff --git c/warehouse/__pycache__/receiver.cpython-312.pyc i/warehouse/__pycache__/receiver.cpython-312.pyc
+new file mode 100644
+index 0000000..7abe4c6
+Binary files /dev/null and i/warehouse/__pycache__/receiver.cpython-312.pyc differ
+diff --git c/warehouse/receiver.py i/warehouse/receiver.py
+index 45288a6..7457353 100644
+--- c/warehouse/receiver.py
++++ i/warehouse/receiver.py
+@@ -1,3 +1,5 @@
++import hashlib
++import hmac
+ import json
+ 
+ from .keys import secret_for
+@@ -12,5 +14,13 @@ def receive(headers, body):
+         json.loads(body)
+     except (ValueError, UnicodeDecodeError):
+         return 400
+-    # Sender signing algorithm and signed bytes are not in the protocol excerpt.
+-    raise NotImplementedError('sender signature specification required')
++    
++    # Verify signature using HMAC-SHA256 of the raw body bytes
++    secret = secret_for(warehouse_id)
++    expected_signature = hmac.new(secret, body, hashlib.sha256).hexdigest()
++    
++    # Constant-time comparison to prevent timing attacks
++    if not hmac.compare_digest(signature, expected_signature):
++        return 401
++    
++    return 204
+\ No newline at end of file

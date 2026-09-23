@@ -1,0 +1,80 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..44baa1a
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..4ca0b9c
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..c5ffcfe
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..c7a1782 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,35 @@
++import re
++
++# Exactly one of bytes=D-D, bytes=D-, bytes=-D, where D is 1+ ASCII 0-9.
++_SPEC = re.compile(r'\Abytes=([0-9]*)-([0-9]*)\Z')
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
++    """Return inclusive (start, end) for a valid single range, else None."""
++    if not isinstance(header, str):
++        return None
++    m = _SPEC.match(header)
++    if m is None:
++        return None
++    first, last = m.group(1), m.group(2)
++    if not first and not last:
++        return None
++    if last:
++        if not first:
++            # Suffix: last N bytes.
++            n = int(last)
++            if n == 0:
++                return None
++            end = length - 1
++            start = max(0, length - n)
++        else:
++            start = int(first)
++            end = int(last)
++            if end >= length:
++                end = length - 1
++    else:
++        start = int(first)
++        end = length - 1
++    if start > end:
++        return None
+     return start, end
+diff --git c/download/service.py i/download/service.py
+index 72a053d..ef9d263 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,15 @@
+ from .ranges import bounds
+ 
++
+ def serve(data, range_header=None):
++    length = len(data)
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
++        return 200, {'Content-Length': str(length)}, data
++    bounds_ = bounds(range_header, length)
++    if bounds_ is None:
++        return 416, {'Content-Length': '0',
++                     'Content-Range': f'bytes */{length}'}, b''
++    start, end = bounds_
++    body = data[start:end + 1]
+     return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++                 'Content-Range': f'bytes {start}-{end}/{length}'}, body

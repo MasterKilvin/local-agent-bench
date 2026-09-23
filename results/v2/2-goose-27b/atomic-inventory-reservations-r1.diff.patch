@@ -1,0 +1,20 @@
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..4eaf40b 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -9,10 +9,14 @@ class Inventory:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
+-        remaining = self.available[sku]
+         if on_attempt is not None:
++            # Invoke exactly once before this request's state transition.
++            # The callback may submit other reservations, so the stock
++            # check must run afterwards against the current value.
+             on_attempt()
++        remaining = self.available[sku]
+         if remaining < quantity:
++            # Rejected: no state change for this request.
+             return None
+         reservation_id = self._next_id
+         self._next_id += 1

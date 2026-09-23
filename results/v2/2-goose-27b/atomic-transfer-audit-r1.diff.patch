@@ -1,0 +1,48 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..632defc
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..b362145
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..4289f00
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..cd28ee0
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..d38f8ef 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,24 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
++
++        # Stage the transfer without touching the live ledger; this keeps
++        # both the balances and the audit log exactly as before when any
++        # injected phase fails.
++        after_debit = dict(balances)
++        after_debit[source] = balances[source] - amount
++        after_credit = dict(after_debit)
++        after_credit[target] = after_debit[target] + amount
++
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
++
++        # Commit balances and audit event together: the live state is only
++        # written after every phase succeeded, so a failure at any phase
++        # leaves no debit, credit, or audit trail behind.
++        balances.clear()
++        balances.update(after_credit)
+         self.ledger.audit.append(event(source, target, amount))
+         return True

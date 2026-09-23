@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..ef87dde
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "missing-sender-signing-spec", "evidence": "README.md:7-10: the protocol excerpt states no signing algorithm, no signed bytes (raw body vs canonical JSON vs fields vs headers+body), and no signed sample request; interoperability cannot be established locally. Also warehouse/receiver.py:15-16."}

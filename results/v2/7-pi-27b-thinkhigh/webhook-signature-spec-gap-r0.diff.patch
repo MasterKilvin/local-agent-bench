@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..5ff7b77
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "missing-signature-spec", "evidence": "README.md lines 7-11: the sender's protocol excerpt does not state the signing algorithm or the signed bytes (raw body vs canonical JSON vs fields vs headers+body), no known signed request or digest accompanies it, and local convention cannot establish interoperability; warehouse/receiver.py raises NotImplementedError('sender signature specification required'); git history (single commit) contains no sender test vector"}

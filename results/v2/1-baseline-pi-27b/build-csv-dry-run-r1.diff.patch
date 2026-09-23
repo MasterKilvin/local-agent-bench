@@ -1,0 +1,70 @@
+diff --git c/__pycache__/main.cpython-312.pyc i/__pycache__/main.cpython-312.pyc
+new file mode 100644
+index 0000000..19b1819
+Binary files /dev/null and i/__pycache__/main.cpython-312.pyc differ
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..a4f99e0
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..97ad14f
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..cc48641
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..93e4000 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,44 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
+-    result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
++_DIGITS = frozenset('0123456789')
++
++
++def _row_field(row, column):
++    try:
++        value = row[column]
++    except KeyError:
++        raise ValueError('missing %r column' % column)
++    if value is None:
++        raise ValueError('missing %r field' % column)
++    return value
++
++
++def import_text(text, store, dry_run=False):
++    rows = list(csv.DictReader(io.StringIO(text)))
++
++    # Validate every row before committing any changes.
++    items = []
+     for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
++        sku = _row_field(row, 'sku').strip()
++        name = _row_field(row, 'name').strip()
++        qty_text = _row_field(row, 'qty').strip()
++        if not sku:
++            raise ValueError('sku must not be empty')
++        if not name:
++            raise ValueError('name must not be empty')
++        if not qty_text or not all(ch in _DIGITS for ch in qty_text):
++            raise ValueError('qty must contain only decimal digits')
++        items.append({'sku': sku, 'name': name, 'qty': int(qty_text)})
++
++    result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
++    for item in items:
+         before = store.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        if not dry_run:
++            store.put(item)
+     return result

@@ -1,0 +1,182 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..edb04ea
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,176 @@
++"""Regression tests for the retry wrapper's public API (see README.md).
++
++Contract under test, exactly as stated in README.md:
++
++* ``run(operation, attempts=3)`` calls a zero-argument operation.
++* ``TransientError`` is retried up to ``attempts`` total calls, returning
++  the first success or raising the last transient error.
++* ``PermanentError`` must propagate immediately on any attempt, including
++  after a transient failure -- the operation must never be called again.
++* No other exception is retried.
++* ``attempts`` is positive.
++
++Per the README, every test verifies both the *outcome* (returned value or
++raised exception) and the *call count* of the operation.  Only public API
++names ``run``, ``TransientError`` and ``PermanentError`` are used.
++"""
++
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++class PermanentErrorStopsImmediately(unittest.TestCase):
++    """README: 'PermanentError must propagate immediately on any attempt'."""
++
++    def test_permanent_failure_is_not_retried(self):
++        calls = []
++        raised = PermanentError('fatal')
++
++        def operation():
++            calls.append(raised)
++            raise raised
++
++        with self.assertRaises(PermanentError) as caught:
++            run(operation, attempts=5)
++
++        # Outcome: the very same exception instance propagates...
++        self.assertIs(caught.exception, raised)
++        # ...and the operation stops immediately: exactly one call.
++        self.assertEqual(
++            len(calls),
++            1,
++            'operation must not be retried after a PermanentError',
++        )
++
++    def test_permanent_after_transient_stops_immediately(self):
++        """README: must propagate immediately 'including after a transient failure'."""
++        calls = []
++        fatal = PermanentError('fatal')
++
++        def operation():
++            calls.append(None)
++            if len(calls) == 1:
++                raise TransientError('first failure was transient')
++            raise fatal
++
++        with self.assertRaises(PermanentError) as caught:
++            run(operation, attempts=5)
++
++        self.assertIs(caught.exception, fatal)
++        self.assertEqual(
++            len(calls),
++            2,
++            'operation must stop the moment a PermanentError occurs, '
++            'even when it follows a transient failure',
++        )
++
++    def test_permanent_failure_is_not_retried_with_default_attempts(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            raise PermanentError('fatal')
++
++        with self.assertRaises(PermanentError) as caught:
++            run(operation)  # default attempts=3
++
++        self.assertIsInstance(caught.exception, PermanentError)
++        self.assertEqual(
++            len(calls),
++            1,
++            'default run must not retry a PermanentError either',
++        )
++
++
++class TransientErrorIsRetried(unittest.TestCase):
++    """README: transient errors are retried up to ``attempts`` total calls."""
++
++    def test_first_attempt_success_is_single_call(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            return 'ok'
++
++        self.assertEqual(run(operation, attempts=3), 'ok')
++        self.assertEqual(len(calls), 1, 'no retry needed on immediate success')
++
++    def test_transient_failures_are_retried_until_success(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            if len(calls) < 3:
++                raise TransientError('blip %d' % len(calls))
++            return 'recovered'
++
++        self.assertEqual(run(operation, attempts=3), 'recovered')
++        self.assertEqual(len(calls), 3, 'two transient failures must be retried')
++
++    def test_exhausted_attempts_raise_last_transient_error(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            raise TransientError('failure %d' % len(calls))
++
++        with self.assertRaises(TransientError) as caught:
++            run(operation, attempts=4)
++
++        self.assertEqual(len(calls), 4, 'transient errors must be retried up to attempts')
++        self.assertEqual(
++            str(caught.exception),
++            'failure 4',
++            'the last transient error must be the one raised',
++        )
++
++    def test_default_attempts_is_three(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            raise TransientError('always flaky')
++
++        with self.assertRaises(TransientError):
++            run(operation)  # default attempts=3
++
++        self.assertEqual(len(calls), 3, 'default attempts must be three')
++
++    def test_single_attempt_transient_raises_after_one_call(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            raise TransientError('only chance')
++
++        with self.assertRaises(TransientError) as caught:
++            run(operation, attempts=1)
++
++        self.assertEqual(str(caught.exception), 'only chance')
++        self.assertEqual(len(calls), 1)
++
++
++class OtherExceptionsAreNotRetried(unittest.TestCase):
++    """README: 'No other exception is retried.'"""
++
++    def test_unrelated_exception_propagates_after_single_call(self):
++        calls = []
++
++        def operation():
++            calls.append(None)
++            raise ValueError('unexpected')
++
++        with self.assertRaises(ValueError) as caught:
++            run(operation, attempts=5)
++
++        self.assertEqual(str(caught.exception), 'unexpected')
++        self.assertEqual(
++            len(calls),
++            1,
++            'exceptions other than TransientError/PermanentError must not be retried',
++        )
++
++
++if __name__ == '__main__':
++    unittest.main()

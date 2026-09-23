@@ -1,0 +1,51 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..b7b2204
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..8bcdc66
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..e518acc
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..6b08b7c
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..28fc037 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,26 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
++
++        # Prepare the transfer without touching the ledger: the new balances
++        # and the audit event are computed first and committed together only
++        # after every injected phase has completed, so a fault at any phase
++        # leaves balances and audit log exactly as before.
++        new_balances = {
++            source: balances[source] - amount,
++            target: balances[target] + amount,
++        }
++        audit_event = event(source, target, amount)
++
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
++
++        self._commit(new_balances, audit_event)
+         return True
++
++    def _commit(self, new_balances, audit_event):
++        # Apply the balance changes and the audit record in one commit step.
++        self.ledger.balances.update(new_balances)
++        self.ledger.audit.append(audit_event)

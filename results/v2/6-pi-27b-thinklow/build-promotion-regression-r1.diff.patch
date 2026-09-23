@@ -1,0 +1,50 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..3cc0323
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,44 @@
++"""Regression test for the double-discount-at-checkout bug.
++
++The promotion must be applied exactly once to the subtotal (see README.md):
++    payable = subtotal * (1 - rate), rounded with ROUND_HALF_UP.
++
++The current production bug applies the factor twice, which inflates the
++discount whenever ``rate`` != 0. These tests pin down the correct payable
++total for two distinct baskets:
++
++  * a single line with quantity above one
++  * a multiple-line basket in which every quantity is one
++
++Each test fails against the buggy implementation and passes against a
++correct checkout. Only the public ``checkout`` API is exercised.
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class DoubleDiscountRegressionTest(unittest.TestCase):
++    """Cover the double-discount bug across the two required scenarios."""
++
++    def test_single_line_quantity_above_one(self):
++        # One line, qty 2. Subtotal = 10.00 * 2 = 20.00.
++        # Promotion (10% off) applied once: 20.00 * 0.90 = 18.00.
++        # Buggy double-discount would give 20.00 * 0.90 * 0.90 = 16.20.
++        lines = [{"price": "10.00", "qty": 2}]
++        self.assertEqual(checkout(lines, "0.10"), "18.00")
++
++    def test_multiple_lines_all_quantities_one(self):
++        # Two lines, each qty 1. Subtotal = 10.00 + 5.00 = 15.00.
++        # Promotion (10% off) applied once: 15.00 * 0.90 = 13.50.
++        # Buggy double-discount would give 15.00 * 0.90 * 0.90 = 12.15.
++        lines = [
++            {"price": "10.00", "qty": 1},
++            {"price": "5.00", "qty": 1},
++        ]
++        self.assertEqual(checkout(lines, "0.10"), "13.50")
++
++
++if __name__ == "__main__":
++    unittest.main()

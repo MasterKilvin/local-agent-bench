@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..893f50e
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "missing-status-mapping", "evidence": "README.md lines 6-9: the documented instructions do not state whether 'held' maps to 'paused' or 'cancelled', nor whether 'reversed' maps to 'cancelled' or 'refunded'; orders/migrate.py KNOWN maps only queued/sent/failed and no other file (orders/legacy.py, orders/target.py, main.py) defines the missing mappings"}

@@ -1,0 +1,111 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..697e18e
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,105 @@
++"""Regression tests for the public retry API documented in README.md.
++
++The contract (README.md) is:
++  * ``run(operation, attempts=3)`` invokes a zero-argument ``operation``.
++  * ``TransientError`` is retried up to ``attempts`` total calls, returning the
++    first success or raising the last transient error once attempts are used up.
++  * ``PermanentError`` propagates immediately on whatever attempt it happens,
++    **including after a transient failure** -- it is never retried.
++  * No other exception is retried.
++
++These tests exercise only the public API above (no private internals) and verify
++both the *outcomes* (return value / which error is raised) and the *call counts*
++(the number of times the operation actually ran).
++
++Run from the project root:
++
++    python -m unittest tests.test_regression -v
++
++Note: against the current production implementation the ``PermanentError`` cases
++here FAIL, because ``run`` currently swallows and re-loops ``PermanentError``
++instead of propagating it. That failure is the point of the regression test:
++it pins down the documented spec so the bug cannot regress silently. The
++``TransientError`` cases pass, capturing the behaviour that does already match
++the spec.
++"""
++
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++class TransientRetriesRegression(unittest.TestCase):
++    """Transient failures are retried and the first success is returned."""
++
++    def test_transient_then_first_success(self):
++        calls = []
++
++        def op():
++            calls.append(None)
++            if len(calls) < 3:
++                raise TransientError("flaky")
++            return "ok"
++
++        # attempts > the number of calls actually needed, proving we stop as soon
++        # as the first success arrives rather than running a fixed loop.
++        result = run(op, attempts=5)
++
++        self.assertEqual(result, "ok")
++        self.assertEqual(len(calls), 3)
++
++    def test_transient_exhausts_attempts(self):
++        calls = []
++        attempts = 5
++
++        def op():
++            calls.append(None)
++            raise TransientError("always flaky")
++
++        # Every attempt fails transiently, so all ``attempts`` calls are made and
++        # the last transient error is the one raised.
++        with self.assertRaises(TransientError):
++            run(op, attempts=attempts)
++
++        self.assertEqual(len(calls), attempts)
++
++
++class PermanentImmediateRegression(unittest.TestCase):
++    """PermanentError propagates immediately and is never retried."""
++
++    def test_permanent_stops_immediately(self):
++        calls = []
++        attempts = 5
++
++        def op():
++            calls.append(None)
++            raise PermanentError("fatal")
++
++        with self.assertRaises(PermanentError):
++            run(op, attempts=attempts)
++
++        # The heart of the fix: with 5 attempts allowed, a permanent error runs
++        # exactly once. A retry wrapper that "repeats permanent failures" would
++        # drive this count up to ``attempts`` and trip this assertion.
++        self.assertEqual(len(calls), 1)
++
++    def test_permanent_propagates_after_transient_failure(self):
++        calls = []
++        attempts = 5
++
++        def op():
++            calls.append(None)
++            if len(calls) == 1:
++                raise TransientError("flaky once")
++            raise PermanentError("then fatal")
++
++        # Attempt 1 fails transiently and is legitimately retried; attempt 2 hits
++        # a permanent error which must stop immediately. Total: exactly 2 calls.
++        with self.assertRaises(PermanentError):
++            run(op, attempts=attempts)
++
++        self.assertEqual(len(calls), 2)
++
++
++if __name__ == "__main__":
++    unittest.main()

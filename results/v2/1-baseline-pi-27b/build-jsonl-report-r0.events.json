@@ -1,0 +1,153 @@
+{
+"peak_prompt_tokens": 5236,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 2,
+"steps_detail": [
+{
+"t": 1.4,
+"prompt": 1666,
+"completion": 48,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 1.9,
+"prompt": 2035,
+"completion": 54,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 2.7,
+"prompt": 2317,
+"completion": 105,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 4.9,
+"prompt": 2546,
+"completion": 361,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 6.7,
+"prompt": 2931,
+"completion": 255,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 10.0,
+"prompt": 3213,
+"completion": 336,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 11.3,
+"prompt": 3730,
+"completion": 182,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 13.1,
+"prompt": 3941,
+"completion": 278,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 17.4,
+"prompt": 4248,
+"completion": 629,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 17.9,
+"prompt": 4983,
+"completion": 55,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 19.8,
+"prompt": 5236,
+"completion": 238,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 1.4,
+"name": "bash",
+"args_hash": "c8da57b59ec9b9e9",
+"error": null
+},
+{
+"t": 1.9,
+"name": "bash",
+"args_hash": "7bed3a2311688116",
+"error": null
+},
+{
+"t": 2.7,
+"name": "read",
+"args_hash": "15ab59e68965799f",
+"error": null
+},
+{
+"t": 2.7,
+"name": "read",
+"args_hash": "258baefbccc6b242",
+"error": null
+},
+{
+"t": 4.9,
+"name": "write",
+"args_hash": "d2e06015a66b5bab",
+"error": null
+},
+{
+"t": 6.7,
+"name": "edit",
+"args_hash": "ab84aa0d774d8f27",
+"error": null
+},
+{
+"t": 10.0,
+"name": "read",
+"args_hash": "15ab59e68965799f",
+"error": null
+},
+{
+"t": 11.3,
+"name": "edit",
+"args_hash": "eeb2083fff86661e",
+"error": null
+},
+{
+"t": 13.1,
+"name": "edit",
+"args_hash": "bf46d8b85f1c67f0",
+"error": null
+},
+{
+"t": 17.4,
+"name": "bash",
+"args_hash": "302cac233195bf1b",
+"error": null
+},
+{
+"t": 17.9,
+"name": "read",
+"args_hash": "15ab59e68965799f",
+"error": null
+}
+]
+}

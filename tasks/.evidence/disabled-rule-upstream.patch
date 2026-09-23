@@ -1,0 +1,10 @@
+--- pre-fix-extract.py
++++ fixed-extract.py
+@@ -132,6 +132,7 @@
+ 			assert include is None, (
+ 				f"include:{include!r} must be null when pattern:{pattern!r} is null."
+ 			)
++			regex = None
+ 
+ 		else:
+ 			raise TypeError(f"pattern:{pattern!r} is not a string, re.Pattern, or None.")

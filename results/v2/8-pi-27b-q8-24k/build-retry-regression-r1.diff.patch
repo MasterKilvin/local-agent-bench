@@ -1,0 +1,124 @@
+diff --git c/retry/__pycache__/__init__.cpython-312.pyc i/retry/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..97f047c
+Binary files /dev/null and i/retry/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/retry/__pycache__/wrapper.cpython-312.pyc i/retry/__pycache__/wrapper.cpython-312.pyc
+new file mode 100644
+index 0000000..c2f377c
+Binary files /dev/null and i/retry/__pycache__/wrapper.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..76c96cd
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..1726745
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..ebf0b5b
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,102 @@
++"""Regression tests for retry.wrapper.run, written strictly against the
++public API described in README.md.
++
++- TransientError is retried up to `attempts` total calls, returning the
++  first success or raising the last transient error.
++- PermanentError propagates immediately on any attempt (exactly one call,
++  even after earlier transient failures) and is never retried.
++- No other exception is retried.
++"""
++
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++def flaky(*outcomes):
++    """Return an operation and a counter; each call yields the next outcome.
++
++    A string outcome is returned, an exception instance is raised.
++    """
++    calls = {"count": 0}
++
++    def operation():
++        index = calls["count"]
++        calls["count"] += 1
++        outcome = outcomes[min(index, len(outcomes) - 1)]
++        if isinstance(outcome, Exception):
++            raise outcome
++        return outcome
++
++    return operation, calls
++
++
++class PermanentErrorNotRetried(unittest.TestCase):
++    def test_permanent_on_first_attempt_stops_immediately(self):
++        operation, calls = flaky(PermanentError("fatal"))
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=3)
++        self.assertEqual(calls["count"], 1,
++                         "PermanentError must stop the first attempt")
++
++    def test_permanent_after_transient_stops_immediately(self):
++        operation, calls = flaky(
++            TransientError("bump 1"),
++            TransientError("bump 2"),
++            PermanentError("fatal"),
++        )
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=5)
++        self.assertEqual(calls["count"], 3,
++                         "PermanentError must propagate immediately, "
++                         "not be retried up to attempts")
++
++    def test_permanent_is_the_exception_that_propagates(self):
++        permanent = PermanentError("fatal")
++        operation, calls = flaky(TransientError("bump"), permanent)
++        try:
++            run(operation, attempts=5)
++        except PermanentError as exc:
++            self.assertIs(exc, permanent)
++        else:
++            self.fail("PermanentError did not propagate")
++        self.assertEqual(calls["count"], 2)
++
++
++class TransientErrorRetried(unittest.TestCase):
++    def test_transient_retried_until_success(self):
++        operation, calls = flaky(
++            TransientError("bump 1"),
++            TransientError("bump 2"),
++            "ok",
++        )
++        self.assertEqual(run(operation, attempts=3), "ok")
++        self.assertEqual(calls["count"], 3)
++
++    def test_transient_retries_attempts_times_then_raises_last(self):
++        last = TransientError("last bump")
++        operation, calls = flaky(
++            TransientError("bump 1"),
++            TransientError("bump 2"),
++            last,
++        )
++        try:
++            run(operation, attempts=3)
++        except TransientError as exc:
++            self.assertIs(exc, last,
++                          "the last transient error must be raised")
++        else:
++            self.fail("transient errors exhausted but nothing raised")
++        self.assertEqual(calls["count"], 3)
++
++
++class OtherExceptionsNotRetried(unittest.TestCase):
++    def test_value_error_propagates_on_first_call(self):
++        operation, calls = flaky(ValueError("boom"))
++        with self.assertRaises(ValueError):
++            run(operation, attempts=3)
++        self.assertEqual(calls["count"], 1)
++
++
++if __name__ == "__main__":
++    unittest.main()

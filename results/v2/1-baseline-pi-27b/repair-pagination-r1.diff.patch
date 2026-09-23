@@ -1,0 +1,26 @@
+diff --git c/library/__pycache__/__init__.cpython-312.pyc i/library/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..3679d36
+Binary files /dev/null and i/library/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/library/__pycache__/data.cpython-312.pyc i/library/__pycache__/data.cpython-312.pyc
+new file mode 100644
+index 0000000..3b3b95d
+Binary files /dev/null and i/library/__pycache__/data.cpython-312.pyc differ
+diff --git c/library/__pycache__/search.cpython-312.pyc i/library/__pycache__/search.cpython-312.pyc
+new file mode 100644
+index 0000000..77e4361
+Binary files /dev/null and i/library/__pycache__/search.cpython-312.pyc differ
+diff --git c/library/search.py i/library/search.py
+index b66680c..67933e0 100644
+--- c/library/search.py
++++ i/library/search.py
+@@ -2,6 +2,8 @@ def search(books, term, page, size):
+     if page < 1 or size < 1:
+         raise ValueError('page and size must be positive')
+     matches = [b for b in books if term.casefold() in b['title'].casefold()]
++    total = len(matches)
++    pages = (total + size - 1) // size if total else 0
+     start = (page - 1) * size
+     items = matches[start:start + size]
+-    return {'items': items, 'total': len(items), 'pages': len(matches) // size}
++    return {'items': items, 'total': total, 'pages': pages}

@@ -1,0 +1,50 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..3d1df50
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..b4ac53f
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..d3d3673
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..363d259
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..350d6ce
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,28 @@
++"""Regression tests for the double-discount checkout bug.
++
++The promotion must be applied exactly once to the basket subtotal.
++A buggy implementation that squares the discount factor
++(`subtotal * discount * discount`) makes the payable total too low.
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class CheckoutDoubleDiscountRegression(unittest.TestCase):
++    def test_single_line_quantity_above_one(self):
++        # Subtotal: 10.00 * 2 = 20.00, 10% off once => 18.00.
++        # Doubled discount would be 20.00 * 0.9 * 0.9 = 16.20.
++        lines = [{'price': '10.00', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_multiple_lines_all_quantities_one(self):
++        # Subtotal: 10.00 + 5.00 = 15.00, 10% off once => 13.50.
++        # Doubled discount would be 15.00 * 0.9 * 0.9 = 12.15.
++        lines = [{'price': '10.00', 'qty': 1}, {'price': '5.00', 'qty': 1}]
++        self.assertEqual(checkout(lines, '0.10'), '13.50')
++
++
++if __name__ == '__main__':
++    unittest.main()

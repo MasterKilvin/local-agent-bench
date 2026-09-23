@@ -1,0 +1,77 @@
+diff --git c/main.py i/main.py
+index 4811001..7ff8347 100644
+--- c/main.py
++++ i/main.py
+@@ -1,7 +1,13 @@
++import argparse
+ import json
+ import sys
++
+ from stock.importer import import_text
+ from stock.store import Store
+ 
+ if __name__ == '__main__':
+-    print(json.dumps(import_text(sys.stdin.read(), Store())))
++    parser = argparse.ArgumentParser(description='Import a stock CSV from stdin.')
++    parser.add_argument('--dry-run', action='store_true',
++                        help='show the changes without writing anything')
++    args = parser.parse_args()
++    print(json.dumps(import_text(sys.stdin.read(), Store(), dry_run=args.dry_run)))
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..0ca71d6
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..4aaff6c
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..a2d78cf
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..e15834d 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,35 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_DECIMAL_DIGITS = set('0123456789')
++
++
++def _parse_row(row):
++    fields = [row.get(field) for field in ('sku', 'name', 'qty')]
++    if any(value is None for value in fields):
++        raise ValueError('malformed csv row: %r' % (row,))
++    sku, name, qty = (value.strip() for value in fields)
++    if not sku:
++        raise ValueError('empty sku: %r' % (row,))
++    if not name:
++        raise ValueError('empty name: %r' % (row,))
++    if not qty or any(char not in _DECIMAL_DIGITS for char in qty):
++        raise ValueError('invalid quantity: %r' % (row,))
++    return {'sku': sku, 'name': name, 'qty': int(qty)}
++
++
++def import_text(text, store, dry_run=False):
++    rows = list(csv.DictReader(io.StringIO(text)))
++    items = [_parse_row(row) for row in rows]
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
++    for item in items:
+         before = store.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+-        result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        result['changes'].append(
++            {'sku': item['sku'], 'before': before, 'after': item})
++        if not dry_run:
++            store.put(item)
+     return result

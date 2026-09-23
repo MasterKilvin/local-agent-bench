@@ -1,0 +1,11 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..936f6a9
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "blocked",
++  "blocker": "pigeonhole-impossibility",
++  "evidence": "README.md: 'return fewer bytes than its input' + 'recover the exact original for every accepted input' + 'including all 256 one-byte strings' — every one-byte input must encode to the only shorter value, b'', so all 256 distinct inputs collide into one codeword and decode(b'') can return only one of them; archive/codec.py is an empty TODO stub, so the contradiction is in the spec itself"
++}

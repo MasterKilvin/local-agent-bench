@@ -1,0 +1,151 @@
+{
+"peak_prompt_tokens": 6809,
+"thinking_tokens": 0,
+"tool_errors": 1,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 1.6,
+"prompt": 1680,
+"completion": 62,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 2.5,
+"prompt": 1974,
+"completion": 170,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 7.2,
+"prompt": 2840,
+"completion": 581,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 8.3,
+"prompt": 3445,
+"completion": 107,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 14.1,
+"prompt": 3666,
+"completion": 905,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 21.4,
+"prompt": 4726,
+"completion": 1043,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 25.7,
+"prompt": 5849,
+"completion": 697,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 26.3,
+"prompt": 6618,
+"completion": 59,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 29.2,
+"prompt": 6809,
+"completion": 342,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 1.6,
+"name": "bash",
+"args_hash": "43a108951f81c669",
+"error": null
+},
+{
+"t": 2.5,
+"name": "read",
+"args_hash": "19b4e2f4c9a2ed43",
+"error": null
+},
+{
+"t": 2.5,
+"name": "read",
+"args_hash": "3bc969dc8f2d9f8c",
+"error": null
+},
+{
+"t": 2.5,
+"name": "read",
+"args_hash": "0a884ee16cc22de5",
+"error": null
+},
+{
+"t": 2.5,
+"name": "read",
+"args_hash": "89231e7b75a029b6",
+"error": null
+},
+{
+"t": 2.5,
+"name": "read",
+"args_hash": "ddbbb2eaa49bd743",
+"error": null
+},
+{
+"t": 2.5,
+"name": "read",
+"args_hash": "0c54c594d0604c64",
+"error": null
+},
+{
+"t": 7.2,
+"name": "edit",
+"args_hash": "c336f084cfb3b459",
+"error": null
+},
+{
+"t": 8.3,
+"name": "bash",
+"args_hash": "57dec2d5182f65bb",
+"error": null
+},
+{
+"t": 14.1,
+"name": "bash",
+"args_hash": "0cf0df86af24d6fc",
+"error": null
+},
+{
+"t": 21.4,
+"name": "bash",
+"args_hash": "e1db99f45a4d7231",
+"error": "isError"
+},
+{
+"t": 25.7,
+"name": "bash",
+"args_hash": "a2a9ecf79be577fe",
+"error": null
+},
+{
+"t": 26.3,
+"name": "bash",
+"args_hash": "1183524ef946555b",
+"error": null
+}
+]
+}

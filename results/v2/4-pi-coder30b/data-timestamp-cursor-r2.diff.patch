@@ -1,0 +1,47 @@
+diff --git c/activity/__pycache__/__init__.cpython-312.pyc i/activity/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..c072f1a
+Binary files /dev/null and i/activity/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/activity/__pycache__/paging.cpython-312.pyc i/activity/__pycache__/paging.cpython-312.pyc
+new file mode 100644
+index 0000000..d55dc23
+Binary files /dev/null and i/activity/__pycache__/paging.cpython-312.pyc differ
+diff --git c/activity/__pycache__/store.cpython-312.pyc i/activity/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..e3594f8
+Binary files /dev/null and i/activity/__pycache__/store.cpython-312.pyc differ
+diff --git c/activity/paging.py i/activity/paging.py
+index e9fc2b8..0e4ee9b 100644
+--- c/activity/paging.py
++++ i/activity/paging.py
+@@ -3,7 +3,29 @@ def page(records, cursor=None, limit=10):
+         raise ValueError('limit')
+     ordered = sorted(records, key=lambda x: (x['timestamp'], x['id']))
+     if cursor is not None:
+-        ordered = [x for x in ordered if x['timestamp'] > cursor]
++        # When a cursor is provided, we want to skip all records that would have
++        # already been returned in previous pages, including those with same timestamp
++        
++        # Find the index of the last record whose timestamp equals the cursor
++        # (because there might be multiple records with that timestamp)
++        start_index = 0
++        for i, record in enumerate(ordered):
++            if record['timestamp'] == cursor:
++                # If this is the last element with the current cursor timestamp,
++                # we need to skip all of them to get to next elements
++                if i == len(ordered) - 1:
++                    start_index = i + 1
++                    break
++                elif ordered[i+1]['timestamp'] != cursor:
++                    # This is the last record with this timestamp
++                    start_index = i + 1
++                    break
++            elif record['timestamp'] > cursor:
++                # Record that comes after the cursor in sort order
++                start_index = i
++                break
++        
++        ordered = ordered[start_index:]
+     items = ordered[:limit]
+     next_cursor = items[-1]['timestamp'] if len(ordered) > limit else None
+     return {'items': items, 'next_cursor': next_cursor}

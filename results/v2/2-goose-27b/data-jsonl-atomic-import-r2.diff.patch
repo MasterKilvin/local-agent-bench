@@ -1,0 +1,47 @@
+diff --git c/events/__pycache__/__init__.cpython-312.pyc i/events/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..cc0bbb6
+Binary files /dev/null and i/events/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/events/__pycache__/importer.cpython-312.pyc i/events/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..d07801a
+Binary files /dev/null and i/events/__pycache__/importer.cpython-312.pyc differ
+diff --git c/events/__pycache__/store.cpython-312.pyc i/events/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..baa30b2
+Binary files /dev/null and i/events/__pycache__/store.cpython-312.pyc differ
+diff --git c/events/importer.py i/events/importer.py
+index 4a941c5..2981fed 100644
+--- c/events/importer.py
++++ i/events/importer.py
+@@ -6,16 +6,23 @@ class ImportProblem(Exception):
+         super().__init__(f'invalid line {line}')
+ 
+ def import_bytes(payload, store):
+-    count = 0
+-    for line, raw in enumerate(payload.splitlines(), 1):
++    staged = []
++    for line, raw in enumerate(payload.split(b'\n'), 1):
+         if not raw.strip():
+             continue
+         try:
+             record = json.loads(raw.decode('utf-8'))
+-            if not isinstance(record, dict) or not isinstance(record.get('id'), str):
+-                raise ValueError()
+         except (UnicodeDecodeError, ValueError):
+             raise ImportProblem(line)
+-        store.append(record)
+-        count += 1
+-    return count
++        rid = record.get('id') if isinstance(record, dict) else None
++        count = record.get('count') if isinstance(record, dict) else None
++        if (
++            not isinstance(record, dict)
++            or type(rid) is not str
++            or rid == ''
++            or type(count) is not int
++        ):
++            raise ImportProblem(line)
++        staged.append(record)
++    store.records.extend(staged)
++    return len(staged)

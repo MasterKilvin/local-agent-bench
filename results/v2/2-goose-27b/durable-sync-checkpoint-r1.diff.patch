@@ -1,0 +1,32 @@
+diff --git c/sync/__pycache__/__init__.cpython-312.pyc i/sync/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..fc768d4
+Binary files /dev/null and i/sync/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/sync/__pycache__/checkpoint.cpython-312.pyc i/sync/__pycache__/checkpoint.cpython-312.pyc
+new file mode 100644
+index 0000000..46fd722
+Binary files /dev/null and i/sync/__pycache__/checkpoint.cpython-312.pyc differ
+diff --git c/sync/__pycache__/job.cpython-312.pyc i/sync/__pycache__/job.cpython-312.pyc
+new file mode 100644
+index 0000000..3b20126
+Binary files /dev/null and i/sync/__pycache__/job.cpython-312.pyc differ
+diff --git c/sync/__pycache__/sink.cpython-312.pyc i/sync/__pycache__/sink.cpython-312.pyc
+new file mode 100644
+index 0000000..c4012e0
+Binary files /dev/null and i/sync/__pycache__/sink.cpython-312.pyc differ
+diff --git c/sync/job.py i/sync/job.py
+index 87be689..bf7f68d 100644
+--- c/sync/job.py
++++ i/sync/job.py
+@@ -8,5 +8,10 @@ class SyncJob:
+             if record_id <= self.checkpoints.value:
+                 continue
+             self.sink.write((record_id, text))
+-            self.checkpoints.save(record_id)
++            # Commit to durable output before advancing the checkpoint:
++            # the checkpoint may never skip a record absent from durable
++            # output. A failed flush then leaves the checkpoint behind, so
++            # the record is replayed on retry (the sink dedupes by ID).
+             self.sink.flush()
++            self.checkpoints.save(record_id)
++

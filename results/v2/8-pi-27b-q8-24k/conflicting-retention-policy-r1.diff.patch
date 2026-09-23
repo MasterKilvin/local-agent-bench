@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..760c2a8
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "rule-a-conflicts-with-rule-b", "evidence": "README.md: Rule A requires deleting every closed case record at age >= 7, while Rule B requires keeping every closed case record through day 30; for any age in [7, 30] the rules contradict each other, and the README states both apply with no exception or priority rule, so no sweep can satisfy both for every age."}

@@ -1,0 +1,57 @@
+{
+"peak_prompt_tokens": null,
+"thinking_tokens": null,
+"tool_errors": null,
+"repeated_calls": null,
+"steps_detail": [],
+"tools_detail": [
+{
+"t": 3.4,
+"name": "todo_write todo",
+"args_hash": null,
+"error": null
+},
+{
+"t": 3.4,
+"name": "tree",
+"args_hash": null,
+"error": null
+},
+{
+"t": 4.0,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 19.1,
+"name": "write",
+"args_hash": null,
+"error": null
+},
+{
+"t": 27.3,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 28.7,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 30.2,
+"name": "shell",
+"args_hash": null,
+"error": null
+},
+{
+"t": 31.7,
+"name": "todo_write todo",
+"args_hash": null,
+"error": null
+}
+]
+}

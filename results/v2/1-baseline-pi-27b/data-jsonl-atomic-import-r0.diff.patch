@@ -1,0 +1,54 @@
+diff --git c/events/importer.py i/events/importer.py
+index 4a941c5..54c0f16 100644
+--- c/events/importer.py
++++ i/events/importer.py
+@@ -1,21 +1,40 @@
+ import json
+ 
++
+ class ImportProblem(Exception):
+     def __init__(self, line):
+         self.line = line
+         super().__init__(f'invalid line {line}')
+ 
++
++def _parse_record(raw):
++    text = raw.decode('utf-8')  # malformed UTF-8 -> UnicodeDecodeError
++    record = json.loads(text)   # malformed JSON -> ValueError (JSONDecodeError)
++    if not isinstance(record, dict):
++        raise ValueError('record must be an object')
++    record_id = record.get('id')
++    if not isinstance(record_id, str) or record_id == '':
++        raise ValueError('id must be a nonempty string')
++    if 'count' not in record:
++        raise ValueError('count is required')
++    count = record['count']
++    if isinstance(count, bool) or not isinstance(count, int):
++        raise ValueError('count must be an integer, not a bool or float')
++    return record
++
++
+ def import_bytes(payload, store):
+-    count = 0
++    # Validate and collect every record in a local list first. Only append to
++    # the store once the whole payload is known to be valid, so a malformed
++    # line leaves the store exactly unchanged (no half-committed import).
++    records = []
+     for line, raw in enumerate(payload.splitlines(), 1):
+         if not raw.strip():
+-            continue
++            continue  # blank lines are ignored but still count in `line`
+         try:
+-            record = json.loads(raw.decode('utf-8'))
+-            if not isinstance(record, dict) or not isinstance(record.get('id'), str):
+-                raise ValueError()
+-        except (UnicodeDecodeError, ValueError):
+-            raise ImportProblem(line)
++            records.append(_parse_record(raw))
++        except (UnicodeDecodeError, ValueError) as error:
++            raise ImportProblem(line) from error
++    for record in records:
+         store.append(record)
+-        count += 1
+-    return count
++    return len(records)

@@ -1,0 +1,64 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..6e77e8f
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..f1b2402
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..9b5d734
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..21cd01a
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..2d89709
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,42 @@
++"""Regression tests for the double-discount promotion bug at checkout.
++
++The README.md contract says the promotion (``rate``) must be applied
++exactly once to the subtotal, then rounded with ROUND_HALF_UP.
++The buggy implementation applies it twice (``discount * discount``).
++
++These tests use only the public API ``shop.checkout.checkout``, assert the
++correct single-application behavior, and therefore fail when the
++promotion is applied twice and pass with correct checkout behavior.
++
++Two distinct regression scenarios are covered:
++  1. A single line with quantity above one.
++  2. A separate multiple-line basket with every quantity equal to one.
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class TestPromotionAppliedExactlyOnce(unittest.TestCase):
++    def test_single_line_with_quantity_above_one(self):
++        # Subtotal: 10.00 * 2 = 20.00
++        # Promotion 0.10 applied once: 20.00 * 0.90 = 18.00
++        # Double-applied (buggy) would be: 20.00 * 0.90 * 0.90 = 16.20
++        result = checkout([{'price': '10.00', 'qty': 2}], '0.10')
++        self.assertEqual(result, '18.00')
++
++    def test_multiple_lines_all_quantities_one(self):
++        # Subtotal: 1.00 + 2.00 = 3.00
++        # Promotion 0.10 applied once: 3.00 * 0.90 = 2.70
++        # Double-applied (buggy) would be: 3.00 * 0.90 * 0.90 = 2.43
++        lines = [
++            {'price': '1.00', 'qty': 1},
++            {'price': '2.00', 'qty': 1},
++        ]
++        result = checkout(lines, '0.10')
++        self.assertEqual(result, '2.70')
++
++
++if __name__ == '__main__':
++    unittest.main()

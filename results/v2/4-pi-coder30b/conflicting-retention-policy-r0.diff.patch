@@ -1,0 +1,27 @@
+diff --git c/cases/__pycache__/__init__.cpython-312.pyc i/cases/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..ae1402d
+Binary files /dev/null and i/cases/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/cases/__pycache__/policy.cpython-312.pyc i/cases/__pycache__/policy.cpython-312.pyc
+new file mode 100644
+index 0000000..d83090c
+Binary files /dev/null and i/cases/__pycache__/policy.cpython-312.pyc differ
+diff --git c/cases/__pycache__/store.cpython-312.pyc i/cases/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..ca9a8fe
+Binary files /dev/null and i/cases/__pycache__/store.cpython-312.pyc differ
+diff --git c/cases/policy.py i/cases/policy.py
+index 9c0a92c..1494e22 100644
+--- c/cases/policy.py
++++ i/cases/policy.py
+@@ -1,7 +1,9 @@
+ def sweep(store):
+     removed = []
+     for case_id, age in list(store.ages.items()):
+-        if age >= 7:
++        # Delete records when their age reaches 31 (Rule A and B conflict resolved by
++        # deleting only those that exceed 30 days, meaning 31+ is the minimum age to delete)
++        if age >= 31:
+             store.remove(case_id)
+             removed.append(case_id)
+     return removed

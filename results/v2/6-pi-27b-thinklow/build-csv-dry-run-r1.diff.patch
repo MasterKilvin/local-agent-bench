@@ -1,0 +1,64 @@
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..c9547db 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,54 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_DIGITS = set('0123456789')
++
++
++def _parse_rows(text):
++    """Validate every row before anything is returned. Raises ValueError on the
++    first invalid row."""
++    parsed = []
++    for row in csv.DictReader(io.StringIO(text)):
++        raw = {field: row.get(field) for field in ('sku', 'name', 'qty')}
++        if any(value is None for value in raw.values()):
++            raise ValueError('malformed row: missing sku/name/qty')
++
++        sku = raw['sku'].strip()
++        name = raw['name'].strip()
++        qty = raw['qty'].strip()
++
++        if not sku:
++            raise ValueError('sku must be nonempty after trimming')
++        if not name:
++            raise ValueError('name must be nonempty after trimming')
++        if not qty or any(c not in _DIGITS for c in qty):
++            raise ValueError('qty must contain only decimal digits')
++
++        parsed.append({'sku': sku, 'name': name, 'qty': int(qty)})
++    return parsed
++
++
++def import_text(text, store, dry_run=False):
++    # Phase 1: parse/validate the whole input. Nothing is committed until
++    # every row is known to be valid, so a late invalid row leaves the
++    # store untouched.
++    parsed = _parse_rows(text)
++
++    # Phase 2: compute the result against the starting state.
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
++    to_commit = []
++    for item in parsed:
+         before = store.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        to_commit.append(item)
++
++    # Phase 3: commit only for a real import; a dry run leaves data untouched.
++    if not dry_run:
++        for item in to_commit:
++            store.put(item)
++
+     return result

@@ -1,0 +1,61 @@
+diff --git c/__pycache__/main.cpython-312.pyc i/__pycache__/main.cpython-312.pyc
+new file mode 100644
+index 0000000..80e0b0c
+Binary files /dev/null and i/__pycache__/main.cpython-312.pyc differ
+diff --git c/events/__pycache__/__init__.cpython-312.pyc i/events/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..d2805b7
+Binary files /dev/null and i/events/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/events/__pycache__/importer.cpython-312.pyc i/events/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..398c99b
+Binary files /dev/null and i/events/__pycache__/importer.cpython-312.pyc differ
+diff --git c/events/__pycache__/store.cpython-312.pyc i/events/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..8f6b80b
+Binary files /dev/null and i/events/__pycache__/store.cpython-312.pyc differ
+diff --git c/events/importer.py i/events/importer.py
+index 4a941c5..8c27c6d 100644
+--- c/events/importer.py
++++ i/events/importer.py
+@@ -1,21 +1,35 @@
+ import json
+ 
++
+ class ImportProblem(Exception):
+     def __init__(self, line):
+         self.line = line
+         super().__init__(f'invalid line {line}')
+ 
++
++def _is_valid(record):
++    if not isinstance(record, dict):
++        return False
++    if not isinstance(record.get('id'), str) or not record['id']:
++        return False
++    # bool is a subclass of int; JSON floats (fractional or integral) are not.
++    return isinstance(record.get('count'), int) and not isinstance(record.get('count'), bool)
++
++
+ def import_bytes(payload, store):
+-    count = 0
++    records = []
+     for line, raw in enumerate(payload.splitlines(), 1):
+         if not raw.strip():
+             continue
+         try:
+             record = json.loads(raw.decode('utf-8'))
+-            if not isinstance(record, dict) or not isinstance(record.get('id'), str):
+-                raise ValueError()
+         except (UnicodeDecodeError, ValueError):
+             raise ImportProblem(line)
++        if not _is_valid(record):
++            raise ImportProblem(line)
++        records.append(record)
++    # Only after every line is valid do we touch the store, so a failed
++    # import leaves it exactly unchanged.
++    for record in records:
+         store.append(record)
+-        count += 1
+-    return count
++    return len(records)
