@@ -52,7 +52,8 @@ wording is accepted at 3 of 4 votes. All 22 distinct rejected wordings were acce
 After the runs, every scored attempt was audited (`analysis/self-audit-20260923.txt`). Findings that changed the write-up:
 - The coder-tuned model wrote `BLOCKED.json` on 12 solvable attempts, but 10 of those files said "success" or "complete".
   That is protocol misuse, not refusal (report 4).
-- 26 of its 60 attempts hit "Stream ended without finish_reason" between agent and engine (report 4).
+- 26 of its 60 attempts hit stream errors between agent and engine: 21 "Stream ended without finish_reason", 6 "The
+  operation was aborted", one attempt both (report 4).
 - The relay did not record finish reasons for streamed calls. Stream failures are known only from the agents' own logs.
 - Goose prints text rather than an event stream, so its tool counts are unknown. They are reported as unknown, not zero.
 - The one solvable-task refusal from the baseline was genuine: the model misread the task.

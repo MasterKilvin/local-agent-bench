@@ -9,7 +9,7 @@ Each report takes one finding and gives its evidence, what it supports and what 
 1. [How the bench works: 20 frozen tasks, hidden tests, and a refusal judge that still needed a blind second look](reports/01-method.md)
 2. [A local 27B agent refused all 60 impossible attempts: 35 matched our wording list, all 60 passed blind review](reports/02-honest-refusal.md)
 3. [Q8 showed no advantage over Q4 at matched 24K context, and took 2.3 times as long per attempt](reports/03-q4-vs-q8.md)
-4. [A coder-tuned 30B solved 14 of 48: 71 failed edits, 26 broken streams, and a "blocked" file used as a success report](reports/04-coder-model.md)
+4. [A coder-tuned 30B solved 14 of 48: 71 failed edits, stream errors on 26 of 60 attempts, and a "blocked" file used as a success report](reports/04-coder-model.md)
 5. [Pi, Goose and OpenCode with the same model: 42, 40 and 43 of 48 solved, but Goose and OpenCode sent 2.5 to 2.6 times the prompt tokens](reports/05-three-agent-tools.md)
 
 ## The short version
@@ -29,7 +29,8 @@ Each report takes one finding and gives its evidence, what it supports and what 
 - **A coder-tuned 30B configuration** solved **14 of 48** under the frozen rules. It wrote the refusal file on 12 solvable
   attempts, but 10 of those files said "success" or "complete" — it used the "cannot be done" file as a completion
   report; 6 of the 12 had code that passes the hidden tests once that file is ignored (**20 of 48** under that reading).
-  26 of its 60 attempts hit "stream ended without finish_reason" errors between the agent and the engine; attempts
+  26 of its 60 attempts hit stream errors between the agent and the engine ("stream ended without finish_reason" or
+  "the operation was aborted"); attempts
   without that error still passed only 10 of 34. The traces do not separate coding ability from model–tool
   compatibility.
 - **One illustrative cloud run** (Claude Code on Opus 5.5, one attempt per task) solved 15 of 16 solvable tasks and 4 of 4
@@ -83,7 +84,8 @@ no isolation rules out training-data contamination.
 
 ### The configurations and the comparisons they support
 Baseline: Pi 0.87.0 + Qwen3.8-27B Q4_K_M, 64K context, medium thinking, 3 runs per task. Harness arms change prompts, tool
-interfaces and agent behaviour together; Goose had no matched thinking control. The model comparison changes size,
+interfaces and agent behaviour together. Only Pi sent a thinking level to the engine (the relay log records
+`reasoning_effort` on every Pi call); Goose and OpenCode sent none, so the engine default applied. The model comparison changes size,
 family and training. The cloud arm changes model, agent and execution environment. Only matched settings (arms 8/9, and
 5/9) support an isolated comparison.
 

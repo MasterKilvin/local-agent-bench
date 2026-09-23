@@ -1,4 +1,4 @@
-# A coder-tuned 30B solved 14 of 48: 71 failed edits, 26 broken streams, and a "blocked" file used as a success report
+# A coder-tuned 30B solved 14 of 48: 71 failed edits, stream errors on 26 of 60 attempts, and a "blocked" file used as a success report
 
 *Report 4 of 5. Method and scoring: report 1.*
 
@@ -15,7 +15,7 @@ Arm 4 swapped the model: Qwen3-Coder-30B in place of Qwen3.8-27B, same agent (Pi
 | Repeated identical calls | 101 | 5 |
 | Median model calls per attempt | 15 | 6 |
 | Median prompt tokens per attempt | 50,767 | 19,685 |
-| Attempts with "Stream ended without finish_reason" | 26 of 60 | 0 of 60 |
+| Attempts with stream errors | 26 of 60 | 0 of 60 |
 | Median seconds per attempt | 15.0 | 17.5 |
 
 Per kind, passed of 12: repair 5, state 4, data 4, build 1. Sources: `results/v2/4-pi-coder30b/results.jsonl` and
@@ -26,9 +26,10 @@ Per kind, passed of 12: repair 5, state 4, data 4, build 1. Sources: `results/v2
 traces record that a call failed, not the error text. The same calls were then often repeated unchanged: 101 repeated
 identical calls. The model used more calls and more prompt tokens to reach fewer passes.
 
-**2. The stream broke.** 26 of 60 attempts logged "Stream ended without finish_reason" (44 times in total), and 6 logged
-"The operation was aborted". Usage was recorded for only 39 of 60 attempts because broken streams carry no token counts.
-Attempts without the error passed 10 of 34. Attempts with it passed 5 of 26. The error explains part of the gap, not all
+**2. The stream broke.** 26 of 60 attempts logged a stream error: 21 logged "Stream ended without finish_reason" (44 times in
+total), 6 logged "The operation was aborted", and one logged both. Engine token usage was recorded for only 39 of 60
+attempts. Counting all kinds under the strict rules, attempts without a stream error passed 10 of 34, and attempts
+with one passed 5 of 26. The error explains part of the gap, not all
 of it.
 
 **3. The refusal file was misused.** On 12 solvable attempts the model wrote `BLOCKED.json`. Ten of those files said
