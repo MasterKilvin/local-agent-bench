@@ -56,7 +56,7 @@ For per-attempt patch similarity, compare the agent's patch with `*-reference.pa
 
 ## Local verification
 
-Reproduce with `python3 -B build_anchors.py` and `python3 -B verify_anchors.py`. Verification uses Python 3.14.7 and subprocesses with `-B -S`, only the standard library, and temporary directories inside this folder. It overlays `reference_files` onto `files`, adds the hidden test and runs unittest discovery. Every given snapshot fails on the reported behavior; imports and syntax succeed. Every reference passes. Each suite exercises the CLI parser/API journey and invalid input.
+Reproduce with `python3 -B build_anchors.py` and then `python3 -B verify_anchors.py`, from this folder; the second reads the per-task files the first writes. The rebuilt tasks are byte-identical to `tasks-anchors.jsonl` (checked September 23, 2026). Verification uses Python 3.14.7 and subprocesses with `-B -S`, only the standard library, and temporary directories inside this folder. It overlays `reference_files` onto `files`, adds the hidden test and runs unittest discovery. Every given snapshot fails on the reported behavior; imports and syntax succeed. Every reference passes. Each suite exercises the CLI parser/API journey and invalid input.
 
 | Task | JSON bytes | Visible / with tests | Test methods | Given | Reference | Incomplete fix |
 | --- | ---: | ---: | ---: | --- | --- | --- |
