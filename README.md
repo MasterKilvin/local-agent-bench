@@ -85,7 +85,9 @@ no isolation rules out training-data contamination.
 ### The configurations and the comparisons they support
 Baseline: Pi 0.87.0 + Qwen3.8-27B Q4_K_M, 64K context, medium thinking, 3 runs per task. Harness arms change prompts, tool
 interfaces and agent behaviour together. Only Pi sent a thinking level to the engine (the relay log records
-`reasoning_effort` on every Pi call); Goose and OpenCode sent none, so the engine default applied. The model comparison changes size,
+`reasoning_effort` on every Pi call); Goose and OpenCode sent none. On this engine and model, sending none gave the same completion-token and
+reasoning-character counts as medium at fixed seeds (`analysis/thinking-default-check.jsonl`), so all three most likely
+ran at medium; this was not confirmed for every call. The model comparison changes size,
 family and training. The cloud arm changes model, agent and execution environment. Only matched settings (arms 8/9, and
 5/9) support an isolated comparison.
 
@@ -215,7 +217,9 @@ Energy use was not measured.
 ## Corrections
 An earlier version of this repository, public for a few hours on September 23, 2026, reported upper-middle values as
 medians (44 s for Q8 instead of 42.0 s), described the coder model's 12 refusal files on solvable tasks as refusals, and
-gave a task-file hash that did not match the published file. All three are corrected here. The published `run.py`
+gave a task-file hash that did not match the published file. All three are corrected here. A later same-day correction: `results/scores.json` listed upper-middle medians for
+the multi-file set (57.8 s and 78.9 s; true medians 55.2 s and 78.1 s), and the README and report 5 said thinking was not
+matched across the three agent tools, which our own check does not support. The published `run.py`
 differs from the frozen one only in file paths (report 1).
 
 ## Files

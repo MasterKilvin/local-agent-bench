@@ -1,0 +1,8 @@
+{"effort": null, "seed": 1, "secs": 9.4, "completion_tokens": 194, "reasoning_chars": 264}
+{"effort": null, "seed": 2, "secs": 2.0, "completion_tokens": 310, "reasoning_chars": 515}
+{"effort": "medium", "seed": 1, "secs": 1.2, "completion_tokens": 194, "reasoning_chars": 264}
+{"effort": "medium", "seed": 2, "secs": 1.9, "completion_tokens": 310, "reasoning_chars": 515}
+{"effort": "low", "seed": 1, "secs": 1.1, "completion_tokens": 179, "reasoning_chars": 225}
+{"effort": "low", "seed": 2, "secs": 1.6, "completion_tokens": 256, "reasoning_chars": 402}
+{"effort": "high", "seed": 1, "secs": 0.7, "completion_tokens": 82, "reasoning_chars": 154}
+{"effort": "high", "seed": 2, "secs": 2.6, "completion_tokens": 314, "reasoning_chars": 870}

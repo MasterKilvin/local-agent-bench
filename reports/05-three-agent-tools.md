@@ -5,8 +5,10 @@
 ## The result
 Same model (Qwen3.8-27B Q4_K_M, 64K context, Ollama 0.33.3), same twenty tasks, three repeats. Each arm is a complete
 configuration: the agent's own system prompt, tool set and loop. Only Pi sent a thinking level (medium, on
-every call in the relay log). Goose and OpenCode sent none, so the engine's default applied; all three produced
-reasoning text. Thinking is therefore not matched across these arms.
+every call in the relay log). Goose and OpenCode sent none. On this engine and model,
+sending none gave the same completion-token and reasoning-character counts as medium at fixed seeds
+(`analysis/thinking-default-check.jsonl`, two seeds), so all three most likely ran at medium; this was not confirmed for
+every call.
 
 | | Pi 0.87.0 (arm 1) | Goose 1.51.0 (arm 2) | OpenCode 1.18.32 (arm 3) |
 |---|---|---|---|
