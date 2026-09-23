@@ -5,7 +5,7 @@
  "model_info": {
   "num_ctx": 24576,
   "manifest_sha256": "3fa93254c899",
-  "modified_at": "2026-09-23T01:25:07.682446866-04:00",
+  "modified_at": "2026-09-23T05:25:07.682446866Z",
   "details": {
    "parent_model": "qwen3.8:27b-q8_0",
    "format": "gguf",
