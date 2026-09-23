@@ -20,3 +20,8 @@ images: 1203913142c72c18fc3
 ollama: ollama version is 0.33.3
 agents: pi 0.87.0, opencode 1.18.32, goose  1.51.0
 models: qwen3.8:27b-q8-24k=3fa93254c899 qwen3.8:27b-q4-24k=795961fa4710 qwen3.8:27b-q8_0=8f5fb6b71ea0 qwen3.8:27b-64k=67a1c5bfe600 qwen3.8:27b=22130167c4c2 qwen3-coder:30b=06c1097efce0 
+
+## Published copy (added for the public repository)
+`run.py` here differs from the frozen `5563a27b…` in four lines: the sandbox-script and task-file paths, and two comments,
+so it runs from this folder. `refusal.py` and `bridge.py` are byte-identical. The published task file drops the `source`
+bookkeeping field; its sha256 is `cb4645681f754b38…`, with task content, hidden tests and reference fixes unchanged.

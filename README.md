@@ -1,8 +1,16 @@
-# Local coding agents on one consumer GPU: multi-file tasks, and whether the agent knows when to stop
+# Local coding agents on one RTX 5090: a 27B model refused 60 of 60 impossible attempts, Q8 showed no edge over Q4, and a coder model broke its tools
 
 *A September 2026 experiment by kilvinscale. Local inference on one RTX 5090 (32 GB VRAM). This repository records the
 experiment and its scoring artifacts; it is not a maintained benchmark. Every table below can be recomputed from the
 files here.*
+
+## Reports
+Each report takes one finding and gives its evidence, what it supports and what it does not.
+1. [How the bench works: 20 frozen tasks, hidden tests, and a refusal judge that still needed a blind second look](reports/01-method.md)
+2. [A local 27B agent refused all 60 impossible attempts: 35 matched our wording list, all 60 passed blind review](reports/02-honest-refusal.md)
+3. [Q8 showed no advantage over Q4 at matched 24K context, and took 2.3 times as long per attempt](reports/03-q4-vs-q8.md)
+4. [A coder-tuned 30B solved 14 of 48: 71 failed edits, 26 broken streams, and a "blocked" file used as a success report](reports/04-coder-model.md)
+5. [Pi, Goose and OpenCode with the same model: 42, 40 and 43 of 48 solved, but Goose and OpenCode sent 2.5 to 2.6 times the prompt tokens](reports/05-three-agent-tools.md)
 
 ## The short version
 
@@ -162,7 +170,9 @@ Prompt tokens count re-sent context across calls. Missing usage is unknown, not 
    solvable work.
 5. **Context actually used:** peak prompts reached 19,244 tokens at medium thinking and 42,503 at high thinking on 4–6-file
    tasks. Small projects do exceed 16K.
-6. **Build tasks were the weakest solvable kind** (7–8 of 12), chiefly the "write the regression test" tasks.
+6. **Build tasks were the weakest solvable kind** (7–8 of 12 in the main 27B arms), chiefly one feature task: adding a
+   CSV dry-run option failed 23 of 24 local attempts, most of them by skipping the README's row-validation rules
+   (report 1).
 7. **Thinking level (exploratory):** low, medium and high produced 15,566, 5,937 and 18,150 reasoning characters per
    attempt; solvable 28/32, 42/48, 31/32; adjudicated refusals 4/8, 12/12, 8/8; median 36.3, 17.5, 44.5 s. On this engine "low"
    did not produce less reasoning text. Low and high had two repeats, medium three; no optimal setting is established.
@@ -200,7 +210,13 @@ Energy use was not measured.
 - Requires Podman, Ollama and the agent CLIs; the container images are built from `harness/Containerfile` and
   `harness/Containerfile.deps`.
 
+## Corrections
+An earlier version of this repository, public for a few hours on September 23, 2026, reported upper-middle values as
+medians (44 s for Q8 instead of 42.0 s), described the coder model's 12 refusal files on solvable tasks as refusals, and
+gave a task-file hash that did not match the published file. All three are corrected here. The published `run.py`
+differs from the frozen one only in file paths (report 1).
+
 ## Files
 `harness/` runner, sandbox script, relay, refusal judge and its tests, Modelfiles · `tasks/` the frozen 20, the anchors
 and scorer test cases · `results/v2/<arm>/` per-attempt outcomes, diffs, final trees, event traces, engine call log ·
-`analysis/` tables and the adjudication record.
+`analysis/` tables, the adjudication record and the self-audit · `reports/` one page per finding.
