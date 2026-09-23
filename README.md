@@ -7,10 +7,10 @@ files here.*
 ## Reports
 Each report takes one finding and gives its evidence, what it supports and what it does not.
 1. [How the bench works: 20 frozen tasks, hidden tests, and a refusal judge that still needed a blind second look](reports/01-method.md)
-2. [A local 27B agent refused all 60 impossible attempts: 35 matched our wording list, all 60 passed blind review](reports/02-honest-refusal.md)
-3. [Q8 showed no advantage over Q4 at matched 24K context, and took 2.3 times as long per attempt](reports/03-q4-vs-q8.md)
+2. [Five local 27B configurations refused 60 of 60 impossible attempts: 35 matched our wording list, all 60 passed blind review](reports/02-honest-refusal.md)
+3. [Q8 showed no advantage over Q4 at matched 24K context and took 2.3 times as long per attempt; plus exploratory thinking-level and KV-cache runs](reports/03-q4-vs-q8.md)
 4. [A coder-tuned 30B solved 14 of 48: 71 failed edits, stream errors on 26 of 60 attempts, and a "blocked" file used as a success report](reports/04-coder-model.md)
-5. [Pi, Goose and OpenCode with the same model: 42, 40 and 43 of 48 solved, but Goose and OpenCode sent 2.5 to 2.6 times the prompt tokens](reports/05-three-agent-tools.md)
+5. [Pi, Goose and OpenCode with the same model: 42, 40 and 43 of 48 solved, but Goose and OpenCode used 2.5 to 2.6 times Pi's prompt tokens per attempt](reports/05-three-agent-tools.md)
 
 ## The short version
 
@@ -112,9 +112,9 @@ family and training. The cloud arm changes model, agent and execution environmen
 | 3 OpenCode + 27B | 3 | 43/48 | 8 → 12 /12 | 0 | 21.4 | 0 | 4 | 15,811 | 8,532 |
 | 4 Pi + Coder-30B | 3 | 14/48 | 1 → 4 /12 | 12 | 15.0 | 102 | 101 | 16,852 | 0 |
 | 8 Pi + 27B Q8 24K | 3 | 42/48 | 6 → 12 /12 | 0 | 42.0 | 20 | 5 | 11,815 | 3,957 |
-| 9 Pi + 27B Q4 24K | 3 | 44/48 | 6 → 12 /12 | 0 | 18.1 | 25 | 3 | 17,151 | 4,692 |
+| 9 Pi + 27B Q4 24K | 3 | 44/48 | 6 → 12 /12 | 0 | 18.1 | 25 | 3 | 17,151 | 4,693 |
 | 5 KV-cache q4_0 24K | 2 | 29/32 | 5 → 6 /8 | 0 | 18.8 | 24 | 1 | 13,945 | 6,058 |
-| 6 thinking low | 2 | 28/32 | 2 → 4 /8 | 0 | 36.3 | 13 | 11 | 18,337 | 15,566 |
+| 6 thinking low | 2 | 28/32 | 2 → 4 /8 | 0 | 36.3 | 13 | 11 | 18,337 | 14,969 |
 | 7 thinking high | 2 | 31/32 | 5 → 8 /8 | 0 | 44.5 | 31 | 11 | 42,503 | 18,150 |
 | A anchors (Pi + 27B) | 3 | 9/9 | — | 0 | 44.9 | 22 | 4 | 33,219 | 19,026 |
 | 10 Claude Code + Opus 5.5 | 1 | 15/16 | 2 → 4 /4 | 0 | 14.9 | — | — | — | — |
@@ -141,18 +141,19 @@ rather than an event stream, so its tool counts are unknown (null, not zero); it
 | Arm | Median prompt tokens | Median completion tokens | Median model calls | Attempts with usage known |
 |---|---|---|---|---|
 | 1 Pi | 19,685 | 2,156 | 6 | 60/60 |
-| 2 Goose | 48,751 | 3,836 | 9 | 59/60 |
+| 2 Goose | 48,751 | 3,836 | 10 | 59/60 |
 | 3 OpenCode | 51,930 | 2,558 | 7 | 60/60 |
-| 4 Coder-30B | 50,767 | 2,075 | 15 | 39/60 |
+| 4 Coder-30B | 50,767 | 2,075 | 17 | 39/60 |
 | 8 Q8 24K | 18,335 | 2,056 | 6 | 60/60 |
 | 9 Q4 24K | 18,400 | 2,140 | 6 | 59/60 |
 | 5 KV-q4_0 | 23,310 | 2,377 | 7 | 40/40 |
-| 6 low | 37,497 | 4,726 | 7 | 40/40 |
-| 7 high | 42,303 | 5,745 | 8 | 40/40 |
+| 6 low | 37,497 | 4,726 | 7.5 | 40/40 |
+| 7 high | 42,303 | 5,745 | 8.5 | 40/40 |
 | A anchors | 77,231 | 5,782 | 13 | 9/9 |
 | 10 Claude Code Opus 5.5 | 78,784 (incl. cache reads; its own counter) | 1,401 | 4 turns | 20/20 |
 
-Prompt tokens count re-sent context across calls. Missing usage is unknown, not zero.
+Prompt tokens count re-sent context across calls. Token medians use the attempts with usage known; model calls are
+counted over every attempt, from relay calls inside each attempt's time window. Missing usage is unknown, not zero.
 
 ### What the numbers do and do not say
 1. **Three configurations, one model:** 42, 40 and 43 of 48 solvable; each 12 of 12 adjudicated refusals. The spread does
@@ -175,7 +176,7 @@ Prompt tokens count re-sent context across calls. Missing usage is unknown, not 
 6. **Build tasks were the weakest solvable kind** (7–8 of 12 in the main 27B arms), chiefly one feature task: adding a
    CSV dry-run option failed 23 of 24 local attempts, most of them by skipping the README's row-validation rules
    (report 1).
-7. **Thinking level (exploratory):** low, medium and high produced 15,566, 5,937 and 18,150 reasoning characters per
+7. **Thinking level (exploratory):** low, medium and high produced 14,969, 5,937 and 18,150 reasoning characters per
    attempt; solvable 28/32, 42/48, 31/32; adjudicated refusals 4/8, 12/12, 8/8; median 36.3, 17.5, 44.5 s. On this engine "low"
    did not produce less reasoning text. Low and high had two repeats, medium three; no optimal setting is established.
 8. **KV cache q4_0 (exploratory):** 29 of 32 solvable and 6 of 8 adjudicated refusals at 24K, vs the f16 control (arm 9)

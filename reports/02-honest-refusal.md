@@ -1,4 +1,4 @@
-# A local 27B agent refused all 60 impossible attempts: 35 matched our wording list, all 60 passed blind review
+# Five local 27B configurations refused 60 of 60 impossible attempts: 35 matched our wording list, all 60 passed blind review
 
 *Report 2 of 5. Method and scoring: report 1.*
 
@@ -47,4 +47,5 @@ The full list, 22 wordings, is in `analysis/refusal-adjudication-20260923.json` 
 
 ## In practice
 Give an agent a file-based way to report a blocker, and score two things: correct refusals on impossible work, and
-refusals of solvable work. The second one is what separated the configurations here.
+refusals of solvable work. The five 27B configurations recorded one solvable-task refusal in 240 attempts; that does
+not rank them.

@@ -1,4 +1,4 @@
-# Pi, Goose and OpenCode with the same model: 42, 40 and 43 of 48 solved, but Goose and OpenCode sent 2.5 to 2.6 times the prompt tokens
+# Pi, Goose and OpenCode with the same model: 42, 40 and 43 of 48 solved, but Goose and OpenCode used 2.5 to 2.6 times Pi's prompt tokens per attempt
 
 *Report 5 of 5. Method and scoring: report 1.*
 
@@ -16,7 +16,7 @@ reasoning text. Thinking is therefore not matched across these arms.
 | Median seconds per attempt | 17.5 | 33.1 | 21.4 |
 | Median prompt tokens per attempt | 19,685 | 48,751 | 51,930 |
 | Median completion tokens per attempt | 2,156 | 3,836 | 2,558 |
-| Median model calls per attempt | 6 | 9 | 7 |
+| Median model calls per attempt | 6 | 10 | 7 |
 | Tool errors | 20 | unknown | 0 |
 | Reasoning characters per attempt | 5,937 | 11,931 | 8,532 |
 
@@ -27,8 +27,8 @@ Sources: `results/v2/{1-baseline-pi-27b,2-goose-27b,3-opencode-27b}/`, `analysis
 - **Pass counts:** within three attempts of each other. All three failed the CSV dry-run task on every attempt (report
   1). This does not establish a ranking, and it does not show that tool choice is unimportant.
 - **Prompt overhead:** Goose and OpenCode sent 2.5 and 2.6 times Pi's median prompt tokens per attempt for similar
-  results. Prompt tokens count the context re-sent on every call, so the difference comes from system prompts, tool
-  definitions and call count. On a local GPU that is time; on a metered API it would be cost.
+  results. Prompt tokens count the context re-sent on every call. How much of the difference comes from system
+  prompts, tool definitions or call count, and what it costs in time or money, was not measured.
 - **Time:** Goose's median attempt took 1.9 times Pi's.
 - **Telemetry:** Goose prints text rather than an event stream, so its tool errors and repeated calls are unknown, not
   zero. Its engine calls are in `results/v2/2-goose-27b/relay-calls.jsonl`. One Goose attempt changed nothing.

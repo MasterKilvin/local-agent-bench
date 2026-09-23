@@ -1,13 +1,13 @@
 | Arm | Median prompt tokens / attempt | Median completion tokens / attempt | Median model calls / attempt | Attempts with usage known |
 |---|---|---|---|---|
 | 1 Pi | 19,685 | 2,156 | 6 | 60/60 |
-| 2 Goose | 48,751 | 3,836 | 9 | 59/60 |
+| 2 Goose | 48,751 | 3,836 | 10 | 59/60 |
 | 3 OpenCode | 51,930 | 2,558 | 7 | 60/60 |
-| 4 Coder-30B | 50,767 | 2,075 | 15 | 39/60 |
+| 4 Coder-30B | 50,767 | 2,075 | 17 | 39/60 |
 | 8 Q8 24K | 18,335 | 2,056 | 6 | 60/60 |
 | 9 Q4 24K | 18,400 | 2,140 | 6 | 59/60 |
 | 5 KV-Q4 | 23,310 | 2,377 | 7 | 40/40 |
-| 6 low | 37,497 | 4,726 | 7 | 40/40 |
-| 7 high | 42,303 | 5,745 | 8 | 40/40 |
+| 6 low | 37,497 | 4,726 | 7.5 | 40/40 |
+| 7 high | 42,303 | 5,745 | 8.5 | 40/40 |
 | A anchors | 77,231 | 5,782 | 13 | 9/9 |
 | 10 Claude Code Opus 5.5 | 78,784 (incl. cache reads; Claude Code's own counter) | 1,401 | 4 turns | 20/20 |

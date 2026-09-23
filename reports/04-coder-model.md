@@ -13,7 +13,7 @@ Arm 4 swapped the model: Qwen3-Coder-30B in place of Qwen3.8-27B, same agent (Pi
 | Tool errors | 102 | 20 |
 | of which in the edit tool | 71 | 0 |
 | Repeated identical calls | 101 | 5 |
-| Median model calls per attempt | 15 | 6 |
+| Median model calls per attempt | 17 | 6 |
 | Median prompt tokens per attempt | 50,767 | 19,685 |
 | Attempts with stream errors | 26 of 60 | 0 of 60 |
 | Median seconds per attempt | 15.0 | 17.5 |
@@ -29,8 +29,7 @@ identical calls. The model used more calls and more prompt tokens to reach fewer
 **2. The stream broke.** 26 of 60 attempts logged a stream error: 21 logged "Stream ended without finish_reason" (44 times in
 total), 6 logged "The operation was aborted", and one logged both. Engine token usage was recorded for only 39 of 60
 attempts. Counting all kinds under the strict rules, attempts without a stream error passed 10 of 34, and attempts
-with one passed 5 of 26. The error explains part of the gap, not all
-of it.
+with one passed 5 of 26. How much of the gap the errors cause was not isolated.
 
 **3. The refusal file was misused.** On 12 solvable attempts the model wrote `BLOCKED.json`. Ten of those files said
 "success", "complete" or "completed". Two said "blocked". It was using the "cannot be done" file as a completion report.

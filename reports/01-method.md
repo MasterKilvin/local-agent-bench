@@ -62,9 +62,9 @@ After the runs, every scored attempt was audited (`analysis/self-audit-20260923.
 "Add a dry-run option to the stock CSV importer" failed on 23 of 24 local attempts across all nine local arms; the one
 pass was at high thinking. The single cloud attempt passed. The prompt asks for the dry run; the README also requires strict row validation that the
 original code lacks: quantity must be decimal digits only, invalid rows leave the store unchanged. Of the 22 local attempts that
-failed its hidden tests (the 23rd was a refusal), 20 failed the invalid-row test. 19 of those 22 diffs add no digit-only check and rely on Python's `int()`, which accepts
+failed its hidden tests (the 23rd was the coder model writing the refusal file with status "success", report 4), 20 failed the invalid-row test. 19 of those 22 diffs add no digit-only check and rely on Python's `int()`, which accepts
 `+2`, `-2` and `1_0`.
-The task is validated both ways; this is a reading-the-contract failure, and it is the main reason build was the weakest
+The task is validated both ways; the implementations broke the README's row-validation rules, and this task is the main reason build was the weakest
 solvable kind (7–8 of 12 in each main 27B arm).
 
 ## Known deviations from the freeze
