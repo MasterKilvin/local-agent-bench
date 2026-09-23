@@ -17,14 +17,14 @@ Each report takes one finding and gives its evidence, what it supports and what 
 - **The bench:** twenty small multi-file tasks in five kinds, scored by hidden tests the agent never sees, with an
   explicit refusal protocol. Four tasks are deliberately impossible or underspecified; the correct answer is to change
   nothing and name what is missing.
-- **Honest refusal:** with the refusal protocol, a local Qwen3.8-27B (Q4_K_M, Ollama) refused **12 of 12 impossible
+- **Honest refusal:** with the refusal protocol, a local Qwen3.8-27B (Q4_K_M or Q8_0, Ollama) refused **12 of 12 impossible
   attempts in each of five configurations** (arms 1, 2, 3, 8, 9) after blind wording adjudication — 60 of 60, with no
   invented fixes. The strict, frozen-list count was 35 of 60; both are published. These are repeats of four constructed
   tasks.
 - **Three agent tools, one model:** Pi, Goose and OpenCode solved **42, 40 and 43 of 48** solvable attempts. These are
   complete tool-and-prompt configurations; the counts do not establish a winner.
-- **4-bit vs 8-bit weights at matched 24K context:** Q4_K_M **44 of 48**, Q8_0 **42 of 48** solvable attempts, 12 of 12
-  adjudicated refusals each. Median attempt time **18.1 s vs 42.0 s**. Q8 showed no observed advantage here; this does not
+- **4-bit vs 8-bit weights at matched 24K context:** Q4_K_M **44 of 48**, Q8_0 **42 of 48** solvable attempts; refusals 6 strict
+  and 12 of 12 adjudicated each. Median attempt time **18.1 s vs 42.0 s**. Q8 showed no observed advantage here; this does not
   establish equal quality.
 - **A coder-tuned 30B configuration** solved **14 of 48** under the frozen rules. It wrote the refusal file on 12 solvable
   attempts, but 10 of those files said "success" or "complete" — it used the "cannot be done" file as a completion
@@ -105,7 +105,7 @@ family and training. The cloud arm changes model, agent and execution environmen
 ## Results
 
 ### All arms — strict and adjudicated
-| Arm | Runs | Solvable | Refusals strict → adjudicated | Refused a solvable | Median s / attempt | Tool errors | Repeated calls | Peak prompt tokens | Reasoning chars / attempt |
+| Arm | Runs | Solvable | Refusals strict → adjudicated | Refused a solvable | Median s / attempt | Tool errors | Repeated calls | Peak prompt tokens | Mean reasoning chars / attempt |
 |---|---|---|---|---|---|---|---|---|---|
 | 1 Pi + 27B 64K medium | 3 | 42/48 | 7 → 12 /12 | 1 | 17.5 | 20 | 5 | 19,244 | 5,937 |
 | 2 Goose + 27B | 3 | 40/48 | 8 → 12 /12 | 0 | 33.1 | unknown | unknown | unknown | 11,931 |
@@ -156,9 +156,8 @@ Prompt tokens count re-sent context across calls. Token medians use the attempts
 counted over every attempt, from relay calls inside each attempt's time window. Missing usage is unknown, not zero.
 
 ### What the numbers do and do not say
-1. **Three configurations, one model:** 42, 40 and 43 of 48 solvable; each 12 of 12 adjudicated refusals. The spread does
-   not establish a ranking or show that tool choice is unimportant. On an earlier, different 12-task set the same three
-   spread more widely (92% / 89% / 69%); both observations are specific to their task sets.
+1. **Three configurations, one model:** 42, 40 and 43 of 48 solvable; refusals 7, 8 and 8 strict, 12 of 12 each adjudicated. The
+   spread does not establish a ranking or show that tool choice is unimportant.
 2. **Q4_K_M vs Q8_0 at 24K:** 44 vs 42 of 48 solvable; strict totals 50 vs 48 of 60, adjudicated 56 vs 54. Median times
    18.1 vs 42.0 s (about 2.3×, failed attempts included). Q4 is a reasonable starting point for tasks like these; this sample
    does not establish equivalent quality.
@@ -179,8 +178,8 @@ counted over every attempt, from relay calls inside each attempt's time window. 
 7. **Thinking level (exploratory):** low, medium and high produced 14,969, 5,937 and 18,150 reasoning characters per
    attempt; solvable 28/32, 42/48, 31/32; adjudicated refusals 4/8, 12/12, 8/8; median 36.3, 17.5, 44.5 s. On this engine "low"
    did not produce less reasoning text. Low and high had two repeats, medium three; no optimal setting is established.
-8. **KV cache q4_0 (exploratory):** 29 of 32 solvable and 6 of 8 adjudicated refusals at 24K, vs the f16 control (arm 9)
-   44 of 48 and 12 of 12 with three repeats. This does not establish that cache quantization preserved quality; peak
+8. **KV cache q4_0 (exploratory):** 29 of 32 solvable and refusals 5 → 6 of 8 (strict → adjudicated) at 24K, vs the f16 control (arm 9)
+   44 of 48 and refusals 6 → 12 of 12, with three repeats. This does not establish that cache quantization preserved quality; peak
    prompts reached 13,945 tokens, so long-context behaviour is untested. The engine log confirming the quantized cache is
    in `results/v2/5-pi-27b-q4-24k-kvq4/engine-log-kv.txt`.
 9. **Three adapted upstream bugs** (python-dotenv, pathspec ×2): 9 of 9 attempts passed locally, 3 of 3 in the cloud arm.

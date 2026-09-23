@@ -37,7 +37,9 @@ Because the judge is a pure function of saved files, rejected refusals could be 
 Four independent reviewers voted blind, with arm identity stripped and a rubric written before they saw any wording. A
 wording is accepted at 3 of 4 votes. All 22 distinct rejected wordings were accepted. Every vote is in
 `analysis/refusal-adjudication-20260923.json`, and `harness/rescore_refusals.py` recomputes the adjudicated column.
-**Both numbers are printed everywhere, side by side. Neither replaces the other.**
+**Both numbers are printed everywhere, side by side. Neither replaces the other.** The review ran in one direction only:
+rejected wordings were re-judged, but refusals the frozen list accepted were not re-checked for false positives, so
+adjudication could only raise scores. The four reviewers were AI sessions and may share blind spots.
 
 ## Execution
 - **Local agents** run in rootless Podman with `--network none`, an isolated home, a throwaway checkout, dropped

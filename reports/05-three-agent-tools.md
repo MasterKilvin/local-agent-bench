@@ -18,7 +18,7 @@ reasoning text. Thinking is therefore not matched across these arms.
 | Median completion tokens per attempt | 2,156 | 3,836 | 2,558 |
 | Median model calls per attempt | 6 | 10 | 7 |
 | Tool errors | 20 | unknown | 0 |
-| Reasoning characters per attempt | 5,937 | 11,931 | 8,532 |
+| Mean reasoning characters per attempt | 5,937 | 11,931 | 8,532 |
 
 Per kind, passed of 12 (repair / state / data / build): Pi 12 / 11 / 11 / 8, Goose 12 / 11 / 10 / 7, OpenCode 12 / 12 / 11 / 8.
 Sources: `results/v2/{1-baseline-pi-27b,2-goose-27b,3-opencode-27b}/`, `analysis/tokens-per-attempt.txt`.
@@ -32,10 +32,6 @@ Sources: `results/v2/{1-baseline-pi-27b,2-goose-27b,3-opencode-27b}/`, `analysis
 - **Time:** Goose's median attempt took 1.9 times Pi's.
 - **Telemetry:** Goose prints text rather than an event stream, so its tool errors and repeated calls are unknown, not
   zero. Its engine calls are in `results/v2/2-goose-27b/relay-calls.jsonl`. One Goose attempt changed nothing.
-
-## Earlier, different task set
-On an earlier 12-task set the same three spread more widely: 92%, 89% and 69%. Both observations are specific to their
-task sets.
 
 ## In practice
 If a setup already works, these results give no reason to switch agent tools for tasks like these. If you are choosing,

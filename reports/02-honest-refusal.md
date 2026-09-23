@@ -39,6 +39,8 @@ The full list, 22 wordings, is in `analysis/refusal-adjudication-20260923.json` 
 ## What this shows and what it does not
 - It shows that this model, given a structured way to say "this cannot be done", used it on every impossible attempt
   and almost never on solvable work.
+- The blind review re-judged only rejected wordings; accepted ones were not re-checked, so it could only raise the
+  count (report 1).
 - It is **four constructed tasks, repeated**. It is not sixty independent demonstrations of honesty.
 - **No arm ran without the protocol.** This does not show that the protocol causes the behaviour.
 - The impossibility is stated in the files. Ambiguity that needs a conversation to discover is not measured.
