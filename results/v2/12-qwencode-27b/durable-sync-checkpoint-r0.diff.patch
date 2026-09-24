@@ -1,0 +1,97 @@
+diff --git c/__pycache__/test_sync.cpython-312.pyc i/__pycache__/test_sync.cpython-312.pyc
+new file mode 100644
+index 0000000..5de2847
+Binary files /dev/null and i/__pycache__/test_sync.cpython-312.pyc differ
+diff --git c/sync/__pycache__/__init__.cpython-312.pyc i/sync/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..42ea191
+Binary files /dev/null and i/sync/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/sync/__pycache__/checkpoint.cpython-312.pyc i/sync/__pycache__/checkpoint.cpython-312.pyc
+new file mode 100644
+index 0000000..fe0819a
+Binary files /dev/null and i/sync/__pycache__/checkpoint.cpython-312.pyc differ
+diff --git c/sync/__pycache__/job.cpython-312.pyc i/sync/__pycache__/job.cpython-312.pyc
+new file mode 100644
+index 0000000..e514f71
+Binary files /dev/null and i/sync/__pycache__/job.cpython-312.pyc differ
+diff --git c/sync/__pycache__/sink.cpython-312.pyc i/sync/__pycache__/sink.cpython-312.pyc
+new file mode 100644
+index 0000000..94a2e1a
+Binary files /dev/null and i/sync/__pycache__/sink.cpython-312.pyc differ
+diff --git c/sync/job.py i/sync/job.py
+index 87be689..5cd2bd8 100644
+--- c/sync/job.py
++++ i/sync/job.py
+@@ -8,5 +8,5 @@ class SyncJob:
+             if record_id <= self.checkpoints.value:
+                 continue
+             self.sink.write((record_id, text))
+-            self.checkpoints.save(record_id)
+             self.sink.flush()
++            self.checkpoints.save(record_id)
+diff --git c/test_sync.py i/test_sync.py
+new file mode 100644
+index 0000000..cd5ab92
+--- /dev/null
++++ i/test_sync.py
+@@ -0,0 +1,60 @@
++import unittest
++
++from sync import CheckpointStore, DurableSink, SyncJob
++
++RECORDS = [(1, 'book'), (2, 'magazine'), (3, 'paper'), (4, 'tapes')]
++
++
++class RestartSafetyTest(unittest.TestCase):
++    def run_with_failure(self, inject_sink=None, fail_checkpoint=False):
++        sink = DurableSink()
++        checkpoint = CheckpointStore()
++        if inject_sink is not None:
++            sink.inject(inject_sink)
++        if fail_checkpoint:
++            checkpoint.fail_next = True
++
++        first_error = None
++        try:
++            SyncJob(sink, checkpoint).run(RECORDS)
++        except RuntimeError as err:  # the injected failure
++            first_error = err
++
++        # Restart per the README: discard staged output, new job, same stores.
++        sink.restart()
++        SyncJob(sink, checkpoint).run(RECORDS)
++        return first_error, sink.rows, checkpoint.value
++
++    def assert_completed(self, rows, value):
++        self.assertEqual(rows, RECORDS)
++        self.assertEqual(value, len(RECORDS))
++
++    def test_clean_run(self):
++        error, rows, value = self.run_with_failure()
++        self.assertIsNone(error)
++        self.assert_completed(rows, value)
++
++    def test_failure_during_write(self):
++        error, rows, value = self.run_with_failure(inject_sink='write')
++        self.assertIsInstance(error, RuntimeError)
++        self.assert_completed(rows, value)
++
++    def test_failure_before_flush_commit(self):
++        error, rows, value = self.run_with_failure(inject_sink='flush-before')
++        self.assertIsInstance(error, RuntimeError)
++        self.assert_completed(rows, value)
++
++    def test_failure_after_flush_commit(self):
++        error, rows, value = self.run_with_failure(inject_sink='flush-after')
++        self.assertIsInstance(error, RuntimeError)
++        self.assert_completed(rows, value)
++
++    def test_failure_before_checkpoint_save(self):
++        error, rows, value = self.run_with_failure(fail_checkpoint=True)
++        self.assertIsInstance(error, RuntimeError)
++        # replayed row must not duplicate
++        self.assert_completed(rows, value)
++
++
++if __name__ == '__main__':
++    unittest.main()

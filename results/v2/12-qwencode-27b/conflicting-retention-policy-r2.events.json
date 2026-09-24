@@ -1,0 +1,67 @@
+{
+"peak_prompt_tokens": 20365,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 7.9,
+"prompt": 18233,
+"completion": 188,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 19.8,
+"prompt": 18772,
+"completion": 1563,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 22.1,
+"prompt": 20365,
+"completion": 216,
+"thinking": 0,
+"stop": null
+}
+],
+"tools_detail": [
+{
+"t": 7.9,
+"name": "read_file",
+"args_hash": "50c07950b7de4446",
+"error": null
+},
+{
+"t": 7.9,
+"name": "read_file",
+"args_hash": "99a20c4afa71b315",
+"error": null
+},
+{
+"t": 7.9,
+"name": "read_file",
+"args_hash": "a9964864bcdbeb6c",
+"error": null
+},
+{
+"t": 7.9,
+"name": "read_file",
+"args_hash": "59f71e6ee000a2e7",
+"error": null
+},
+{
+"t": 7.9,
+"name": "read_file",
+"args_hash": "c264620b62cbe343",
+"error": null
+},
+{
+"t": 19.8,
+"name": "write_file",
+"args_hash": "e8ec858e4db1eba9",
+"error": null
+}
+]
+}

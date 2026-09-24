@@ -1,0 +1,52 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..35ec986
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..2f34b71
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..3c85724
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..07957e8
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..312d787 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,23 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
+-        if inject is not None:
+-            inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+-            inject('after_credit')
+-            inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
++        debit_done = False
++        credit_done = False
++        try:
++            balances[source] -= amount
++            debit_done = True
++            if inject is not None:
++                inject('after_debit')
++            balances[target] += amount
++            credit_done = True
++            if inject is not None:
++                inject('after_credit')
++                inject('before_audit')
++            self.ledger.audit.append(event(source, target, amount))
++        except BaseException:
++            if credit_done:
++                balances[target] -= amount
++            if debit_done:
++                balances[source] += amount
++            raise
+         return True

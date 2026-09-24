@@ -1,0 +1,30 @@
+diff --git c/activity/__pycache__/__init__.cpython-312.pyc i/activity/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..fbd190f
+Binary files /dev/null and i/activity/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/activity/__pycache__/paging.cpython-312.pyc i/activity/__pycache__/paging.cpython-312.pyc
+new file mode 100644
+index 0000000..33a2486
+Binary files /dev/null and i/activity/__pycache__/paging.cpython-312.pyc differ
+diff --git c/activity/__pycache__/store.cpython-312.pyc i/activity/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..550382e
+Binary files /dev/null and i/activity/__pycache__/store.cpython-312.pyc differ
+diff --git c/activity/paging.py i/activity/paging.py
+index e9fc2b8..c3b1e00 100644
+--- c/activity/paging.py
++++ i/activity/paging.py
+@@ -2,8 +2,9 @@ def page(records, cursor=None, limit=10):
+     if limit < 1:
+         raise ValueError('limit')
+     ordered = sorted(records, key=lambda x: (x['timestamp'], x['id']))
+-    if cursor is not None:
+-        ordered = [x for x in ordered if x['timestamp'] > cursor]
+-    items = ordered[:limit]
+-    next_cursor = items[-1]['timestamp'] if len(ordered) > limit else None
++    offset = 0 if cursor is None else int(cursor)
++    if offset < 0:
++        raise ValueError('cursor')
++    items = ordered[offset:offset + limit]
++    next_cursor = offset + len(items) if offset + len(items) < len(ordered) else None
+     return {'items': items, 'next_cursor': next_cursor}

@@ -1,0 +1,117 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..0da0c6b
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..9203beb
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..eb2f96e
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..d29b017 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,65 @@
++"""Parser for the single-range header described in README.md.
++
++The header must exactly match one of ``bytes=D-D``, ``bytes=D-`` or
++``bytes=-D`` where each D is one or more ASCII digits 0-9 (leading zeros
++allowed).  Signs, underscores (Python-style numeric spellings), Unicode
++digits, whitespace, extra separators and multiple ranges are all
++malformed and map to HTTP 416.
++"""
++
++import re
++
++_RANGE = re.compile(
++    r'bytes=(?:(?P<start>[0-9]+)-(?P<end>[0-9]+)'
++    r'|(?P<open>[0-9]+)-'
++    r'|-(?P<suffix>[0-9]+))'
++)
++
++
++class InvalidRange(ValueError):
++    """Header is malformed, or the range hits no byte (HTTP 416)."""
++
++
++def _at_most(value, cap):
++    """Return min(int(value), cap) without materialising huge integers."""
++    if cap <= 0:
++        return 0
++    digits = value.lstrip('0') or '0'
++    bound = str(cap)
++    if len(digits) > len(bound) or (len(digits) == len(bound) and digits >= bound):
++        return cap
++    return int(digits)
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++    """Return the clamped inclusive (start, end) byte pair for ``header``.
++
++    Raises InvalidRange when the header does not match the grammar, when
++    the range starts beyond EOF, when the suffix is zero, or when the
++    bounds are reversed.  ``length`` is the length of the data in bytes.
++    """
++    if not isinstance(header, str):
++        raise InvalidRange('range header must be a string')
++    if length <= 0:
++        raise InvalidRange('empty data has no rangeable bytes')
++    match = _RANGE.fullmatch(header)
++    if match is None:
++        raise InvalidRange('malformed range header')
++    groups = match.groupdict()
++    if groups['suffix'] is not None:
++        n = _at_most(groups['suffix'], length)
++        if n == 0:
++            raise InvalidRange('suffix must be at least 1')
++        return length - n, length - 1
++    if groups['end'] is not None:
++        start = _at_most(groups['start'], length)
++        if start >= length:
++            raise InvalidRange('start beyond EOF')
++        end = _at_most(groups['end'], length - 1)
++        if start > end:
++            raise InvalidRange('reversed bounds')
++        return start, end
++    start = _at_most(groups['open'], length)
++    if start >= length:
++        raise InvalidRange('start beyond EOF')
++    return start, length - 1
+diff --git c/download/service.py i/download/service.py
+index 72a053d..f7b966f 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,21 @@
+-from .ranges import bounds
++from .ranges import InvalidRange, bounds
++
+ 
+ def serve(data, range_header=None):
++    """Serve ``data`` per README.md: returns (status, headers, body).
++
++    No header returns 200 with the full data.  A valid single range
++    returns 206 with the inclusive byte slice and a Content-Range
++    header.  Malformed syntax and ranges that hit no byte return 416,
++    an empty body, and ``Content-Range: bytes */<length>``.
++    """
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
++    length = len(data)
++    try:
++        start, end = bounds(range_header, length)
++    except InvalidRange:
++        return 416, {'Content-Length': '0', 'Content-Range': f'bytes */{length}'}, b''
++    body = data[start:end + 1]
+     return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++                 'Content-Range': f'bytes {start}-{end}/{length}'}, body

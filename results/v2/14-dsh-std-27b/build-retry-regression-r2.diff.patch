@@ -1,0 +1,119 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..c9eecbc
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,113 @@
++"""Regression tests for the retry wrapper's public API (README.md).
++
++The README contract for ``retry.wrapper.run(operation, attempts=3)``:
++
++* ``TransientError`` is retried up to ``attempts`` total calls, returning
++  the first success or raising the last transient error.
++* ``PermanentError`` must propagate immediately on any attempt, including
++  after a transient failure.
++* No other exception is retried.
++
++These tests exercise only the public API: ``run``, ``TransientError`` and
++``PermanentError``. Per the README they verify call counts as well as
++outcomes, so a wrapper that retries a ``PermanentError`` fails the
++permanent-error tests on the call count even though it still raises that
++exception in the end.
++"""
++
++import os
++import sys
++import unittest
++
++# Make the project root importable no matter how this file is launched
++# (``python -m unittest``, ``python -m pytest tests``, or direct execution).
++_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if _PROJECT_ROOT not in sys.path:
++    sys.path.insert(0, _PROJECT_ROOT)
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++class ScriptedOperation:
++    """A zero-argument operation that plays back a script of steps.
++
++    Each step is either a value to return or an exception instance to
++    raise.  Once the script is exhausted, the last step repeats, so a
++    single-step script describes an endless stream of the same failure.
++    ``calls`` counts how many times the operation was invoked, which is
++    what the assertions use to prove that retrying (or not retrying)
++    happened.
++    """
++
++    def __init__(self, steps):
++        self.steps = list(steps)
++        self.calls = 0
++
++    def __call__(self):
++        self.calls += 1
++        step = self.steps[min(self.calls - 1, len(self.steps) - 1)]
++        if isinstance(step, BaseException):
++            raise step
++        return step
++
++
++class TransientErrorIsRetried(unittest.TestCase):
++    """Transient errors keep being tried until a success or attempts run out."""
++
++    def test_success_needs_no_retry(self):
++        op = ScriptedOperation([42])
++        self.assertEqual(42, run(op))
++        self.assertEqual(1, op.calls)
++
++    def test_transient_error_then_first_success_within_default_attempts(self):
++        op = ScriptedOperation([TransientError("blip"), "ok"])
++        self.assertEqual("ok", run(op))
++        self.assertEqual(2, op.calls)
++
++    def test_all_attempts_transient_raises_last_transient_error(self):
++        op = ScriptedOperation([TransientError("always down")])
++        with self.assertRaises(TransientError):
++            run(op, attempts=4)
++        self.assertEqual(4, op.calls)
++
++    def test_single_attempt_stops_after_one_transient_call(self):
++        op = ScriptedOperation([TransientError("down")])
++        with self.assertRaises(TransientError):
++            run(op, attempts=1)
++        self.assertEqual(1, op.calls)
++
++
++class PermanentErrorPropagatesImmediately(unittest.TestCase):
++    """A permanent error must stop the wrapper on the attempt it occurs on."""
++
++    def test_permanent_error_is_not_retried(self):
++        op = ScriptedOperation([PermanentError("fatal")])
++        with self.assertRaises(PermanentError):
++            run(op, attempts=5)
++        self.assertEqual(1, op.calls)
++
++    def test_permanent_error_after_transient_failure_is_not_retried(self):
++        # The trailing transient step only repeats if the wrapper wrongly
++        # keeps calling the operation after seeing the permanent error.
++        op = ScriptedOperation(
++            [
++                TransientError("blip"),
++                PermanentError("fatal"),
++                TransientError("unreachable"),
++            ]
++        )
++        with self.assertRaises(PermanentError):
++            run(op, attempts=5)
++        self.assertEqual(2, op.calls)
++
++
++class NoOtherExceptionsAreRetried(unittest.TestCase):
++    def test_unexpected_exception_propagates_on_first_attempt(self):
++        op = ScriptedOperation([ValueError("boom")])
++        with self.assertRaises(ValueError):
++            run(op, attempts=3)
++        self.assertEqual(1, op.calls)
++
++
++if __name__ == "__main__":
++    unittest.main()

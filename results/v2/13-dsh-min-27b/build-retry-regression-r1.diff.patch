@@ -1,0 +1,125 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..e6b54c5
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,119 @@
++"""Regression tests for the retry wrapper.
++
++The public API and required behavior are specified in README.md:
++
++* ``run(operation, attempts=3)`` calls a zero-argument operation.
++* ``TransientError`` is retried up to ``attempts`` total calls, returning
++  the first success or raising the last transient error.
++* ``PermanentError`` must propagate immediately on any attempt, including
++  after a transient failure.
++* No other exception is retried.
++* ``attempts`` is positive.
++
++These tests assert the specification, including the call counts.
++Run with:  python -m unittest tests.test_regression -v
++"""
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++def _make_reraiser(errors):
++    """Return an operation that raises errors[call-1] (or the last one)."""
++    calls = []
++
++    def operation():
++        calls.append(1)
++        error = errors[min(len(calls), len(errors)) - 1]
++        raise error
++
++    return operation, calls
++
++
++class PermanentErrorRegressionTests(unittest.TestCase):
++    """PermanentError must be raised on the first call, never retried."""
++
++    def test_permanent_error_is_not_retried(self):
++        operation, calls = _make_reraiser([PermanentError('nope')])
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=3)
++        self.assertEqual(
++            calls, [1],
++            'PermanentError must propagate immediately; '
++            'operation was called %d time(s), expected exactly 1' % len(calls))
++
++    def test_permanent_error_after_transient_is_not_retried(self):
++        calls = []
++
++        def operation():
++            calls.append(1)
++            if len(calls) == 1:
++                raise TransientError('blip')
++            raise PermanentError('nope')
++
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=3)
++        self.assertEqual(
++            calls, [1, 1],
++            'PermanentError after a transient failure must stop immediately; '
++            'operation was called %d time(s), expected exactly 2' % len(calls))
++
++    def test_permanent_error_with_single_attempt(self):
++        calls = []
++
++        def operation():
++            calls.append(1)
++            raise PermanentError('nope')
++
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=1)
++        self.assertEqual(len(calls), 1, 'expected exactly one call')
++
++
++class TransientErrorRegressionTests(unittest.TestCase):
++    """TransientError must keep being retried up to the attempt limit."""
++
++    def test_transient_errors_are_retried_then_raised(self):
++        operation, calls = _make_reraiser([TransientError('blip')])
++        with self.assertRaises(TransientError):
++            run(operation, attempts=3)
++        self.assertEqual(
++            len(calls), 3,
++            'TransientError should be retried for up to 3 calls')
++
++    def test_transient_errors_stop_at_first_success(self):
++        calls = []
++
++        def operation():
++            calls.append(1)
++            if len(calls) < 3:
++                raise TransientError('blip')
++            return 'ok'
++
++        self.assertEqual(run(operation, attempts=3), 'ok')
++        self.assertEqual(len(calls), 3, 'expected 2 failures then 1 success')
++
++    def test_transient_retry_budget_is_the_attempts_value(self):
++        operation, calls = _make_reraiser([TransientError('blip')])
++        with self.assertRaises(TransientError):
++            run(operation, attempts=5)
++        self.assertEqual(len(calls), 5, 'expected exactly 5 calls')
++
++
++class NonRetriedErrorRegressionTests(unittest.TestCase):
++    """Any exception other than TransientError/PermanentError propagates."""
++
++    def test_value_error_is_not_retried(self):
++        calls = []
++
++        def operation():
++            calls.append(1)
++            raise ValueError('boom')
++
++        with self.assertRaises(ValueError):
++            run(operation, attempts=3)
++        self.assertEqual(len(calls), 1, 'ValueError must not be retried')
++
++
++if __name__ == '__main__':
++    unittest.main()

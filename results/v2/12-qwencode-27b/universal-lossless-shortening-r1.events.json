@@ -1,0 +1,80 @@
+{
+"peak_prompt_tokens": 21898,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 7.8,
+"prompt": 18244,
+"completion": 167,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 31.9,
+"prompt": 18681,
+"completion": 2877,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 33.3,
+"prompt": 21588,
+"completion": 161,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 37.9,
+"prompt": 21898,
+"completion": 575,
+"thinking": 0,
+"stop": null
+}
+],
+"tools_detail": [
+{
+"t": 7.8,
+"name": "read_file",
+"args_hash": "50c07950b7de4446",
+"error": null
+},
+{
+"t": 7.8,
+"name": "read_file",
+"args_hash": "99a20c4afa71b315",
+"error": null
+},
+{
+"t": 7.8,
+"name": "read_file",
+"args_hash": "f99fc2d186f2d6cb",
+"error": null
+},
+{
+"t": 7.8,
+"name": "read_file",
+"args_hash": "c0036073569877aa",
+"error": null
+},
+{
+"t": 7.8,
+"name": "read_file",
+"args_hash": "95dfbe6c78027292",
+"error": null
+},
+{
+"t": 31.9,
+"name": "write_file",
+"args_hash": "ce3857a9e3f6f4e1",
+"error": null
+},
+{
+"t": 33.3,
+"name": "run_shell_command",
+"args_hash": "c4fd4a1c1dfa7f65",
+"error": null
+}
+]
+}

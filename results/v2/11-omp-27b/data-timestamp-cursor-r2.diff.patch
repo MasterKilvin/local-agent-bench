@@ -1,0 +1,43 @@
+diff --git c/activity/__pycache__/__init__.cpython-312.pyc i/activity/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..a836d5e
+Binary files /dev/null and i/activity/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/activity/__pycache__/paging.cpython-312.pyc i/activity/__pycache__/paging.cpython-312.pyc
+new file mode 100644
+index 0000000..935b45b
+Binary files /dev/null and i/activity/__pycache__/paging.cpython-312.pyc differ
+diff --git c/activity/__pycache__/store.cpython-312.pyc i/activity/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..cfe4f85
+Binary files /dev/null and i/activity/__pycache__/store.cpython-312.pyc differ
+diff --git c/activity/paging.py i/activity/paging.py
+index e9fc2b8..b36978c 100644
+--- c/activity/paging.py
++++ i/activity/paging.py
+@@ -1,9 +1,24 @@
++from urllib.parse import quote, unquote
++
+ def page(records, cursor=None, limit=10):
+     if limit < 1:
+         raise ValueError('limit')
+     ordered = sorted(records, key=lambda x: (x['timestamp'], x['id']))
+     if cursor is not None:
+-        ordered = [x for x in ordered if x['timestamp'] > cursor]
++        last_ts, last_id = _decode_cursor(cursor)
++        ordered = [x for x in ordered if (x['timestamp'], x['id']) > (last_ts, last_id)]
+     items = ordered[:limit]
+-    next_cursor = items[-1]['timestamp'] if len(ordered) > limit else None
++    next_cursor = None
++    if len(ordered) > limit:
++        last = items[-1]
++        next_cursor = _encode_cursor(last['timestamp'], last['id'])
+     return {'items': items, 'next_cursor': next_cursor}
++
++def _encode_cursor(timestamp, id):
++    return quote(timestamp, safe='') + '\x1f' + quote(id, safe='')
++
++def _decode_cursor(cursor):
++    separator = cursor.find('\x1f')
++    if separator < 0:
++        raise ValueError('cursor')
++    return unquote(cursor[:separator]), unquote(cursor[separator + 1:])

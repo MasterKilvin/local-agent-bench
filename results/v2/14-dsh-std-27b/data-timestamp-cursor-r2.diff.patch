@@ -1,0 +1,17 @@
+diff --git c/activity/paging.py i/activity/paging.py
+index e9fc2b8..34e9480 100644
+--- c/activity/paging.py
++++ i/activity/paging.py
+@@ -1,9 +1,9 @@
+ def page(records, cursor=None, limit=10):
+     if limit < 1:
+         raise ValueError('limit')
+-    ordered = sorted(records, key=lambda x: (x['timestamp'], x['id']))
++    ordered = sorted(records, key=lambda x: [x['timestamp'], x['id']])
+     if cursor is not None:
+-        ordered = [x for x in ordered if x['timestamp'] > cursor]
++        ordered = [x for x in ordered if [x['timestamp'], x['id']] > cursor]
+     items = ordered[:limit]
+-    next_cursor = items[-1]['timestamp'] if len(ordered) > limit else None
++    next_cursor = [items[-1]['timestamp'], items[-1]['id']] if len(ordered) > limit else None
+     return {'items': items, 'next_cursor': next_cursor}

@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..8ade032
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "contradictory-retention-rules", "evidence": "README.md: Rule A (delete once age reaches 7 days) and Rule B (keep through day 30) apply to the same records with 'no exception or priority rule', yet both must hold for every age - impossible for recorded ages 7-30 (e.g., ages 8 and 31 in main.py). cases/policy.py implements only Rule A (age >= 7), so no change in this directory can satisfy both rules."}

@@ -1,0 +1,63 @@
+{
+ "agent": "qwen",
+ "agent_version": "0.24.4",
+ "model": "qwen3.8:27b-64k",
+ "model_info": {
+  "num_ctx": 65536,
+  "manifest_sha256": "67a1c5bfe600",
+  "modified_at": "2026-09-23T13:03:24.113685059Z",
+  "details": {
+   "parent_model": "qwen3.8:27b",
+   "format": "gguf",
+   "family": "qwen35",
+   "families": [
+    "qwen35"
+   ],
+   "parameter_size": "27.3B",
+   "quantization_level": "Q4_K_M"
+  },
+  "capabilities": [
+   "completion",
+   "vision",
+   "tools",
+   "thinking"
+  ]
+ },
+ "endpoint": "http://127.0.0.1:11435/v1",
+ "ctx": 65536,
+ "max_output": 8192,
+ "steps": 30,
+ "timeout": 900,
+ "repeats": 3,
+ "thinking": null,
+ "protocol": "v2",
+ "image": "localhost/bench-agentroom-deps:1",
+ "image_id": "1203913142c72c18fc3",
+ "workroom_sha": "ea01f440cb10",
+ "tasks_sha": "7c8fddf11146",
+ "run_py_sha": "77486f088e71",
+ "n_tasks": 20,
+ "started": "2026-09-23 17:53:09",
+ "agent_config": {
+  "security": {
+   "auth": {
+    "selectedType": "openai"
+   }
+  },
+  "general": {
+   "enableAutoUpdate": false
+  },
+  "privacy": {
+   "usageStatisticsEnabled": false
+  },
+  "telemetry": {
+   "enabled": false
+  },
+  "model": {
+   "name": "qwen3.8:27b-64k",
+   "generationConfig": {
+    "contextWindowSize": 65536
+   }
+  }
+ }
+}

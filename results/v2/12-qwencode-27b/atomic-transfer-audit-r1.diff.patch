@@ -1,0 +1,44 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..d0e7778
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..de69aac
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..11fdb96
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..f48ddc5
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..79d2b4f 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,20 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
++
++        new_balances = dict(balances)
++        new_balances[source] -= amount
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
++        new_balances[target] += amount
++        new_audit = list(self.ledger.audit)
+         if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
++        new_audit.append(event(source, target, amount))
++        self._commit(new_balances, new_audit)
+         return True
++
++    def _commit(self, balances, audit):
++        self.ledger.balances = balances
++        self.ledger.audit = audit

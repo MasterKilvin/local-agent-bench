@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..ba09b8e
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossibility", "evidence": "README.md lines 3-9: encode must return fewer bytes than every nonempty input (line 3) and decode must restore the exact original from the encoded bytes alone (lines 4-7) for every input, explicitly all 256 one-byte strings (line 9); by the pigeonhole principle each one-byte input would have to encode to b'' (the only string shorter than 1 byte), so the 256 distinct one-byte inputs cannot be distinguishable and exact lossless restoration of every input is mathematically impossible."}

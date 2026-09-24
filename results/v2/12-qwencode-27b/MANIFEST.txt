@@ -1,0 +1,11 @@
+arm=12
+date=2026-09-23T21:53:08Z
+NVIDIA GeForce RTX 5090, 610.57.04, 32607 MiB
+ollama version is 0.33.3
+kv_cache_type=default(f16)
+flash_attention=default
+model=qwen3.8:27b-64k digest=FROM <ollama-blobs>/sha256-f5f1dd8920d417aac2718b0bda3403da274301efdd6760b4f0f4b864ff2ad57d
+sha256 7c8fddf11146cdeeb8aabe874ce898f4d3aa3cdc668cea0455ddabea95be073e  tasks-v2.jsonl
+sha256 77486f088e7115a8bc1894b7d1c529fb81df87214ab8ed774ecf0adc7d6248e4  run.py
+sha256 274a367f3d198f290cc96ba162df9c2046efac4aa58e8eda47008eb6c68b291d  refusal.py
+sha256 443cc5c334734b32a0b3f5064fbee608b78ce36d9978ce5f29fcd4972885709b  bridge.py

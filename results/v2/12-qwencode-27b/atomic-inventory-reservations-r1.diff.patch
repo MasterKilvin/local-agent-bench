@@ -1,0 +1,27 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..ccf39ce
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/inventory.cpython-312.pyc i/shop/__pycache__/inventory.cpython-312.pyc
+new file mode 100644
+index 0000000..270e629
+Binary files /dev/null and i/shop/__pycache__/inventory.cpython-312.pyc differ
+diff --git c/shop/__pycache__/report.cpython-312.pyc i/shop/__pycache__/report.cpython-312.pyc
+new file mode 100644
+index 0000000..b17fac2
+Binary files /dev/null and i/shop/__pycache__/report.cpython-312.pyc differ
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..f6f9b11 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -9,9 +9,9 @@ class Inventory:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
+-        remaining = self.available[sku]
+         if on_attempt is not None:
+             on_attempt()
++        remaining = self.available[sku]
+         if remaining < quantity:
+             return None
+         reservation_id = self._next_id

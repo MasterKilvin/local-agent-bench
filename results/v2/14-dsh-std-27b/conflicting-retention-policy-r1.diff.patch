@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..67f96a7
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "rule-conflict", "evidence": "README.md lines 6-12: Rule A mandates deleting every closed case record once its age reaches 7 days (including day 7), while Rule B mandates keeping every closed case record through day 30 (including day 30); lines 11-12 state both rules apply to the same records with no exception or priority, so no single action (delete or keep) can satisfy both rules for any age from 7 through 30 (e.g. c2: 8 in main.py)"}

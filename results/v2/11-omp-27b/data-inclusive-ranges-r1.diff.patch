@@ -1,0 +1,87 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..4da201a
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..f603e8d
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..e2bab86
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..af7cf35 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,41 @@
++import re
++
++# Grammar (README.md): exactly one of bytes=D-D, bytes=D-, bytes=-D,
++# where each D is one or more ASCII digits 0-9, leading zeros allowed.
++_PATTERNS = (
++    ('range', re.compile(r'bytes=([0-9]+)-([0-9]+)')),
++    ('start', re.compile(r'bytes=([0-9]+)-')),
++    ('suffix', re.compile(r'bytes=-([0-9]+)')),
++)
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++    """Resolve a single range header to inclusive (start, end) indices.
++
++    Returns None when the header does not exactly match one of the
++    allowed forms (no whitespace, signs, underscores, Unicode digits,
++    extra separators, or multiple ranges), or when the range is
++    unsatisfiable against data of the given length: start at or past
++    EOF, zero suffix, reversed bounds, or empty data.
++    """
++    if length == 0:
++        return None
++    for kind, pattern in _PATTERNS:
++        match = pattern.fullmatch(header)
++        if match is None:
++            continue
++        if kind == 'suffix':
++            suffix = int(match.group(1))
++            if suffix == 0:
++                return None
++            return max(0, length - suffix), length - 1
++        start = int(match.group(1))
++        if start >= length:
++            return None
++        end = length - 1
++        if kind == 'range':
++            end = min(int(match.group(2)), length - 1)
++            if start > end:
++                return None
++        return start, end
++    return None
+diff --git c/download/service.py i/download/service.py
+index 72a053d..f1886c0 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,15 @@
+ from .ranges import bounds
+ 
++
+ def serve(data, range_header=None):
++    length = len(data)
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
++        return 200, {'Content-Length': str(length)}, data
++    resolved = bounds(range_header, length)
++    if resolved is None:
++        return 416, {'Content-Length': '0',
++                     'Content-Range': f'bytes */{length}'}, b''
++    start, end = resolved
++    body = data[start:end + 1]
+     return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++                 'Content-Range': f'bytes {start}-{end}/{length}'}, body

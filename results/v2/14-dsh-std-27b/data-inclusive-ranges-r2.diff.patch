@@ -1,0 +1,85 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..d2ac2d4
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..bfc1fae
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..5dddc91
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..5b1c912 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,46 @@
++import re
++
++_RANGES = re.compile(r'bytes=(?:(\d+)-(\d+)|(\d+)-|-(\d+))', re.ASCII)
++
++
++def _digits(s):
++    total = 0
++    for ch in s:
++        total = total * 10 + (ord(ch) - 48)
++    return total
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
++    """Resolve a single byte range against data of the given length.
++
++    Returns the inclusive (start, end) pair, or None when the header is
++    malformed or the range cannot be satisfied (416).
++    """
++    if not isinstance(header, str):
++        return None
++    m = _RANGES.fullmatch(header)
++    if m is None:
++        return None
++    start_s, end_s, first_s, suffix_s = m.groups()
++    if suffix_s is not None:
++        n = _digits(suffix_s)
++        if n == 0:
++            return None
++        start = length - n
++        if start < 0:
++            start = 0
++        end = length - 1
++        if end < start or start < 0:
++            return None
++        return start, end
++    start = _digits(first_s if first_s is not None else start_s)
++    if start > length:
++        return None
++    if end_s is not None:
++        end = _digits(end_s)
++    else:
++        end = length
++    end = min(end, length - 1)
++    if start > end:
++        return None
+     return start, end
+diff --git c/download/service.py i/download/service.py
+index 72a053d..00f25a5 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -3,7 +3,11 @@ from .ranges import bounds
+ def serve(data, range_header=None):
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
++    result = bounds(range_header, len(data))
++    if result is None:
++        headers = {'Content-Range': f'bytes */{len(data)}'}
++        return 416, headers, b''
++    start, end = result
++    body = data[start:end + 1]
+     return 206, {'Content-Length': str(len(body)),
+                  'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body

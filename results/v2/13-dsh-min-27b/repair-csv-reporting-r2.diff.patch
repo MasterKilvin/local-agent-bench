@@ -1,0 +1,71 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..c9bb967
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..6423eed
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/parser.cpython-312.pyc i/stock/__pycache__/parser.cpython-312.pyc
+new file mode 100644
+index 0000000..efff3e4
+Binary files /dev/null and i/stock/__pycache__/parser.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..79ccecd
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index 76fcd00..b6336dd 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,18 +1,29 @@
++import re
++
+ from .parser import rows
+ 
++_QTY_RE = re.compile(r'^[0-9]+$')
++
++
+ def import_text(text, store):
+     report = {'seen': 0, 'imported': 0, 'rejected': 0, 'quantity': 0}
+-    for parts in rows(text):
++    for index, parts in enumerate(rows(text)):
++        if index == 0:
++            # First record is the header row (sku,name,qty); not counted as seen.
++            continue
+         report['seen'] += 1
+-        if len(parts) != 3 or not parts[0] or not parts[1]:
++        if len(parts) != 3:
+             report['rejected'] += 1
+             continue
+-        try:
+-            qty = int(parts[2])
+-        except ValueError:
++        sku, name, qty = (field.strip() for field in parts)
++        if not sku or not name:
+             report['rejected'] += 1
+             continue
+-        store.put(parts[0], parts[1], qty)
++        if not _QTY_RE.match(qty):
++            report['rejected'] += 1
++            continue
++        amount = int(qty)
++        store.put(sku, name, amount)
+         report['imported'] += 1
+-        report['quantity'] += qty
++        report['quantity'] += amount
+     return report
+diff --git c/stock/parser.py i/stock/parser.py
+index 005ca5d..86a1494 100644
+--- c/stock/parser.py
++++ i/stock/parser.py
+@@ -1,3 +1,7 @@
++import csv
++import io
++
++
+ def rows(text):
+-    for line in text.splitlines()[1:]:
+-        yield line.split(',')
++    for row in csv.reader(io.StringIO(text)):
++        yield row

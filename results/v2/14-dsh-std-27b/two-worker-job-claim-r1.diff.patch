@@ -1,0 +1,21 @@
+diff --git c/jobs/queue.py i/jobs/queue.py
+index 7ed2e9f..95783d9 100644
+--- c/jobs/queue.py
++++ i/jobs/queue.py
+@@ -5,10 +5,14 @@ class JobQueue:
+ 
+     def claim(self, job_id, worker_id, on_attempt=None):
+         job = self.jobs[job_id]
+-        was_pending = job['state'] == 'pending'
+         if on_attempt is not None:
+             on_attempt()
+-        if not was_pending:
++        # Re-check the job state only after the callback has run. The callback is
++        # an explicit interleaving point that may synchronously let another worker
++        # commit a claim first; by deciding on live state at the commit point, the
++        # check and the commit are tight together, so at most one worker can ever
++        # acquire the job.
++        if job['state'] != 'pending':
+             return False
+         job['state'] = 'claimed'
+         job['owner'] = worker_id

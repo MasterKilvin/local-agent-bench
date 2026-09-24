@@ -1,0 +1,151 @@
+{
+"peak_prompt_tokens": 15030,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 1,
+"steps_detail": [
+{
+"t": 2.0,
+"prompt": 7072,
+"completion": 75,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 3.1,
+"prompt": 7914,
+"completion": 157,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 19.3,
+"prompt": 8691,
+"completion": 2099,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 28.7,
+"prompt": 10818,
+"completion": 1358,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 33.6,
+"prompt": 12203,
+"completion": 722,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 37.3,
+"prompt": 13392,
+"completion": 490,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 39.4,
+"prompt": 14230,
+"completion": 278,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 40.3,
+"prompt": 14534,
+"completion": 99,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 45.5,
+"prompt": 15030,
+"completion": 713,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 2.0,
+"name": "bash",
+"args_hash": "ca6faa086766060c",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "d74f29ba48a9e92c",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "79a15eaa6ebdf9b9",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "4c465c3473eb85a5",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "89f37495f25f0bd3",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "a4e0fa3769b57c29",
+"error": null
+},
+{
+"t": 19.3,
+"name": "bash",
+"args_hash": "995f5fd0e69a179d",
+"error": null
+},
+{
+"t": 28.7,
+"name": "edit",
+"args_hash": "ea7570a2da107416",
+"error": null
+},
+{
+"t": 33.6,
+"name": "bash",
+"args_hash": "4d5d6b3f08660ba6",
+"error": null
+},
+{
+"t": 37.3,
+"name": "bash",
+"args_hash": "a5aa07cb6bdc4416",
+"error": null
+},
+{
+"t": 39.4,
+"name": "bash",
+"args_hash": "e77b804d57f0eadc",
+"error": null
+},
+{
+"t": 40.3,
+"name": "read",
+"args_hash": "4c465c3473eb85a5",
+"error": null
+},
+{
+"t": 40.3,
+"name": "bash",
+"args_hash": "7ba9a255ad79bf4a",
+"error": null
+}
+]
+}

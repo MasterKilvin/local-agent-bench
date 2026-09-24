@@ -1,0 +1,52 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..33f4a7f
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/inventory.cpython-312.pyc i/shop/__pycache__/inventory.cpython-312.pyc
+new file mode 100644
+index 0000000..912b119
+Binary files /dev/null and i/shop/__pycache__/inventory.cpython-312.pyc differ
+diff --git c/shop/__pycache__/report.cpython-312.pyc i/shop/__pycache__/report.cpython-312.pyc
+new file mode 100644
+index 0000000..0ad568c
+Binary files /dev/null and i/shop/__pycache__/report.cpython-312.pyc differ
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..82af189 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -1,21 +1,27 @@
++import threading
++
++
+ class Inventory:
+     def __init__(self, stock):
+         self.available = dict(stock)
+         self.reservations = {}
+         self._next_id = 1
++        self._lock = threading.Lock()
+ 
+     def reserve(self, sku, quantity, on_attempt=None):
+         if sku not in self.available:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
+-        remaining = self.available[sku]
+         if on_attempt is not None:
+             on_attempt()
+-        if remaining < quantity:
+-            return None
+-        reservation_id = self._next_id
+-        self._next_id += 1
+-        self.available[sku] = remaining - quantity
+-        self.reservations[reservation_id] = (sku, quantity)
+-        return reservation_id
++            # The callback may have served competing reservations; the stock
++            # check below must see that state, so re-read inside the lock.
++        with self._lock:
++            if self.available[sku] < quantity:
++                return None
++            reservation_id = self._next_id
++            self._next_id += 1
++            self.available[sku] -= quantity
++            self.reservations[reservation_id] = (sku, quantity)
++            return reservation_id

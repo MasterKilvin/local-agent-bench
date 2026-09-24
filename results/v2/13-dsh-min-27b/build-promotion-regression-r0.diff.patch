@@ -1,0 +1,76 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..e133938
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..2f46da6
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..526de7c
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..4e3a759
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..90470aa
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,54 @@
++"""Regression tests for the double-discount checkout bug.
++
++Per README.md, ``checkout(lines, rate)`` sums the extended line prices,
++applies the promotion exactly once to the subtotal, and rounds the
++result to two decimals with ROUND_HALF_UP.  The buggy implementation
++multiplied the subtotal by the discount factor twice.
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class SingleLineBasketQuantityAboveOne(unittest.TestCase):
++    """A single line whose quantity is above one."""
++
++    def test_promotion_applied_exactly_once(self):
++        lines = [{'price': '10.00', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_non_integer_promotion_amount(self):
++        # 3 * 9.99 = 29.97 subtotal; 20% promotion -> 23.976 -> 23.98
++        lines = [{'price': '9.99', 'qty': 3}]
++        self.assertEqual(checkout(lines, '0.20'), '23.98')
++
++    def test_half_up_rounding(self):
++        # 5 * 10.01 = 50.05 subtotal; 50% promotion -> 25.025 -> 25.03
++        lines = [{'price': '10.01', 'qty': 5}]
++        self.assertEqual(checkout(lines, '0.50'), '25.03')
++
++
++class MultipleLineBasketsQuantitiesOne(unittest.TestCase):
++    """A separate multiple-line basket where every quantity is one."""
++
++    def test_promotion_applied_exactly_once(self):
++        lines = [
++            {'price': '3.00', 'qty': 1},
++            {'price': '7.50', 'qty': 1},
++        ]
++        # 10.50 subtotal; 20% promotion -> 8.40
++        self.assertEqual(checkout(lines, '0.20'), '8.40')
++
++    def test_three_lines_all_quantity_one(self):
++        lines = [
++            {'price': '1.25', 'qty': 1},
++            {'price': '2.75', 'qty': 1},
++            {'price': '0.50', 'qty': 1},
++        ]
++        # 4.50 subtotal; 33.3% promotion -> 3.0015 -> 3.00
++        self.assertEqual(checkout(lines, '0.333'), '3.00')
++
++
++if __name__ == '__main__':
++    unittest.main()

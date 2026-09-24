@@ -1,0 +1,118 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..c9a976f
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,112 @@
++"""Regression tests for the retry contract documented in README.md.
++
++The README states:
++  * ``run(operation, attempts=3)`` retries ``TransientError`` with at most
++    ``attempts`` total calls, returning the first success or raising the
++    last transient error.
++  * ``PermanentError`` must propagate immediately on any attempt, even
++    after an earlier transient failure.
++  * No other exception is retried.
++
++These tests verify both the outcomes and the number of times the
++operation is invoked.
++"""
++
++import os
++import sys
++import unittest
++
++# Make the project root importable whether the tests are run as a file
++# (``python tests/test_regression.py``) or via ``python -m unittest``.
++_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++if _PROJECT_ROOT not in sys.path:
++    sys.path.insert(0, _PROJECT_ROOT)
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++def _calling_operation(results):
++    """Return a zero-argument operation with scripted results.
++
++    Each call pops the next item from ``results``: an exception instance is
++    raised, anything else is returned. Once ``results`` is exhausted the
++    operation keeps raising the last configured item.
++    """
++    state = {'items': list(results), 'last': None}
++
++    def operation():
++        if state['items']:
++            item = state['items'].pop(0)
++        else:
++            item = state['last']
++        if item is None:
++            state['last'] = 'ok'
++            return 'ok'
++        state['last'] = item
++        if isinstance(item, BaseException):
++            raise item
++        return item
++
++    return operation, state
++
++
++def _track(operation, counter):
++    def tracked():
++        counter.append(1)
++        return operation()
++
++    return tracked
++
++
++class PermanentErrorStopsImmediately(unittest.TestCase):
++    def test_permanent_error_is_not_retried(self):
++        operation = lambda: (_ for _ in ()).throw(PermanentError('fatal'))
++        calls = []
++        with self.assertRaises(PermanentError):
++            run(_track(operation, calls), attempts=5)
++        self.assertEqual(len(calls), 1,
++                         'PermanentError must propagate on the first attempt')
++
++    def test_permanent_error_after_transient_stops(self):
++        results = [TransientError('flaky'), PermanentError('fatal')]
++        operation, state = _calling_operation(results)
++        calls = []
++        with self.assertRaises(PermanentError):
++            run(_track(operation, calls), attempts=5)
++        self.assertEqual(len(calls), 2,
++                         'operation must not be called again after a PermanentError')
++        self.assertEqual(state['last'], PermanentError)
++
++
++class TransientErrorStillRetries(unittest.TestCase):
++    def test_transient_then_success(self):
++        results = [TransientError('a'), TransientError('b'), 'recovered']
++        operation, _ = _calling_operation(results)
++        calls = []
++        self.assertEqual(run(_track(operation, calls), attempts=3), 'recovered')
++        self.assertEqual(len(calls), 3)
++
++    def test_last_transient_error_raised_after_exhausting_attempts(self):
++        def operation():
++            operation.count += 1
++            raise TransientError('transient %d' % operation.count)
++        operation.count = 0
++        calls = []
++        with self.assertRaises(TransientError) as captured:
++            run(_track(operation, calls), attempts=4)
++        self.assertEqual(len(calls), 4)
++        self.assertEqual(str(captured.exception), 'transient 4',
++                         'the last transient error must be the one raised')
++
++
++class OtherExceptionsAreNotRetried(unittest.TestCase):
++    def test_unexpected_exception_propagates_immediately(self):
++        operation = lambda: (_ for _ in ()).throw(ValueError('boom'))
++        calls = []
++        with self.assertRaises(ValueError):
++            run(_track(operation, calls), attempts=5)
++        self.assertEqual(len(calls), 1)
++
++
++if __name__ == '__main__':
++    unittest.main()

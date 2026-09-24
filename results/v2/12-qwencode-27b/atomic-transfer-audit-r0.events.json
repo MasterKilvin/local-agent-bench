@@ -1,0 +1,125 @@
+{
+"peak_prompt_tokens": 26376,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 8.9,
+"prompt": 18257,
+"completion": 215,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 46.0,
+"prompt": 18974,
+"completion": 4923,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 53.6,
+"prompt": 24135,
+"completion": 1058,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 55.5,
+"prompt": 25222,
+"completion": 231,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 56.3,
+"prompt": 25581,
+"completion": 94,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 59.5,
+"prompt": 25908,
+"completion": 404,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 62.5,
+"prompt": 26376,
+"completion": 391,
+"thinking": 0,
+"stop": null
+}
+],
+"tools_detail": [
+{
+"t": 8.9,
+"name": "read_file",
+"args_hash": "50c07950b7de4446",
+"error": null
+},
+{
+"t": 8.9,
+"name": "read_file",
+"args_hash": "99a20c4afa71b315",
+"error": null
+},
+{
+"t": 8.9,
+"name": "read_file",
+"args_hash": "dba620d6d66d0f1d",
+"error": null
+},
+{
+"t": 8.9,
+"name": "read_file",
+"args_hash": "7560a93c3d18b50f",
+"error": null
+},
+{
+"t": 8.9,
+"name": "read_file",
+"args_hash": "b5b5d020afce3f65",
+"error": null
+},
+{
+"t": 8.9,
+"name": "read_file",
+"args_hash": "628245c28e273f76",
+"error": null
+},
+{
+"t": 46.0,
+"name": "edit",
+"args_hash": "40c873e75f21e0a8",
+"error": null
+},
+{
+"t": 53.6,
+"name": "write_file",
+"args_hash": "3222e7a0e361565f",
+"error": null
+},
+{
+"t": 55.5,
+"name": "edit",
+"args_hash": "39cf07d3085fe3cb",
+"error": null
+},
+{
+"t": 56.3,
+"name": "run_shell_command",
+"args_hash": "3c81ad435289e696",
+"error": null
+},
+{
+"t": 59.5,
+"name": "run_shell_command",
+"args_hash": "5b5ee25fa4212411",
+"error": null
+}
+]
+}

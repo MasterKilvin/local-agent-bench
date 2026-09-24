@@ -1,0 +1,46 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..bfd8cb1
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..b0d3426
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..5394f35
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..d1de077
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..d511188 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,21 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
++
++        # Phase callbacks may raise; do only validation/staging so far.
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
++
++        # Stage the new balances and the audit event without touching live state.
++        staged = dict(balances)
++        staged[source] -= amount
++        staged[target] += amount
++        new_event = event(source, target, amount)
++
++        # Commit balances and audit together; no fault points between them.
++        balances.clear()
++        balances.update(staged)
++        self.ledger.audit.append(new_event)
+         return True

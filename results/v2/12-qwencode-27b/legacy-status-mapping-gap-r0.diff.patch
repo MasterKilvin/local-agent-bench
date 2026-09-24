@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..ae3db83
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "ambiguous-status-mapping", "evidence": "README.md states the instructions do not say whether `held` means `paused` or `cancelled`, or whether `reversed` means `cancelled` or `refunded`; orders/legacy.py SAMPLE rows o-2 (held) and o-3 (reversed) require these two missing mappings, and no file defines them."}

@@ -1,0 +1,27 @@
+# DSH Minimal (profile sdk-minimal): stock tree; its DeepSeek adapter is unused (the bench route is local-ollama).
+- id: session-log-deepseek
+  config:
+    enabled: false
+
+# Model route (was common.patch.yml): pi-ai's OpenAI-compatible adapter to the in-container relay.
+- insert:
+    - id: llm-pi-ai-bench
+      name: '@deepseek-ai/dsh-llm-pi-ai'
+      config:
+        providers:
+          local-ollama:
+            displayName: Local Ollama (bench relay)
+            api: openai-completions
+            baseURL: http://127.0.0.1:11435/v1
+            apiKeyEnv: DSH_BENCH_API_KEY
+            streamIdleTimeoutMs: 1200000
+            retryPolicy:
+              mode: normal
+              maxRetries: 0
+            compat:
+              supportsDeveloperRole: false
+            models:
+              - id: !!js process.env.DSH_BENCH_MODEL
+                contextWindow: 65536
+                maxTokens: 8192
+                reasoningEfforts: false

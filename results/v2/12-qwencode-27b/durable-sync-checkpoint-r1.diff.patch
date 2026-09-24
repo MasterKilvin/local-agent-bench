@@ -1,0 +1,132 @@
+diff --git c/__pycache__/test_sync.cpython-312.pyc i/__pycache__/test_sync.cpython-312.pyc
+new file mode 100644
+index 0000000..dbdcf9b
+Binary files /dev/null and i/__pycache__/test_sync.cpython-312.pyc differ
+diff --git c/sync/__pycache__/__init__.cpython-312.pyc i/sync/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..ad8c9a3
+Binary files /dev/null and i/sync/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/sync/__pycache__/checkpoint.cpython-312.pyc i/sync/__pycache__/checkpoint.cpython-312.pyc
+new file mode 100644
+index 0000000..d422c44
+Binary files /dev/null and i/sync/__pycache__/checkpoint.cpython-312.pyc differ
+diff --git c/sync/__pycache__/job.cpython-312.pyc i/sync/__pycache__/job.cpython-312.pyc
+new file mode 100644
+index 0000000..e21d569
+Binary files /dev/null and i/sync/__pycache__/job.cpython-312.pyc differ
+diff --git c/sync/__pycache__/sink.cpython-312.pyc i/sync/__pycache__/sink.cpython-312.pyc
+new file mode 100644
+index 0000000..bf8f1b8
+Binary files /dev/null and i/sync/__pycache__/sink.cpython-312.pyc differ
+diff --git c/sync/job.py i/sync/job.py
+index 87be689..5cd2bd8 100644
+--- c/sync/job.py
++++ i/sync/job.py
+@@ -8,5 +8,5 @@ class SyncJob:
+             if record_id <= self.checkpoints.value:
+                 continue
+             self.sink.write((record_id, text))
+-            self.checkpoints.save(record_id)
+             self.sink.flush()
++            self.checkpoints.save(record_id)
+diff --git c/test_sync.py i/test_sync.py
+new file mode 100644
+index 0000000..93e3799
+--- /dev/null
++++ i/test_sync.py
+@@ -0,0 +1,95 @@
++"""Restart-safety tests for the durable library sync (README.md contract).
++
++Contract under test: after a failed run, a fresh SyncJob over the same
++sink + checkpoint store must complete the whole batch with no record lost
++and none duplicated, regardless of which phase the failure struck.
++"""
++import unittest
++
++from sync import CheckpointStore, DurableSink, SyncJob
++
++
++def run_to_success(records, sink, checkpoint):
++    """Retry the whole batch on a fresh job until it completes.
++
++    Mirrors the README: on failure discard staged output via sink.restart()
++    and build a new SyncJob over the same stores.
++    """
++    while True:
++        try:
++            SyncJob(sink, checkpoint).run(records)
++            return sink.rows, checkpoint.value
++        except Exception:
++            sink.restart()
++
++
++class RestartSafetyTest(unittest.TestCase):
++    records = [(1, 'book'), (2, 'magazine'), (3, 'newspaper')]
++
++    def assert_synced(self, rows, checkpoint_value):
++        self.assertEqual(rows, self.records)
++        self.assertEqual(checkpoint_value, self.records[-1][0])
++
++    def fresh_failure(self, phase=None, fail_checkpoint=False):
++        sink, checkpoint = DurableSink(), CheckpointStore()
++        if phase:
++            sink.inject(phase)
++        if fail_checkpoint:
++            checkpoint.fail_next = True
++        rows, value = run_to_success(self.records, sink, checkpoint)
++        return rows, value
++
++    def test_clean_run(self):
++        rows, value = self.fresh_failure()
++        self.assert_synced(rows, value)
++
++    def test_fail_during_write(self):
++        rows, value = self.fresh_failure(phase='write')
++        self.assert_synced(rows, value)
++
++    def test_fail_before_flush_commit(self):
++        rows, value = self.fresh_failure(phase='flush-before')
++        self.assert_synced(rows, value)
++
++    def test_fail_after_flush_commit(self):
++        rows, value = self.fresh_failure(phase='flush-after')
++        self.assert_synced(rows, value)
++
++    def test_fail_checkpoint_save(self):
++        rows, value = self.fresh_failure(fail_checkpoint=True)
++        self.assert_synced(rows, value)
++
++    def _mid_batch_failure(self, phase=None, fail_checkpoint=False):
++        # Pre-seed a state where records 1..2 are already durable and
++        # checkpointed; the injected failure then lands on record 3.
++        sink, checkpoint = DurableSink(), CheckpointStore()
++        sink.rows = [(1, 'book'), (2, 'magazine')]
++        checkpoint.value = 2
++        if phase:
++            sink.inject(phase)
++        if fail_checkpoint:
++            checkpoint.fail_next = True
++        rows, value = run_to_success(self.records, sink, checkpoint)
++        return rows, value
++
++    def test_mid_batch_fail_before_commit(self):
++        rows, value = self._mid_batch_failure(phase='flush-before')
++        self.assert_synced(rows, value)
++
++    def test_mid_batch_fail_checkpoint_save(self):
++        rows, value = self._mid_batch_failure(fail_checkpoint=True)
++        self.assert_synced(rows, value)
++
++    def test_checkpoint_never_skips_uncommitted(self):
++        # A flush-before failure must leave the checkpoint behind the
++        # record, guaranteeing the record is replayed (never lost).
++        sink, checkpoint = DurableSink(), CheckpointStore()
++        sink.inject('flush-before')
++        with self.assertRaises(Exception):
++            SyncJob(sink, checkpoint).run(self.records)
++        self.assertEqual(sink.rows, [])
++        self.assertEqual(checkpoint.value, 0)
++
++
++if __name__ == '__main__':
++    unittest.main()

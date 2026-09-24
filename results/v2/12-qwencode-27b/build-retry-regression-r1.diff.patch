@@ -1,0 +1,121 @@
+diff --git c/retry/__pycache__/__init__.cpython-312.pyc i/retry/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..9b8ba11
+Binary files /dev/null and i/retry/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/retry/__pycache__/wrapper.cpython-312.pyc i/retry/__pycache__/wrapper.cpython-312.pyc
+new file mode 100644
+index 0000000..971c1b8
+Binary files /dev/null and i/retry/__pycache__/wrapper.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..5307445
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..eb57c18
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..ced2395
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,99 @@
++"""Regression tests for ``retry.wrapper.run`` against its public API contract.
++
++The contract is documented in ``README.md``:
++
++* ``run(operation, attempts=3)`` calls a zero-argument operation.
++* ``TransientError`` is retried up to ``attempts`` total calls, returning the
++  first success or raising the last transient error.
++* ``PermanentError`` must propagate immediately on any attempt -- including
++  after a transient failure -- and is never retried.
++
++These tests use only the public API (``run`` plus the two error types) and
++assert both the observed outcome and the number of times the operation was
++called.
++"""
++
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++def operation_from_script(script):
++    """Build a zero-argument callable that replays ``script`` in order.
++
++    Each entry of ``script`` is either a value to return or an exception
++    class to raise. The final entry repeats for any further calls, so scripts
++    do not need to be padded out to the full attempt budget.
++
++    Returns the callable and a dict exposing the live call counter, so the
++    caller can verify "how many" times the operation was invoked.
++    """
++    state = {"calls": 0}
++
++    def operation():
++        index = min(state["calls"], len(script) - 1)
++        state["calls"] += 1
++        step = script[index]
++        if isinstance(step, type) and issubclass(step, BaseException):
++            raise step("attempt {}".format(index + 1))
++        return step
++
++    return operation, state
++
++
++class PermanentErrorRegressionTests(unittest.TestCase):
++    """``PermanentError`` must stop retrying immediately on the attempt it occurs."""
++
++    def test_permanent_error_stops_after_a_single_call(self):
++        operation, state = operation_from_script([PermanentError] * 5)
++
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=3)
++
++        # Contract: propagate immediately -- the operation ran once, not three times.
++        self.assertEqual(1, state["calls"])
++
++    def test_permanent_error_after_transient_stops_before_next_call(self):
++        # Attempt 1: transient (retry is allowed).
++        # Attempt 2: permanent -> must propagate here, before a third call is made.
++        operation, state = operation_from_script(
++            [TransientError, PermanentError, TransientError]
++        )
++
++        with self.assertRaises(PermanentError):
++            run(operation, attempts=3)
++
++        # The permanent error on attempt 2 must stop the sequence at two calls.
++        self.assertEqual(2, state["calls"])
++
++
++class TransientErrorRegressionTests(unittest.TestCase):
++    """``TransientError`` must be retried up to ``attempts`` total calls."""
++
++    def test_transient_errors_retry_until_attempts_exhausted(self):
++        operation, state = operation_from_script([TransientError] * 5)
++
++        with self.assertRaises(TransientError):
++            run(operation, attempts=3)
++
++        # All three attempts were consumed before the last transient error surfaced.
++        self.assertEqual(3, state["calls"])
++
++    def test_transient_error_then_success_returns_the_first_success(self):
++        operation, state = operation_from_script([TransientError, "ok"])
++
++        self.assertEqual("ok", run(operation, attempts=3))
++
++        # First call failed transiently, second call succeeded -> exactly two calls.
++        self.assertEqual(2, state["calls"])
++
++    def test_immediate_success_calls_the_operation_once(self):
++        operation, state = operation_from_script(["ok"])
++
++        self.assertEqual("ok", run(operation, attempts=3))
++
++        self.assertEqual(1, state["calls"])
++
++
++if __name__ == "__main__":
++    unittest.main(verbosity=2)

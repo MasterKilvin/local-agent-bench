@@ -1,0 +1,8 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..b85f363
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "signing-algorithm-undefined", "evidence": "README.md lines 7-11: the protocol excerpt does not say which signing algorithm or which bytes are signed, and no known signed request or digest accompanies it; receiver.py lines 15-16 raise NotImplementedError for the same gap"}
+\ No newline at end of file

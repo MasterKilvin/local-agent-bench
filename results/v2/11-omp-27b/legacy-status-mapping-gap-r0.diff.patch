@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..d24964a
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "ambiguous-status-mapping", "evidence": "README.md lines 8-9 state the mapping for legacy 'held' (paused vs cancelled) and 'reversed' (cancelled vs refunded) is not given; no other file (orders/legacy.py, orders/target.py, orders/migrate.py, main.py) or git history defines the business meaning of those two statuses, and the task forbids guessing, so the required mapping rule is missing."}

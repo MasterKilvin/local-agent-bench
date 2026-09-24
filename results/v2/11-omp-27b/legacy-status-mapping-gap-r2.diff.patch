@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..1d34e78
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "ambiguous-status-mapping", "evidence": "README.md:8-12: held->(paused|cancelled) and reversed->(cancelled|refunded) are not specified anywhere, yet orders/legacy.py:5-6 holds records with these statuses and README.md:10-12 forbids skipping/catch-all and requires meaning-preserving migration; no rule for held/reversed is defined in migrate.py:4"}

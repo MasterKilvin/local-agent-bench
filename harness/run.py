@@ -18,8 +18,13 @@ TASKS = HERE.parent / "tasks" / "tasks-v2-frozen.jsonl"
 IMAGE = os.environ.get("AGENTROOM_IMAGE", "localhost/bench-agentroom:1")
 MISE = Path.home() / ".local/share/mise/installs"
 AGENT_DIRS = {"opencode": MISE / "opencode/latest", "pi": MISE / "pi/latest/pi",
-              "goose": Path.home() / ".local/share/goose-bench"}   # a copy of the goose binary, mounted read-only
-AGENT_BIN = {"opencode": "opencode", "pi": "pi", "goose": "goose"}
+              "goose": Path.home() / ".local/share/goose-bench",
+              "omp": MISE / "github-can1357-oh-my-pi/18.2.11",
+              "qwen": Path.home() / ".local/share/qwen-bench",
+              "dsh-min": Path.home() / ".local/share/dsh-bench", "dsh-std": Path.home() / ".local/share/dsh-bench"}   # DeepSeek Harness 0.1.5-rc.3 (npm), driven by dsh/driver.py   # Qwen Code 0.24.4 (npm, private prefix); runs on the host's Node, mounted read-only
+NODE_DIR = MISE / "node/26.8.1"   # Oh My Pi, a fork of pi: one self-contained binary   # a copy of the goose binary, mounted read-only
+AGENT_BIN = {"opencode": "opencode", "pi": "pi", "goose": "goose", "omp": "omp", "qwen": "node_modules/.bin/qwen",
+             "dsh-min": "node_modules/.bin/dsh", "dsh-std": "node_modules/.bin/dsh"}
 IN_PORT = 11435  # port the agent sees inside the container (relayed to --endpoint on the host)
 RELAY_LOG = None  # set per run in main(): engine-level per-call log (bridge.py)
 THINKING = None   # --thinking low|medium|high: sent as reasoning_effort by pi/opencode; None = not sent (engine default)
@@ -206,6 +211,23 @@ def check_context(endpoint, model, need):
             "modified_at": info.get("modified_at"), "details": info.get("details"), "capabilities": caps}
 
 
+def resolve_ctx(endpoint, model, requested):
+    """Use the model's num_ctx for 'auto', or validate an explicit integer limit."""
+    # Auto imposes no minimum, but still requires num_ctx and tool calling.
+    info = check_context(endpoint, model, 0 if requested == "auto" else requested)
+    return info["num_ctx"] if requested == "auto" else requested
+
+
+def ctx_value(v):
+    """--ctx accepts 'auto' or an integer token count."""
+    if v == "auto":
+        return "auto"
+    try:
+        return int(v)
+    except ValueError:
+        raise argparse.ArgumentTypeError("must be 'auto' or an integer token count")
+
+
 # ---------------- agent configs ----------------
 def write_agent_config(agent, cfg, model, ctx, max_out, steps):
     base = f"http://127.0.0.1:{IN_PORT}/v1"
@@ -225,10 +247,18 @@ def write_agent_config(agent, cfg, model, ctx, max_out, steps):
         (cfg / "opencode.json").write_text(json.dumps(conf, indent=1))
     elif agent == "goose":
         pass   # goose is configured entirely by the environment (see agent_command)
-    else:
-        d = cfg / "pi"
+    elif agent == "qwen":
+        d = cfg / "qwen"
         d.mkdir()
-        (d / "models.json").write_text(json.dumps({"providers": {"ollama": {
+        # OpenAI-compatible protocol to the relay; no auto-update, no usage statistics, no telemetry; declared context
+        (d / "settings.json").write_text(json.dumps({"security": {"auth": {"selectedType": "openai"}},
+            "general": {"enableAutoUpdate": False}, "privacy": {"usageStatisticsEnabled": False},
+            "telemetry": {"enabled": False}, "model": {"name": model, "generationConfig": {"contextWindowSize": ctx}}}, indent=1))
+    else:
+        d = cfg / ("omp" if agent == "omp" else "pi")
+        d.mkdir()
+        # omp reads the same provider schema as pi, from models.yml (JSON is valid YAML)
+        (d / ("models.yml" if agent == "omp" else "models.json")).write_text(json.dumps({"providers": {"ollama": {
             "baseUrl": base, "api": "openai-completions", "apiKey": "ollama",
             "compat": {"supportsDeveloperRole": False, "supportsReasoningEffort": THINKING is not None},
             "models": [{"id": model, "contextWindow": ctx, "maxTokens": max_out,
@@ -236,6 +266,9 @@ def write_agent_config(agent, cfg, model, ctx, max_out, steps):
                         **({"reasoning": True, "thinkingLevelMap": {"off": "none", "minimal": None, "low": "low", "medium": "medium",
                                                                     "high": "high", "xhigh": None, "max": None}} if THINKING else {})}]}}}, indent=1))
         (d / "settings.json").write_text(json.dumps({"enableInstallTelemetry": False}, indent=1))
+        if agent == "omp":   # no update check, no marketplace, no language-server downloads (no network in the room)
+            (d / "config.yml").write_text(json.dumps({"startup.checkUpdate": False, "marketplace.autoUpdate": "off",
+                                                      "lsp.enabled": False}, indent=1))
 
 
 def agent_command(agent, model, prompt):
@@ -261,6 +294,29 @@ def agent_command(agent, model, prompt):
         cmd = ["/opt/agent/goose", "run", "--no-session", "--with-builtin", "developer",
                "--quiet", "--max-turns", "{steps}", "-t", prompt]
         return env, "", cmd, None
+    if agent in ("dsh-min", "dsh-std"):
+        # DSH's SDK JSON-RPC over stdio, driven by dsh/driver.py (prompt on stdin); the driver caps model steps
+        prof = "sdk-minimal" if agent == "dsh-min" else "sdk"
+        return {}, "", ["python3", "/bench/dsh/driver.py", prof, model, "{steps}"], prompt
+    if agent == "qwen":
+        env = {"OPENAI_API_KEY": "ollama", "OPENAI_BASE_URL": f"http://127.0.0.1:{IN_PORT}/v1", "OPENAI_MODEL": model,
+               "NO_BROWSER": "1"}
+        pre = "mkdir -p /home/worker/.qwen && cp /cfg/qwen/settings.json /home/worker/.qwen/settings.json && "
+        cmd = ["/opt/node/bin/node", "/opt/agent/node_modules/@qwen-code/qwen-code/cli-entry.js", "--yolo",
+               "--output-format", "stream-json", "--max-session-turns", "{steps}", "-m", model, prompt]
+        return env, pre, cmd, None
+    if agent == "omp":
+        # Oh My Pi as shipped, minus tools that need the network or a person (browser, web_search, computer, ask,
+        # python setup, notebook); same turn cap extension and thinking level as pi.
+        env = {"PI_CODING_AGENT_DIR": "/home/worker/omp-agent", "PI_BENCH_MAX_TURNS": "{steps}", "PI_NO_PTY": "1"}
+        pre = "cp -r /cfg/omp /home/worker/omp-agent && "
+        cmd = ["/opt/agent/omp", "-p", "--mode", "json", "--no-session", "--no-lsp", "--no-skills", "--no-rules",
+               "--no-extensions", "-e", "/bench/pi-maxturns.ts", "--no-title",
+               "--tools", "read,bash,edit,write,grep,glob,todo,task", "--model", f"ollama/{model}"]
+        if THINKING:
+            cmd += ["--thinking", THINKING]
+        cmd += ["--", prompt]
+        return env, pre, cmd, None
     env = {"PI_CODING_AGENT_DIR": "/home/worker/pi-agent", "PI_OFFLINE": "1", "PI_TELEMETRY": "0",
            "PI_SKIP_VERSION_CHECK": "1", "PI_BENCH_MAX_TURNS": "{steps}"}
     pre = "cp -r /cfg/pi /home/worker/pi-agent && "
@@ -326,7 +382,46 @@ class StepCounter:
         if not isinstance(ev, dict):
             return
         typ = ev.get("type")
-        if self.agent == "pi":
+        if self.agent in ("dsh-min", "dsh-std"):
+            # DSH SDK notifications echoed by dsh/driver.py: one assistant/message per model step, usage in data.usage
+            # (inputTokens excludes the cached part, so the prompt seen = inputTokens + cacheReadTokens)
+            e = (ev.get("params") or {}).get("event") or {}
+            et, dat = e.get("type"), e.get("data") or {}
+            if et == "assistant/message":
+                u = dat.get("usage") or {}
+                self._step((u.get("inputTokens", 0) or 0) + (u.get("cacheReadTokens", 0) or 0), u.get("outputTokens", 0) or 0,
+                           0, ((dat.get("message") or {}).get("source") or {}).get("replayState", {}).get("response", {}).get("stopReason"))
+            elif et == "tool/call":
+                self._pending[dat.get("callId")] = self._tool(dat.get("name"), dat.get("arguments"))
+            elif et == "tool/result":
+                for b in ((dat.get("message") or {}).get("content") or []):
+                    i = self._pending.pop(b.get("toolCallId"), None)
+                    if i is not None and b.get("isError"):
+                        self.tool_detail[i]["error"] = "isError"; self.tool_errors += 1
+            elif ev.get("driver") in ("initialize-failed", "rpc-error"):
+                self.errors.append(json.dumps(ev)[:300])
+            return
+        if self.agent == "qwen":
+            # Qwen Code stream-json: one assistant event with non-zero usage per model step (partial
+            # thinking/text events carry zero usage); input_tokens already includes the cached part
+            if typ == "assistant":
+                msg = ev.get("message") or {}
+                if (msg.get("usage") or {}).get("input_tokens"):   # the final step has usage but no stop_reason
+                    for b in msg.get("content") or []:
+                        if b.get("type") == "tool_use":
+                            self._pending[b.get("id")] = self._tool(b.get("name"), b.get("input"))
+                    u = msg.get("usage") or {}
+                    self._step(u.get("input_tokens", 0) or 0, u.get("output_tokens", 0) or 0, 0, msg.get("stop_reason"))
+            elif typ == "user":
+                for b in (ev.get("message") or {}).get("content") or []:
+                    if isinstance(b, dict) and b.get("type") == "tool_result":
+                        i = self._pending.pop(b.get("tool_use_id"), None)
+                        if i is not None and b.get("is_error"):
+                            self.tool_detail[i]["error"] = "isError"; self.tool_errors += 1
+            elif typ == "result" and ev.get("is_error"):
+                self.errors.append(str(ev.get("result") or ev.get("subtype"))[:300])
+            return
+        if self.agent in ("pi", "omp"):   # omp is a pi fork; its json events are checked in the smoke run
             if typ == "tool_execution_start":
                 self._pending[ev.get("toolCallId")] = self._tool(ev.get("toolName"), ev.get("args"))
             elif typ == "tool_execution_end":
@@ -390,6 +485,10 @@ def run_agent(agent, model, t, jobdir, sockdir, cfg, steps, limit):
            "-e", "XDG_STATE_HOME=/home/worker/.local/state", "-e", "NO_COLOR=1"]
     for k, v in env.items():
         pod += ["-e", f"{k}={v}"]
+    # Node for Qwen Code: the host's Node plus the one library the container image lacks (libatomic; needs glibc >= 2.14)
+    pod += (["-v", f"{NODE_DIR}:/opt/node:ro", "-v", "/usr/lib/libatomic.so.1:/opt/nodelib/libatomic.so.1:ro",
+             "-e", "LD_LIBRARY_PATH=/opt/nodelib"] if agent in ("qwen", "dsh-min", "dsh-std") else [])
+    pod += (["-v", f"{HERE / 'dsh'}:/bench/dsh:ro"] if agent in ("dsh-min", "dsh-std") else [])
     pod += ["-v", f"{work}:/work:rw", "-v", f"{AGENT_DIRS[agent]}:/opt/agent:ro", "-v", f"{cfg}:/cfg:ro",
             "-v", f"{sockdir}:/sock:rw", "-v", f"{HERE / 'bridge.py'}:/bench/bridge.py:ro",
             "-v", f"{HERE / 'pi-maxturns.ts'}:/bench/pi-maxturns.ts:ro",
@@ -433,10 +532,11 @@ def diff_files(orig, final):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--agent", choices=["opencode", "pi", "goose"])
+    ap.add_argument("--agent", choices=["opencode", "pi", "goose", "omp", "qwen", "dsh-min", "dsh-std"])
     ap.add_argument("--model", help="Ollama model name, e.g. qwen3.8:27b-64k")
     ap.add_argument("--endpoint", default="http://127.0.0.1:11435/v1", help="OpenAI-compatible endpoint on localhost")
-    ap.add_argument("--ctx", type=int, default=65536, help="context window declared to the agent (and required)")
+    ap.add_argument("--ctx", type=ctx_value, default="auto",
+                    help="context window declared to the agent: 'auto' (default: model's num_ctx) or an integer no larger than num_ctx")
     ap.add_argument("--max-output", type=int, default=8192)
     ap.add_argument("--steps", type=int, default=30, help="max model steps per task")
     ap.add_argument("--timeout", type=int, default=600, help="wall-clock seconds per task")
@@ -444,7 +544,7 @@ def main():
     ap.add_argument("--only", help="comma-separated task ids")
     ap.add_argument("--out", help="results dir (default results/<agent>-<model>-<time>)")
     ap.add_argument("--keep", action="store_true", help="keep throwaway dirs (default: delete)")
-    ap.add_argument("--skip-ctx-check", action="store_true", help="dry runs against mock_openai.py only")
+    ap.add_argument("--skip-ctx-check", action="store_true", help="dry runs against mock_openai.py only; 'auto' uses 65536")
     ap.add_argument("--selfcheck", action="store_true")
     ap.add_argument("--taskfile", help="alternative tasks .jsonl (default tasks.jsonl)")
     ap.add_argument("--v2", action="store_true", help="bench v2: append the refusal protocol to every task prompt")
@@ -469,7 +569,12 @@ def main():
         ap.error("--agent and --model are required")
     if subprocess.run(["podman", "image", "exists", IMAGE]).returncode:
         sys.exit(f"image {IMAGE} missing: podman build -t {IMAGE} -f {HERE / 'Containerfile'} {HERE}")
-    model_info = None if a.skip_ctx_check else check_context(a.endpoint, a.model, a.ctx)
+    if a.skip_ctx_check:
+        ctx = 65536 if a.ctx == "auto" else a.ctx
+        model_info = None
+    else:
+        ctx = resolve_ctx(a.endpoint, a.model, a.ctx)
+        model_info = check_context(a.endpoint, a.model, ctx)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     out = Path(a.out) if a.out else HERE / "results" / f"{a.agent}-{safe_id(a.model)}-{stamp}"
     out.mkdir(parents=True, exist_ok=True)
@@ -478,16 +583,19 @@ def main():
     sockdir.mkdir(parents=True)
     cfg.mkdir()
     os.chmod(run_dir, 0o700)
-    write_agent_config(a.agent, cfg, a.model, a.ctx, a.max_output, a.steps)
+    write_agent_config(a.agent, cfg, a.model, ctx, a.max_output, a.steps)
     ver = subprocess.run([str(AGENT_DIRS[a.agent] / AGENT_BIN[a.agent]), "--version"], capture_output=True, text=True).stdout.strip()
     image_id = subprocess.run(["podman", "image", "inspect", IMAGE, "--format", "{{.Id}}"], capture_output=True, text=True).stdout.strip()
     config = {"agent": a.agent, "agent_version": ver, "model": a.model, "model_info": model_info, "endpoint": a.endpoint,
-              "ctx": a.ctx, "max_output": a.max_output, "steps": a.steps, "timeout": a.timeout, "repeats": a.repeats,
+              "ctx": ctx, "max_output": a.max_output, "steps": a.steps, "timeout": a.timeout, "repeats": a.repeats,
               "thinking": THINKING, "protocol": "v2" if a.v2 else "v1",
               "image": IMAGE, "image_id": image_id[:19], "workroom_sha": sha(WORKROOM), "tasks_sha": sha(TASKS),
               "run_py_sha": sha(__file__), "n_tasks": len(tasks), "started": time.strftime("%Y-%m-%d %H:%M:%S"),
               "agent_config": (json.loads((cfg / "opencode.json").read_text()) if a.agent == "opencode"
                                else {} if a.agent == "goose"
+                               else json.loads((cfg / "omp" / "models.yml").read_text()) if a.agent == "omp"
+                               else json.loads((cfg / "qwen" / "settings.json").read_text()) if a.agent == "qwen"
+                               else {p.name: p.read_text() for p in (HERE / "dsh").glob("*.patch.yml")} if a.agent.startswith("dsh")
                                else json.loads((cfg / "pi" / "models.json").read_text()))}
     (out / "config.json").write_text(json.dumps(config, indent=1))
     global RELAY_LOG

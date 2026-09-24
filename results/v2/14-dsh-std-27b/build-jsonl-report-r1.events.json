@@ -1,0 +1,152 @@
+{
+"peak_prompt_tokens": 12504,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 2.3,
+"prompt": 7069,
+"completion": 65,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 3.1,
+"prompt": 7332,
+"completion": 120,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 3.7,
+"prompt": 7915,
+"completion": 72,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 11.0,
+"prompt": 8222,
+"completion": 1110,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 12.5,
+"prompt": 9360,
+"completion": 253,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 17.9,
+"prompt": 9657,
+"completion": 772,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 23.5,
+"prompt": 10597,
+"completion": 902,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 25.6,
+"prompt": 11647,
+"completion": 270,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 28.0,
+"prompt": 12011,
+"completion": 281,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 32.9,
+"prompt": 12504,
+"completion": 668,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 2.3,
+"name": "bash",
+"args_hash": "226a8c753b2003d2",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "d74f29ba48a9e92c",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "79a15eaa6ebdf9b9",
+"error": null
+},
+{
+"t": 3.1,
+"name": "bash",
+"args_hash": "ea76e5fc2316e3e0",
+"error": null
+},
+{
+"t": 3.7,
+"name": "read",
+"args_hash": "4502da34e94d1ab0",
+"error": null
+},
+{
+"t": 3.7,
+"name": "read",
+"args_hash": "dc5dc1f8a6a3aa7b",
+"error": null
+},
+{
+"t": 11.0,
+"name": "bash",
+"args_hash": "02a4f8987e904c5f",
+"error": null
+},
+{
+"t": 12.5,
+"name": "write",
+"args_hash": "a5df848cd64bc84b",
+"error": null
+},
+{
+"t": 17.9,
+"name": "bash",
+"args_hash": "c7b710e7f9757c04",
+"error": null
+},
+{
+"t": 23.5,
+"name": "bash",
+"args_hash": "dc9a569131d264de",
+"error": null
+},
+{
+"t": 25.6,
+"name": "bash",
+"args_hash": "43a50879256c1697",
+"error": null
+},
+{
+"t": 28.0,
+"name": "bash",
+"args_hash": "8560d448fe150754",
+"error": null
+}
+]
+}

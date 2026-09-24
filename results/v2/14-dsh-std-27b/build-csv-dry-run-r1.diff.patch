@@ -1,0 +1,56 @@
+diff --git c/main.py i/main.py
+index 4811001..1c7c98b 100644
+--- c/main.py
++++ i/main.py
+@@ -4,4 +4,5 @@ from stock.importer import import_text
+ from stock.store import Store
+ 
+ if __name__ == '__main__':
+-    print(json.dumps(import_text(sys.stdin.read(), Store())))
++    dry_run = '--dry-run' in sys.argv[1:]
++    print(json.dumps(import_text(sys.stdin.read(), Store(), dry_run=dry_run)))
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..42926f3 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,35 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++
++def _parse_row(row):
++    def field(name):
++        value = row.get(name)
++        if value is None:
++            raise ValueError(f'missing field {name!r}')
++        value = value.strip()
++        if not value:
++            raise ValueError(f'field {name!r} must not be empty')
++        return value
++
++    sku = field('sku')
++    name = field('name')
++    qty = field('qty')
++    if not qty.isascii() or not qty.isdigit():
++        raise ValueError('qty must be a nonnegative decimal integer')
++    return {'sku': sku, 'name': name, 'qty': int(qty)}
++
++
++def import_text(text, store, dry_run=False):
++    items = [_parse_row(row) for row in csv.DictReader(io.StringIO(text))]
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
++    for item in items:
+         before = store.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        if not dry_run:
++            store.put(item)
+     return result

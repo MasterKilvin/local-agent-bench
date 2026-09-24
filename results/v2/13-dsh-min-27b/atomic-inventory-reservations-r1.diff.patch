@@ -1,0 +1,33 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..be335bb
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/inventory.cpython-312.pyc i/shop/__pycache__/inventory.cpython-312.pyc
+new file mode 100644
+index 0000000..b31f016
+Binary files /dev/null and i/shop/__pycache__/inventory.cpython-312.pyc differ
+diff --git c/shop/__pycache__/report.cpython-312.pyc i/shop/__pycache__/report.cpython-312.pyc
+new file mode 100644
+index 0000000..52c3fbf
+Binary files /dev/null and i/shop/__pycache__/report.cpython-312.pyc differ
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..efb5b31 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -9,9 +9,15 @@ class Inventory:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
+-        remaining = self.available[sku]
+         if on_attempt is not None:
++            # Invoked exactly once before this request's state transition.
++            # It may synchronously submit competing reservations (e.g. a
++            # queue consumer acting while this request is waiting), so any
++            # stock change it causes must be visible to our own transition.
+             on_attempt()
++        # Read stock *after* on_attempt so a competing reservation made in
++        # the callback cannot cause this request to oversell the SKU.
++        remaining = self.available[sku]
+         if remaining < quantity:
+             return None
+         reservation_id = self._next_id

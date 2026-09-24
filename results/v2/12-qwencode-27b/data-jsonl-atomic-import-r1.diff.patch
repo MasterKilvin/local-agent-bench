@@ -1,0 +1,61 @@
+diff --git c/events/importer.py i/events/importer.py
+index 4a941c5..497e394 100644
+--- c/events/importer.py
++++ i/events/importer.py
+@@ -1,21 +1,48 @@
+ import json
+ 
++
+ class ImportProblem(Exception):
++    """Raised for a malformed or invalid line; carries the one-based physical line number."""
++
+     def __init__(self, line):
+         self.line = line
+         super().__init__(f'invalid line {line}')
+ 
++
++def _record_is_valid(record):
++    # A valid record is a JSON object with a nonempty string id and an integer count.
++    if not isinstance(record, dict):
++        return False
++    if not isinstance(record.get('id'), str) or not record['id']:
++        return False
++    count = record.get('count')
++    # bool is a subclass of int, and floats (incl. integral 1.0) are not ints, so reject both.
++    return isinstance(count, int) and not isinstance(count, bool)
++
++
+ def import_bytes(payload, store):
+-    count = 0
+-    for line, raw in enumerate(payload.splitlines(), 1):
++    # Read the UTF-8 JSON Lines payload fully and validate every nonblank line before
++    # committing anything. Validating first is what guarantees an all-or-nothing import:
++    # if any line breaks the contract we raise before touching the store, leaving it
++    # exactly unchanged, and the reported line is the one-based physical line of the
++    # first offending line (blank lines still advance the counter).
++    records = []
++    for line, raw in enumerate(payload.split(b'\n'), 1):
+         if not raw.strip():
+             continue
+         try:
+-            record = json.loads(raw.decode('utf-8'))
+-            if not isinstance(record, dict) or not isinstance(record.get('id'), str):
+-                raise ValueError()
+-        except (UnicodeDecodeError, ValueError):
++            text = raw.decode('utf-8')
++        except UnicodeDecodeError:
+             raise ImportProblem(line)
++        try:
++            record = json.loads(text)
++        except ValueError:
++            raise ImportProblem(line)
++        if not _record_is_valid(record):
++            raise ImportProblem(line)
++        records.append(record)
++    # Commit only once the whole payload has validated; existing records are preserved
++    # and all imported records are appended in order.
++    for record in records:
+         store.append(record)
+-        count += 1
+-    return count
++    return len(records)

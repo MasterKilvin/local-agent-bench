@@ -1,0 +1,32 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..66a0290
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/inventory.cpython-312.pyc i/shop/__pycache__/inventory.cpython-312.pyc
+new file mode 100644
+index 0000000..99cca29
+Binary files /dev/null and i/shop/__pycache__/inventory.cpython-312.pyc differ
+diff --git c/shop/__pycache__/report.cpython-312.pyc i/shop/__pycache__/report.cpython-312.pyc
+new file mode 100644
+index 0000000..e813df4
+Binary files /dev/null and i/shop/__pycache__/report.cpython-312.pyc differ
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..dff20e2 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -9,9 +9,14 @@ class Inventory:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
+-        remaining = self.available[sku]
++        # on_attempt runs before this request's state transition and may
++        # synchronously submit another reservation. Defer reading the stock
++        # until after the callback so that nested requests and this request
++        # are all decided against the same, up-to-date stock (in either
++        # order) and the total reserved can never exceed initial stock.
+         if on_attempt is not None:
+             on_attempt()
++        remaining = self.available[sku]
+         if remaining < quantity:
+             return None
+         reservation_id = self._next_id

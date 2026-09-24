@@ -1,0 +1,55 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..a55d2f0
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..ff2c2ad
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..f9cd7db
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..bf5e51a
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..5221898
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,33 @@
++import unittest
++
++from shop.checkout import checkout
++
++
++class TestPromotionAppliedOnce(unittest.TestCase):
++    """The promotion must be applied exactly once to the subtotal.
++
++    checkout() used to multiply every line by the discount factor twice,
++    so these tests fail on the double-discount bug and pass when the
++    promotion is applied a single time to the basket subtotal.
++    """
++
++    def test_single_line_quantity_above_one(self):
++        # Single line with qty > 1: subtotal = 10.00 * 2 = 20.00
++        # Once:  20.00 * 0.90 = 18.00
++        # Twice: 20.00 * 0.90 * 0.90 = 16.20 (the reported bug)
++        lines = [{'price': '10.00', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_multiple_lines_all_quantity_one(self):
++        # Multiple lines, every qty == 1: subtotal = 10.00 + 5.35 = 15.35
++        # Once:  15.35 * 0.95 = 14.58
++        # Twice: 15.35 * 0.95 * 0.95 = 13.85 (the reported bug)
++        lines = [
++            {'price': '10.00', 'qty': 1},
++            {'price': '5.35', 'qty': 1},
++        ]
++        self.assertEqual(checkout(lines, '0.05'), '14.58')
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..823bddc
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossibility", "evidence": "README.md:3-9 requires encode of every nonempty input (explicitly all 256 one-byte strings) to be strictly shorter than input while decode recovers the exact original, using only the encoded bytes (no dictionary, side channel, or shared state). The only byte string shorter than length 1 is the empty string, a single value; encode would be an injection of 256 distinct inputs into 1 output, so decode cannot invert all of them (pigeonhole principle). archive/codec.py:1-11 confirms no side channel exists."}

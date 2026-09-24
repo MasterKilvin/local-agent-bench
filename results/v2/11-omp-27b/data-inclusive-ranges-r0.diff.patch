@@ -1,0 +1,194 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..d6b54b6
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..b3fc807
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..a488b96
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..c479a7f 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,53 @@
++"""Single-range `bytes=` header grammar and bounds resolution."""
++
++import re
++
++__all__ = ['InvalidRange', 'bounds']
++
++_EXACT = re.compile(
++    r'bytes=([0-9]+)-([0-9]+)'  # bytes=D-D
++    r'|bytes=([0-9]+)-'         # bytes=D-
++    r'|bytes=-([0-9]+)'         # bytes=-D
++)
++
++
++class InvalidRange(ValueError):
++    """A range header violating the single-range grammar or semantics."""
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++    """Resolve a range header against `length` bytes into inclusive (start, end).
++
++    Accepts exactly `bytes=D-D`, `bytes=D-`, or `bytes=-D`, each D one or
++    more ASCII digits (leading zeros allowed). An end past EOF clamps to
++    the last byte; a suffix covering the whole data selects the whole data.
++
++    Raises InvalidRange on malformed syntax (whitespace, signs,
++    underscores, non-ASCII digits, extra or repeated separators, both
++    endpoints omitted, multiple ranges), on unsatisfiable ranges (start at
++    or past EOF, zero suffix, reversed bounds), or on empty data.
++    """
++    if not isinstance(header, str):
++        raise InvalidRange('range header must be a str')
++    match = _EXACT.fullmatch(header)
++    if match is None:
++        raise InvalidRange('bad range syntax')
++    if length == 0:
++        raise InvalidRange('range not satisfiable over empty data')
++    if match.group(3) is not None:
++        start = int(match.group(3))
++        if start >= length:
++            raise InvalidRange('range start at or past EOF')
++        return start, length - 1
++    if match.group(4) is not None:
++        suffix = int(match.group(4))
++        if suffix == 0:
++            raise InvalidRange('zero-length suffix')
++        return max(0, length - suffix), length - 1
++    start = int(match.group(1))
++    end = int(match.group(2))
++    if start > end:
++        raise InvalidRange('range start after end')
++    if start >= length:
++        raise InvalidRange('range start at or past EOF')
++    return start, min(end, length - 1)
+diff --git c/download/service.py i/download/service.py
+index 72a053d..b000150 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,16 @@
+-from .ranges import bounds
++"""Byte download endpoint: (status, headers, body) per README.md."""
++
++from .ranges import InvalidRange, bounds
++
+ 
+ def serve(data, range_header=None):
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
++    try:
++        start, end = bounds(range_header, len(data))
++    except InvalidRange:
++        return 416, {'Content-Length': '0',
++                    'Content-Range': f'bytes */{len(data)}'}, b''
++    body = data[start:end + 1]
+     return 206, {'Content-Length': str(len(body)),
+                  'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
+diff --git c/test_download.py i/test_download.py
+new file mode 100644
+index 0000000..1877ff2
+--- /dev/null
++++ i/test_download.py
+@@ -0,0 +1,89 @@
++"""Regression tests for the single-range download behavior in README.md."""
++
++import unittest
++
++from download.service import serve
++
++DATA = b'0123456789'  # 10 bytes
++
++
++class ServeTests(unittest.TestCase):
++    def assert_range(self, header, status, body, content_range=None):
++        st, headers, got = serve(DATA, header)
++        self.assertEqual(status, st, f'status for {header!r}')
++        self.assertEqual(body, got, f'body for {header!r}')
++        self.assertEqual(str(len(body)), headers['Content-Length'],
++                         f'Content-Length for {header!r}')
++        if content_range is not None:
++            self.assertEqual(content_range, headers['Content-Range'],
++                             f'Content-Range for {header!r}')
++        else:
++            self.assertNotIn('Content-Range', headers, header)
++
++    def test_no_range_returns_200_full_data(self):
++        self.assert_range(None, 200, DATA)
++
++    def test_inclusive_end_keeps_last_byte(self):
++        # Regression: the old exclusive slice dropped the end byte.
++        self.assert_range('bytes=0-4', 206, b'01234', 'bytes 0-4/10')
++        self.assert_range('bytes=9-9', 206, b'9', 'bytes 9-9/10')
++
++    def test_open_end_selects_through_eof(self):
++        self.assert_range('bytes=7-', 206, b'789', 'bytes 7-9/10')
++
++    def test_suffix_selects_last_n(self):
++        self.assert_range('bytes=-3', 206, b'789', 'bytes 7-9/10')
++
++    def test_suffix_larger_than_data_selects_all(self):
++        self.assert_range('bytes=-99', 206, DATA, 'bytes 0-9/10')
++
++    def test_end_past_eof_is_clamped(self):
++        self.assert_range('bytes=8-99', 206, b'89', 'bytes 8-9/10')
++
++    def test_leading_zeros_allowed(self):
++        self.assert_range('bytes=007-009', 206, b'789', 'bytes 7-9/10')
++
++    def test_416_shape(self):
++        st, headers, body = serve(DATA, 'bytes=11-13')
++        self.assertEqual(416, st)
++        self.assertEqual(b'', body)
++        self.assertEqual('0', headers['Content-Length'])
++        self.assertEqual('bytes */10', headers['Content-Range'])
++
++    def test_unsatisfiable_and_malformed_headers_are_416(self):
++        for header in [
++            'bytes=10-20',        # start at EOF
++            'bytes=30-40',        # start past EOF
++            'bytes=3-1',          # reverse bounds
++            'bytes=-0',           # zero suffix
++            'bytes=1-3-5',        # extra separator
++            'bytes=1-5,1-2',      # multiple ranges
++            'bytes=',             # both endpoints omitted
++            'bytes=-',            # both endpoints omitted
++            'bytes =0-5',         # whitespace after unit
++            'bytes= 0-5',         # whitespace after '='
++            'bytes=0-5 ',         # trailing whitespace
++            'bytes=0-5\n',        # trailing newline
++            'bytes=+1-5',         # sign on number
++            'bytes=1_0-5',        # underscore (Python-style spelling)
++            'bytes=\u0661-\u0662',  # Unicode digits
++            'BYTES=0-5',          # wrong-case unit
++            'range=0-5',          # wrong unit
++        ]:
++            st, headers, body = serve(DATA, header)
++            self.assertEqual(416, st, f'status for {header!r}')
++            self.assertEqual(b'', body, f'body for {header!r}')
++            self.assertEqual('0', headers['Content-Length'], header)
++            self.assertEqual('bytes */10', headers['Content-Range'], header)
++
++    def test_any_range_on_empty_data_is_416(self):
++        for header in ('bytes=0-0', 'bytes=0-', 'bytes=-1'):
++            st, headers, body = serve(b'', header)
++            self.assertEqual(416, st, f'empty data with {header!r}')
++            self.assertEqual(b'', body, header)
++            self.assertEqual('0', headers['Content-Length'], header)
++            self.assertEqual('bytes */0', headers['Content-Range'], header)
++
++
++if __name__ == '__main__':
++    unittest.main()

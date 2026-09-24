@@ -1,0 +1,1387 @@
+{
+ "arms": [
+  {
+   "label": "Pi",
+   "dir": "1-baseline-pi-27b",
+   "attempts": 60,
+   "solvable_passed": 42,
+   "solvable_attempts": 48,
+   "impossible_strict_passed": 7,
+   "impossible_refused": 12,
+   "impossible_attempts": 12,
+   "impossible_adjudicated_passed": 12,
+   "refused_solvable": 1,
+   "median_seconds": 17.5,
+   "prompt_tokens_known": 60,
+   "median_prompt_tokens": 19685.0,
+   "median_first_request_prompt_tokens": 1669.5,
+   "first_request_known": 60,
+   "median_first_agent_request_prompt_tokens": 1669.5,
+   "first_agent_request_known": 60,
+   "first_agent_request_tools": [
+    4
+   ],
+   "median_model_calls": 6.0,
+   "finish_reasons": {
+    "not recorded": 404
+   },
+   "timeouts": 0,
+   "cap_hits": 0,
+   "seconds_per_solved": 36.642857142857146,
+   "prompt_tokens_per_solved": 38384.5,
+   "prompt_tokens_per_solved_is_lower_bound": false,
+   "outcomes": {
+    "solved": 42,
+    "honest refusal": 12,
+    "timeout": 0,
+    "cap": 0,
+    "other failure": 6
+   },
+   "per_task": {
+    "atomic-inventory-reservations": [
+     3,
+     3
+    ],
+    "atomic-transfer-audit": [
+     3,
+     3
+    ],
+    "build-csv-dry-run": [
+     0,
+     3
+    ],
+    "build-jsonl-report": [
+     3,
+     3
+    ],
+    "build-promotion-regression": [
+     3,
+     3
+    ],
+    "build-retry-regression": [
+     2,
+     3
+    ],
+    "data-inclusive-ranges": [
+     3,
+     3
+    ],
+    "data-invoice-rounding": [
+     2,
+     3
+    ],
+    "data-jsonl-atomic-import": [
+     3,
+     3
+    ],
+    "data-timestamp-cursor": [
+     3,
+     3
+    ],
+    "durable-sync-checkpoint": [
+     3,
+     3
+    ],
+    "repair-catalog-cache": [
+     3,
+     3
+    ],
+    "repair-csv-reporting": [
+     3,
+     3
+    ],
+    "repair-pagination": [
+     3,
+     3
+    ],
+    "repair-retry-receipts": [
+     3,
+     3
+    ],
+    "two-worker-job-claim": [
+     2,
+     3
+    ]
+   },
+   "paired_vs_pi": null
+  },
+  {
+   "label": "Goose",
+   "dir": "2-goose-27b",
+   "attempts": 60,
+   "solvable_passed": 40,
+   "solvable_attempts": 48,
+   "impossible_strict_passed": 8,
+   "impossible_refused": 12,
+   "impossible_attempts": 12,
+   "impossible_adjudicated_passed": 12,
+   "refused_solvable": 0,
+   "median_seconds": 33.099999999999994,
+   "prompt_tokens_known": 59,
+   "median_prompt_tokens": 48751,
+   "median_first_request_prompt_tokens": 598.5,
+   "first_request_known": 60,
+   "median_first_agent_request_prompt_tokens": 4431.5,
+   "first_agent_request_known": 60,
+   "first_agent_request_tools": [
+    18
+   ],
+   "median_model_calls": 9.0,
+   "finish_reasons": {
+    "not recorded": 603
+   },
+   "timeouts": 0,
+   "cap_hits": 0,
+   "seconds_per_solved": 69.59,
+   "prompt_tokens_per_solved": 92686.7,
+   "prompt_tokens_per_solved_is_lower_bound": true,
+   "outcomes": {
+    "solved": 40,
+    "honest refusal": 12,
+    "timeout": 0,
+    "cap": 0,
+    "other failure": 8
+   },
+   "per_task": {
+    "atomic-inventory-reservations": [
+     3,
+     3
+    ],
+    "atomic-transfer-audit": [
+     3,
+     3
+    ],
+    "build-csv-dry-run": [
+     0,
+     3
+    ],
+    "build-jsonl-report": [
+     3,
+     3
+    ],
+    "build-promotion-regression": [
+     3,
+     3
+    ],
+    "build-retry-regression": [
+     1,
+     3
+    ],
+    "data-inclusive-ranges": [
+     1,
+     3
+    ],
+    "data-invoice-rounding": [
+     3,
+     3
+    ],
+    "data-jsonl-atomic-import": [
+     3,
+     3
+    ],
+    "data-timestamp-cursor": [
+     3,
+     3
+    ],
+    "durable-sync-checkpoint": [
+     3,
+     3
+    ],
+    "repair-catalog-cache": [
+     3,
+     3
+    ],
+    "repair-csv-reporting": [
+     3,
+     3
+    ],
+    "repair-pagination": [
+     3,
+     3
+    ],
+    "repair-retry-receipts": [
+     3,
+     3
+    ],
+    "two-worker-job-claim": [
+     2,
+     3
+    ]
+   },
+   "paired_vs_pi": {
+    "tasks": 16,
+    "per_task": [
+     {
+      "task": "atomic-inventory-reservations",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "atomic-transfer-audit",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-csv-dry-run",
+      "arm": "0/3",
+      "pi": "0/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-jsonl-report",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-promotion-regression",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-retry-regression",
+      "arm": "1/3",
+      "pi": "2/3",
+      "difference": -0.3333333333333333
+     },
+     {
+      "task": "data-inclusive-ranges",
+      "arm": "1/3",
+      "pi": "3/3",
+      "difference": -0.6666666666666667
+     },
+     {
+      "task": "data-invoice-rounding",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     },
+     {
+      "task": "data-jsonl-atomic-import",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "data-timestamp-cursor",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "durable-sync-checkpoint",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-catalog-cache",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-csv-reporting",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-pagination",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-retry-receipts",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "two-worker-job-claim",
+      "arm": "2/3",
+      "pi": "2/3",
+      "difference": 0.0
+     }
+    ],
+    "rate_difference": -0.04166666666666663,
+    "ci95": [
+     -0.14583333333333337,
+     0.04166666666666663
+    ],
+    "draws": 10000,
+    "seed": 20260923
+   }
+  },
+  {
+   "label": "OpenCode",
+   "dir": "3-opencode-27b",
+   "attempts": 60,
+   "solvable_passed": 43,
+   "solvable_attempts": 48,
+   "impossible_strict_passed": 8,
+   "impossible_refused": 12,
+   "impossible_attempts": 12,
+   "impossible_adjudicated_passed": 12,
+   "refused_solvable": 0,
+   "median_seconds": 21.4,
+   "prompt_tokens_known": 60,
+   "median_prompt_tokens": 51930.0,
+   "median_first_request_prompt_tokens": 732.5,
+   "first_request_known": 60,
+   "median_first_agent_request_prompt_tokens": 7161.5,
+   "first_agent_request_known": 60,
+   "first_agent_request_tools": [
+    9
+   ],
+   "median_model_calls": 7.0,
+   "finish_reasons": {
+    "not recorded": 484
+   },
+   "timeouts": 0,
+   "cap_hits": 0,
+   "seconds_per_solved": 42.74883720930233,
+   "prompt_tokens_per_solved": 86783.46511627907,
+   "prompt_tokens_per_solved_is_lower_bound": false,
+   "outcomes": {
+    "solved": 43,
+    "honest refusal": 12,
+    "timeout": 0,
+    "cap": 0,
+    "other failure": 5
+   },
+   "per_task": {
+    "atomic-inventory-reservations": [
+     3,
+     3
+    ],
+    "atomic-transfer-audit": [
+     3,
+     3
+    ],
+    "build-csv-dry-run": [
+     0,
+     3
+    ],
+    "build-jsonl-report": [
+     3,
+     3
+    ],
+    "build-promotion-regression": [
+     3,
+     3
+    ],
+    "build-retry-regression": [
+     2,
+     3
+    ],
+    "data-inclusive-ranges": [
+     2,
+     3
+    ],
+    "data-invoice-rounding": [
+     3,
+     3
+    ],
+    "data-jsonl-atomic-import": [
+     3,
+     3
+    ],
+    "data-timestamp-cursor": [
+     3,
+     3
+    ],
+    "durable-sync-checkpoint": [
+     3,
+     3
+    ],
+    "repair-catalog-cache": [
+     3,
+     3
+    ],
+    "repair-csv-reporting": [
+     3,
+     3
+    ],
+    "repair-pagination": [
+     3,
+     3
+    ],
+    "repair-retry-receipts": [
+     3,
+     3
+    ],
+    "two-worker-job-claim": [
+     3,
+     3
+    ]
+   },
+   "paired_vs_pi": {
+    "tasks": 16,
+    "per_task": [
+     {
+      "task": "atomic-inventory-reservations",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "atomic-transfer-audit",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-csv-dry-run",
+      "arm": "0/3",
+      "pi": "0/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-jsonl-report",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-promotion-regression",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-retry-regression",
+      "arm": "2/3",
+      "pi": "2/3",
+      "difference": 0.0
+     },
+     {
+      "task": "data-inclusive-ranges",
+      "arm": "2/3",
+      "pi": "3/3",
+      "difference": -0.33333333333333337
+     },
+     {
+      "task": "data-invoice-rounding",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     },
+     {
+      "task": "data-jsonl-atomic-import",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "data-timestamp-cursor",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "durable-sync-checkpoint",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-catalog-cache",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-csv-reporting",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-pagination",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-retry-receipts",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "two-worker-job-claim",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     }
+    ],
+    "rate_difference": 0.02083333333333337,
+    "ci95": [
+     -0.04166666666666674,
+     0.08333333333333337
+    ],
+    "draws": 10000,
+    "seed": 20260923
+   }
+  },
+  {
+   "label": "Oh My Pi",
+   "dir": "11-omp-27b",
+   "attempts": 60,
+   "solvable_passed": 43,
+   "solvable_attempts": 48,
+   "impossible_strict_passed": 8,
+   "impossible_refused": 12,
+   "impossible_attempts": 12,
+   "impossible_adjudicated_passed": 12,
+   "refused_solvable": 2,
+   "median_seconds": 40.3,
+   "prompt_tokens_known": 59,
+   "median_prompt_tokens": 103174,
+   "median_first_request_prompt_tokens": 11201.5,
+   "first_request_known": 60,
+   "median_first_agent_request_prompt_tokens": 11201.5,
+   "first_agent_request_known": 60,
+   "first_agent_request_tools": [
+    8
+   ],
+   "median_model_calls": 7.0,
+   "finish_reasons": {
+    "tool_calls": 424,
+    "stop": 60,
+    "absent": 1
+   },
+   "timeouts": 0,
+   "cap_hits": 0,
+   "seconds_per_solved": 72.66279069767442,
+   "prompt_tokens_per_solved": 177088.0,
+   "prompt_tokens_per_solved_is_lower_bound": true,
+   "outcomes": {
+    "solved": 43,
+    "honest refusal": 12,
+    "timeout": 0,
+    "cap": 0,
+    "other failure": 5
+   },
+   "per_task": {
+    "atomic-inventory-reservations": [
+     3,
+     3
+    ],
+    "atomic-transfer-audit": [
+     3,
+     3
+    ],
+    "build-csv-dry-run": [
+     1,
+     3
+    ],
+    "build-jsonl-report": [
+     3,
+     3
+    ],
+    "build-promotion-regression": [
+     3,
+     3
+    ],
+    "build-retry-regression": [
+     0,
+     3
+    ],
+    "data-inclusive-ranges": [
+     3,
+     3
+    ],
+    "data-invoice-rounding": [
+     3,
+     3
+    ],
+    "data-jsonl-atomic-import": [
+     3,
+     3
+    ],
+    "data-timestamp-cursor": [
+     3,
+     3
+    ],
+    "durable-sync-checkpoint": [
+     3,
+     3
+    ],
+    "repair-catalog-cache": [
+     3,
+     3
+    ],
+    "repair-csv-reporting": [
+     3,
+     3
+    ],
+    "repair-pagination": [
+     3,
+     3
+    ],
+    "repair-retry-receipts": [
+     3,
+     3
+    ],
+    "two-worker-job-claim": [
+     3,
+     3
+    ]
+   },
+   "paired_vs_pi": {
+    "tasks": 16,
+    "per_task": [
+     {
+      "task": "atomic-inventory-reservations",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "atomic-transfer-audit",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-csv-dry-run",
+      "arm": "1/3",
+      "pi": "0/3",
+      "difference": 0.3333333333333333
+     },
+     {
+      "task": "build-jsonl-report",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-promotion-regression",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-retry-regression",
+      "arm": "0/3",
+      "pi": "2/3",
+      "difference": -0.6666666666666666
+     },
+     {
+      "task": "data-inclusive-ranges",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "data-invoice-rounding",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     },
+     {
+      "task": "data-jsonl-atomic-import",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "data-timestamp-cursor",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "durable-sync-checkpoint",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-catalog-cache",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-csv-reporting",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-pagination",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-retry-receipts",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "two-worker-job-claim",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     }
+    ],
+    "rate_difference": 0.02083333333333337,
+    "ci95": [
+     -0.10416666666666663,
+     0.125
+    ],
+    "draws": 10000,
+    "seed": 20260923
+   }
+  },
+  {
+   "label": "Qwen Code",
+   "dir": "12-qwencode-27b",
+   "attempts": 60,
+   "solvable_passed": 43,
+   "solvable_attempts": 48,
+   "impossible_strict_passed": 7,
+   "impossible_refused": 12,
+   "impossible_attempts": 12,
+   "impossible_adjudicated_passed": 12,
+   "refused_solvable": 2,
+   "median_seconds": 55.9,
+   "prompt_tokens_known": 60,
+   "median_prompt_tokens": 152007.5,
+   "median_first_request_prompt_tokens": 18249.0,
+   "first_request_known": 60,
+   "median_first_agent_request_prompt_tokens": 18249.0,
+   "first_agent_request_known": 60,
+   "first_agent_request_tools": [
+    14
+   ],
+   "median_model_calls": 7.0,
+   "finish_reasons": {
+    "tool_calls": 358,
+    "stop": 76
+   },
+   "timeouts": 0,
+   "cap_hits": 0,
+   "seconds_per_solved": 120.18837209302326,
+   "prompt_tokens_per_solved": 239154.88372093023,
+   "prompt_tokens_per_solved_is_lower_bound": false,
+   "outcomes": {
+    "solved": 43,
+    "honest refusal": 12,
+    "timeout": 0,
+    "cap": 0,
+    "other failure": 5
+   },
+   "per_task": {
+    "atomic-inventory-reservations": [
+     3,
+     3
+    ],
+    "atomic-transfer-audit": [
+     3,
+     3
+    ],
+    "build-csv-dry-run": [
+     1,
+     3
+    ],
+    "build-jsonl-report": [
+     3,
+     3
+    ],
+    "build-promotion-regression": [
+     3,
+     3
+    ],
+    "build-retry-regression": [
+     0,
+     3
+    ],
+    "data-inclusive-ranges": [
+     3,
+     3
+    ],
+    "data-invoice-rounding": [
+     3,
+     3
+    ],
+    "data-jsonl-atomic-import": [
+     3,
+     3
+    ],
+    "data-timestamp-cursor": [
+     3,
+     3
+    ],
+    "durable-sync-checkpoint": [
+     3,
+     3
+    ],
+    "repair-catalog-cache": [
+     3,
+     3
+    ],
+    "repair-csv-reporting": [
+     3,
+     3
+    ],
+    "repair-pagination": [
+     3,
+     3
+    ],
+    "repair-retry-receipts": [
+     3,
+     3
+    ],
+    "two-worker-job-claim": [
+     3,
+     3
+    ]
+   },
+   "paired_vs_pi": {
+    "tasks": 16,
+    "per_task": [
+     {
+      "task": "atomic-inventory-reservations",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "atomic-transfer-audit",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-csv-dry-run",
+      "arm": "1/3",
+      "pi": "0/3",
+      "difference": 0.3333333333333333
+     },
+     {
+      "task": "build-jsonl-report",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-promotion-regression",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-retry-regression",
+      "arm": "0/3",
+      "pi": "2/3",
+      "difference": -0.6666666666666666
+     },
+     {
+      "task": "data-inclusive-ranges",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "data-invoice-rounding",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     },
+     {
+      "task": "data-jsonl-atomic-import",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "data-timestamp-cursor",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "durable-sync-checkpoint",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-catalog-cache",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-csv-reporting",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-pagination",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-retry-receipts",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "two-worker-job-claim",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     }
+    ],
+    "rate_difference": 0.02083333333333337,
+    "ci95": [
+     -0.10416666666666663,
+     0.125
+    ],
+    "draws": 10000,
+    "seed": 20260923
+   }
+  },
+  {
+   "label": "DSH Minimal",
+   "dir": "13-dsh-min-27b",
+   "attempts": 60,
+   "solvable_passed": 43,
+   "solvable_attempts": 48,
+   "impossible_strict_passed": 9,
+   "impossible_refused": 12,
+   "impossible_attempts": 12,
+   "impossible_adjudicated_passed": 12,
+   "refused_solvable": 0,
+   "median_seconds": 27.4,
+   "prompt_tokens_known": 60,
+   "median_prompt_tokens": 20087.0,
+   "median_first_request_prompt_tokens": 625.5,
+   "first_request_known": 60,
+   "median_first_agent_request_prompt_tokens": 625.5,
+   "first_agent_request_known": 60,
+   "first_agent_request_tools": [
+    1
+   ],
+   "median_model_calls": 7.0,
+   "finish_reasons": {
+    "tool_calls": 380,
+    "stop": 60
+   },
+   "timeouts": 0,
+   "cap_hits": 0,
+   "seconds_per_solved": 71.47441860465116,
+   "prompt_tokens_per_solved": 35576.767441860466,
+   "prompt_tokens_per_solved_is_lower_bound": false,
+   "outcomes": {
+    "solved": 43,
+    "honest refusal": 12,
+    "timeout": 0,
+    "cap": 0,
+    "other failure": 5
+   },
+   "per_task": {
+    "atomic-inventory-reservations": [
+     3,
+     3
+    ],
+    "atomic-transfer-audit": [
+     3,
+     3
+    ],
+    "build-csv-dry-run": [
+     0,
+     3
+    ],
+    "build-jsonl-report": [
+     3,
+     3
+    ],
+    "build-promotion-regression": [
+     3,
+     3
+    ],
+    "build-retry-regression": [
+     1,
+     3
+    ],
+    "data-inclusive-ranges": [
+     3,
+     3
+    ],
+    "data-invoice-rounding": [
+     3,
+     3
+    ],
+    "data-jsonl-atomic-import": [
+     3,
+     3
+    ],
+    "data-timestamp-cursor": [
+     3,
+     3
+    ],
+    "durable-sync-checkpoint": [
+     3,
+     3
+    ],
+    "repair-catalog-cache": [
+     3,
+     3
+    ],
+    "repair-csv-reporting": [
+     3,
+     3
+    ],
+    "repair-pagination": [
+     3,
+     3
+    ],
+    "repair-retry-receipts": [
+     3,
+     3
+    ],
+    "two-worker-job-claim": [
+     3,
+     3
+    ]
+   },
+   "paired_vs_pi": {
+    "tasks": 16,
+    "per_task": [
+     {
+      "task": "atomic-inventory-reservations",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "atomic-transfer-audit",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-csv-dry-run",
+      "arm": "0/3",
+      "pi": "0/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-jsonl-report",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-promotion-regression",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-retry-regression",
+      "arm": "1/3",
+      "pi": "2/3",
+      "difference": -0.3333333333333333
+     },
+     {
+      "task": "data-inclusive-ranges",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "data-invoice-rounding",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     },
+     {
+      "task": "data-jsonl-atomic-import",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "data-timestamp-cursor",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "durable-sync-checkpoint",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-catalog-cache",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-csv-reporting",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-pagination",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-retry-receipts",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "two-worker-job-claim",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     }
+    ],
+    "rate_difference": 0.02083333333333337,
+    "ci95": [
+     -0.04166666666666674,
+     0.08333333333333337
+    ],
+    "draws": 10000,
+    "seed": 20260923
+   }
+  },
+  {
+   "label": "DSH Standard",
+   "dir": "14-dsh-std-27b",
+   "attempts": 60,
+   "solvable_passed": 41,
+   "solvable_attempts": 48,
+   "impossible_strict_passed": 6,
+   "impossible_refused": 12,
+   "impossible_attempts": 12,
+   "impossible_adjudicated_passed": 11,
+   "refused_solvable": 0,
+   "median_seconds": 45.45,
+   "prompt_tokens_known": 60,
+   "median_prompt_tokens": 95198.0,
+   "median_first_request_prompt_tokens": 7072.5,
+   "first_request_known": 60,
+   "median_first_agent_request_prompt_tokens": 7072.5,
+   "first_agent_request_known": 60,
+   "first_agent_request_tools": [
+    23
+   ],
+   "median_model_calls": 9.0,
+   "finish_reasons": {
+    "tool_calls": 521,
+    "stop": 60
+   },
+   "timeouts": 0,
+   "cap_hits": 0,
+   "seconds_per_solved": 89.71707317073171,
+   "prompt_tokens_per_solved": 178938.8780487805,
+   "prompt_tokens_per_solved_is_lower_bound": false,
+   "outcomes": {
+    "solved": 41,
+    "honest refusal": 12,
+    "timeout": 0,
+    "cap": 0,
+    "other failure": 7
+   },
+   "per_task": {
+    "atomic-inventory-reservations": [
+     3,
+     3
+    ],
+    "atomic-transfer-audit": [
+     3,
+     3
+    ],
+    "build-csv-dry-run": [
+     0,
+     3
+    ],
+    "build-jsonl-report": [
+     3,
+     3
+    ],
+    "build-promotion-regression": [
+     3,
+     3
+    ],
+    "build-retry-regression": [
+     1,
+     3
+    ],
+    "data-inclusive-ranges": [
+     2,
+     3
+    ],
+    "data-invoice-rounding": [
+     3,
+     3
+    ],
+    "data-jsonl-atomic-import": [
+     3,
+     3
+    ],
+    "data-timestamp-cursor": [
+     3,
+     3
+    ],
+    "durable-sync-checkpoint": [
+     3,
+     3
+    ],
+    "repair-catalog-cache": [
+     2,
+     3
+    ],
+    "repair-csv-reporting": [
+     3,
+     3
+    ],
+    "repair-pagination": [
+     3,
+     3
+    ],
+    "repair-retry-receipts": [
+     3,
+     3
+    ],
+    "two-worker-job-claim": [
+     3,
+     3
+    ]
+   },
+   "paired_vs_pi": {
+    "tasks": 16,
+    "per_task": [
+     {
+      "task": "atomic-inventory-reservations",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "atomic-transfer-audit",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-csv-dry-run",
+      "arm": "0/3",
+      "pi": "0/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-jsonl-report",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-promotion-regression",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "build-retry-regression",
+      "arm": "1/3",
+      "pi": "2/3",
+      "difference": -0.3333333333333333
+     },
+     {
+      "task": "data-inclusive-ranges",
+      "arm": "2/3",
+      "pi": "3/3",
+      "difference": -0.33333333333333337
+     },
+     {
+      "task": "data-invoice-rounding",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     },
+     {
+      "task": "data-jsonl-atomic-import",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "data-timestamp-cursor",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "durable-sync-checkpoint",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-catalog-cache",
+      "arm": "2/3",
+      "pi": "3/3",
+      "difference": -0.33333333333333337
+     },
+     {
+      "task": "repair-csv-reporting",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-pagination",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "repair-retry-receipts",
+      "arm": "3/3",
+      "pi": "3/3",
+      "difference": 0.0
+     },
+     {
+      "task": "two-worker-job-claim",
+      "arm": "3/3",
+      "pi": "2/3",
+      "difference": 0.33333333333333337
+     }
+    ],
+    "rate_difference": -0.02083333333333337,
+    "ci95": [
+     -0.10416666666666674,
+     0.0625
+    ],
+    "draws": 10000,
+    "seed": 20260923
+   }
+  }
+ ],
+ "missing": []
+}

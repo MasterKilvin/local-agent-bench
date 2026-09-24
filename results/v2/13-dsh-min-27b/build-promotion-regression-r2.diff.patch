@@ -1,0 +1,42 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..517fa7b
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,36 @@
++"""Regression tests: promotion must be applied exactly once at checkout."""
++import unittest
++
++from shop.checkout import checkout
++
++
++class CheckoutPromotionRegressionTest(unittest.TestCase):
++    def test_single_line_quantity_above_one(self):
++        # single line, quantity above one
++        # subtotal = 10.00 * 2 = 20.00
++        # correct: 20.00 * (1 - 0.10) = 18.00
++        # double-discount bug would yield 20.00 * 0.9 * 0.9 = 16.20
++        lines = [{'price': '10.00', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_multiple_lines_all_quantity_one(self):
++        # multiple lines, every quantity equal to one
++        # subtotal = 5.00 + 10.00 = 15.00
++        # correct: 15.00 * (1 - 0.50) = 7.50
++        # double-discount bug would yield 15.00 * 0.5 * 0.5 = 3.75
++        lines = [
++            {'price': '5.00', 'qty': 1},
++            {'price': '10.00', 'qty': 1},
++        ]
++        self.assertEqual(checkout(lines, '0.50'), '7.50')
++
++    def test_rounding_half_up(self):
++        # subtotal = 3.33 * 2 = 6.66
++        # correct: 6.66 * (1 - 0.75) = 1.665 -> 1.67 (ROUND_HALF_UP)
++        # double-discount bug would yield 6.66 * 0.25 * 0.25 = 0.41625 -> 0.42
++        lines = [{'price': '3.33', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.75'), '1.67')
++
++
++if __name__ == '__main__':
++    unittest.main()

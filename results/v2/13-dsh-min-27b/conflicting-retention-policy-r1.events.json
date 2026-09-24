@@ -1,0 +1,69 @@
+{
+"peak_prompt_tokens": 2685,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 1.4,
+"prompt": 609,
+"completion": 64,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 2.2,
+"prompt": 1040,
+"completion": 60,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 5.4,
+"prompt": 1474,
+"completion": 382,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 10.4,
+"prompt": 1923,
+"completion": 612,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 12.3,
+"prompt": 2685,
+"completion": 217,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 1.4,
+"name": "bash",
+"args_hash": "171b1303f1ed5f7c",
+"error": null
+},
+{
+"t": 2.2,
+"name": "bash",
+"args_hash": "34bb322c7b00ca6f",
+"error": null
+},
+{
+"t": 5.4,
+"name": "bash",
+"args_hash": "19c1efa68cce6787",
+"error": null
+},
+{
+"t": 10.4,
+"name": "bash",
+"args_hash": "477943b07cf9b53d",
+"error": null
+}
+]
+}

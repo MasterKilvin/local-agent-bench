@@ -11,6 +11,7 @@ Each report takes one finding and gives its evidence, what it supports and what 
 3. [Q8 showed no advantage over Q4 at matched 24K context and took 2.3 times as long per attempt; plus exploratory thinking-level and KV-cache runs](reports/03-q4-vs-q8.md)
 4. [A coder-tuned 30B solved 14 of 48: 71 failed edits, stream errors on 26 of 60 attempts, and a "blocked" file used as a success report](reports/04-coder-model.md)
 5. [Pi, Goose and OpenCode with the same model: 42, 40 and 43 of 48 solved, but Goose and OpenCode used 2.5 to 2.6 times Pi's prompt tokens per attempt](reports/05-three-agent-tools.md)
+6. [Seven agent tools, one local 27B model: DSH Minimal's one-line prompt and single bash tool solved 43 of 48 at Pi's token cost; no tool separated from Pi on solve rate](reports/06-seven-agent-tools.md)
 
 ## The short version
 

@@ -1,0 +1,152 @@
+{
+"peak_prompt_tokens": 18083,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 1.4,
+"prompt": 7084,
+"completion": 62,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 2.3,
+"prompt": 7374,
+"completion": 127,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 2.8,
+"prompt": 7977,
+"completion": 42,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 54.8,
+"prompt": 8174,
+"completion": 6512,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 56.1,
+"prompt": 14730,
+"completion": 159,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 62.9,
+"prompt": 15152,
+"completion": 821,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 66.6,
+"prompt": 16909,
+"completion": 457,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 68.3,
+"prompt": 17634,
+"completion": 197,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 69.9,
+"prompt": 17895,
+"completion": 168,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 76.0,
+"prompt": 18083,
+"completion": 703,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 1.4,
+"name": "bash",
+"args_hash": "42b9bd82195ce496",
+"error": null
+},
+{
+"t": 2.3,
+"name": "read",
+"args_hash": "d74f29ba48a9e92c",
+"error": null
+},
+{
+"t": 2.3,
+"name": "read",
+"args_hash": "79a15eaa6ebdf9b9",
+"error": null
+},
+{
+"t": 2.3,
+"name": "bash",
+"args_hash": "3544f460238ff5fb",
+"error": null
+},
+{
+"t": 2.8,
+"name": "read",
+"args_hash": "487125a600b035ce",
+"error": null
+},
+{
+"t": 54.8,
+"name": "write",
+"args_hash": "a95479a4c21ac414",
+"error": null
+},
+{
+"t": 56.1,
+"name": "bash",
+"args_hash": "32116f64d3916e1b",
+"error": null
+},
+{
+"t": 62.9,
+"name": "bash",
+"args_hash": "d190f887c51f496d",
+"error": null
+},
+{
+"t": 63.0,
+"name": "bash",
+"args_hash": "b14b8ef5dabb27ff",
+"error": null
+},
+{
+"t": 66.6,
+"name": "bash",
+"args_hash": "224f45e572445ac9",
+"error": null
+},
+{
+"t": 68.3,
+"name": "bash",
+"args_hash": "3c585e2040575dcd",
+"error": null
+},
+{
+"t": 69.9,
+"name": "bash",
+"args_hash": "915a3ae721bd4268",
+"error": null
+}
+]
+}

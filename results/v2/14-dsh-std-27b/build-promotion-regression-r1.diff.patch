@@ -1,0 +1,48 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..5d4e57a
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,42 @@
++"""Regression tests for the checkout promotion being applied exactly once.
++
++README.md defines the contract: sum the extended line prices into a subtotal,
++apply the promotion exactly once to that subtotal, then round with
++ROUND_HALF_UP and return the total as a two-decimal string.
++
++The double-discount bug multiplies the discount into the subtotal twice, so
++these tests (which assert the single-application value) fail against the buggy
++code and pass against a correct implementation.
++
++A single line with quantity above one and a separate multi-line basket with
++every quantity equal to one are distinct regression scenarios, so they are
++covered by two separate test methods rather than one combined basket.
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class CheckoutRegressionTest(unittest.TestCase):
++
++    def test_single_line_quantity_above_one(self):
++        # Subtotal = 10.00 * 2 = 20.00
++        # Promotion applied once: 20.00 * (1 - 0.10) = 20.00 * 0.90 = 18.00
++        # (The double-discount bug would yield 20.00 * 0.90 * 0.90 = 16.20.)
++        lines = [{'price': '10.00', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_multiple_lines_all_quantity_one(self):
++        # Subtotal = 5.00 + 7.50 = 12.50
++        # Promotion applied once: 12.50 * (1 - 0.20) = 12.50 * 0.80 = 10.00
++        # (The double-discount bug would yield 12.50 * 0.80 * 0.80 = 8.00.)
++        lines = [
++            {'price': '5.00', 'qty': 1},
++            {'price': '7.50', 'qty': 1},
++        ]
++        self.assertEqual(checkout(lines, '0.20'), '10.00')
++
++
++if __name__ == '__main__':
++    unittest.main()

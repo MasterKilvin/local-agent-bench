@@ -1,0 +1,35 @@
+diff --git c/receipts/__pycache__/__init__.cpython-312.pyc i/receipts/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..dd5804e
+Binary files /dev/null and i/receipts/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/receipts/__pycache__/gateway.cpython-312.pyc i/receipts/__pycache__/gateway.cpython-312.pyc
+new file mode 100644
+index 0000000..d6428b1
+Binary files /dev/null and i/receipts/__pycache__/gateway.cpython-312.pyc differ
+diff --git c/receipts/__pycache__/worker.cpython-312.pyc i/receipts/__pycache__/worker.cpython-312.pyc
+new file mode 100644
+index 0000000..751f51d
+Binary files /dev/null and i/receipts/__pycache__/worker.cpython-312.pyc differ
+diff --git c/receipts/worker.py i/receipts/worker.py
+index e9047c3..f822839 100644
+--- c/receipts/worker.py
++++ i/receipts/worker.py
+@@ -1,9 +1,17 @@
+ from .gateway import TemporaryError
+ 
+ def process(job_id, amount, gateway, attempts=3):
++    committed = gateway.find(job_id)
++    if committed is not None:
++        return committed
+     for _ in range(attempts):
+         try:
+             return gateway.issue(job_id, amount)
+         except TemporaryError:
+-            pass
++            # The failure may have happened after the write: the receipt is
++            # already committed, and a retry would create a duplicate.
++            committed = gateway.find(job_id)
++            if committed is not None:
++                return committed
++    # Fell out of the loop only when no receipt was ever committed.
+     raise TemporaryError('exhausted')

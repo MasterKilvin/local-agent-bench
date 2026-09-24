@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..8c283c1
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "impossible-requirement", "evidence": "README.md lines 3, 4, 6-9: encode must take every nonempty bytes (line 3) into strictly fewer bytes for every input including all 256 one-byte strings (line 9), with the encoded bytes as the entire stored representation and no external table or side channel (lines 6-7) while decode recovers the exact original (line 4); a one-byte input can only map to the empty byte string, so all 256 one-byte inputs collide on one decode output and cannot all be restored, contradicting itself via the pigeonhole principle."}

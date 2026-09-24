@@ -1,0 +1,18 @@
+diff --git c/catalog/cache.py i/catalog/cache.py
+index 65938de..339db36 100644
+--- c/catalog/cache.py
++++ i/catalog/cache.py
+@@ -4,6 +4,10 @@ class CatalogCache:
+         self.entries = {}
+ 
+     def get(self, id):
+-        if id not in self.entries:
+-            self.entries[id] = self.catalog.read(id)
+-        return self.entries[id]
++        entry = self.entries.get(id)
++        if entry is not None and entry[1] == self.catalog.versions.get(id, 0):
++            value = entry[0]
++            return None if value is None else value.copy()
++        fresh = self.catalog.read(id)
++        self.entries[id] = (fresh, self.catalog.versions.get(id, 0))
++        return None if fresh is None else fresh.copy()

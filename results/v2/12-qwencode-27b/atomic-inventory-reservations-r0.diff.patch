@@ -1,0 +1,150 @@
+diff --git c/__pycache__/test_inventory.cpython-312.pyc i/__pycache__/test_inventory.cpython-312.pyc
+new file mode 100644
+index 0000000..6838971
+Binary files /dev/null and i/__pycache__/test_inventory.cpython-312.pyc differ
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..7acc434
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/inventory.cpython-312.pyc i/shop/__pycache__/inventory.cpython-312.pyc
+new file mode 100644
+index 0000000..e9cbf0b
+Binary files /dev/null and i/shop/__pycache__/inventory.cpython-312.pyc differ
+diff --git c/shop/__pycache__/report.cpython-312.pyc i/shop/__pycache__/report.cpython-312.pyc
+new file mode 100644
+index 0000000..29cb4ae
+Binary files /dev/null and i/shop/__pycache__/report.cpython-312.pyc differ
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..f6f9b11 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -9,9 +9,9 @@ class Inventory:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
+-        remaining = self.available[sku]
+         if on_attempt is not None:
+             on_attempt()
++        remaining = self.available[sku]
+         if remaining < quantity:
+             return None
+         reservation_id = self._next_id
+diff --git c/test_inventory.py i/test_inventory.py
+new file mode 100644
+index 0000000..88df86c
+--- /dev/null
++++ i/test_inventory.py
+@@ -0,0 +1,113 @@
++import unittest
++
++from shop import Inventory
++from shop.report import available_units, reserved_units
++
++
++class ReserveTest(unittest.TestCase):
++    def test_basic_reservation(self):
++        inv = Inventory({'mug': 8})
++        rid = inv.reserve('mug', 3)
++        self.assertEqual(rid, 1)
++        self.assertEqual(inv.available['mug'], 5)
++        self.assertEqual(inv.reservations, {1: ('mug', 3)})
++        self.assertEqual(available_units(inv, 'mug'), 5)
++        self.assertEqual(reserved_units(inv, 'mug'), 3)
++
++    def test_rejection_changes_nothing(self):
++        inv = Inventory({'mug': 2})
++        self.assertIsNone(inv.reserve('mug', 3))
++        self.assertEqual(inv.available['mug'], 2)
++        self.assertEqual(inv.reservations, {})
++
++    def test_ids_are_positive_and_unique(self):
++        inv = Inventory({'mug': 8, 'pen': 4})
++        ids = [inv.reserve('mug', 1), None, inv.reserve('pen', 2), inv.reserve('mug', 1)]
++        ids = [i for i in ids if i is not None]
++        self.assertTrue(all(i > 0 for i in ids))
++        self.assertEqual(len(set(ids)), len(ids))
++
++    def test_invalid_quantity(self):
++        inv = Inventory({'mug': 2})
++        for bad in (0, -1, 2.0, True, '3'):
++            with self.assertRaises(ValueError):
++                inv.reserve('mug', bad)
++        self.assertEqual(inv.available['mug'], 2)
++        self.assertEqual(inv.reservations, {})
++
++    def test_unknown_sku(self):
++        with self.assertRaises(KeyError):
++            Inventory({}).reserve('mug', 1)
++
++    def test_competing_callback_cannot_oversell(self):
++        # The callback's reservation is committed first, so the
++        # outer request must see the reduced stock and be rejected.
++        inv = Inventory({'mug': 8})
++        outer = inv.reserve('mug', 3, on_attempt=lambda: inv.reserve('mug', 6))
++        self.assertIsNone(outer)
++        self.assertEqual(inv.available['mug'], 2)
++        self.assertEqual(reserved_units(inv, 'mug'), 6)
++        self.assertEqual(inv.available['mug'] + reserved_units(inv, 'mug'), 8)
++
++    def test_competing_callback_both_fit(self):
++        inv = Inventory({'mug': 10})
++        outer = inv.reserve('mug', 2, on_attempt=lambda: inv.reserve('mug', 5))
++        self.assertIsNotNone(outer)
++        self.assertEqual(inv.available['mug'], 3)
++        self.assertEqual(reserved_units(inv, 'mug'), 7)
++
++    def test_competing_requests_honor_invariant_in_either_order(self):
++        order_a = Inventory({'mug': 8})
++        outer_with_inner = order_a.reserve('mug', 3, on_attempt=lambda: order_a.reserve('mug', 6))
++        self.assertIsNone(outer_with_inner)
++
++        order_b = Inventory({'mug': 8})
++        inner_first = order_b.reserve('mug', 6)
++        outer_after = order_b.reserve('mug', 3)
++        self.assertIsNotNone(inner_first)
++        self.assertIsNone(outer_after)
++
++        for inv in (order_a, order_b):
++            self.assertEqual(inv.available['mug'], 2)
++            self.assertEqual(reserved_units(inv, 'mug'), 6)
++
++    def test_nested_callbacks_stay_within_stock(self):
++        inv = Inventory({'mug': 10})
++        outer = inv.reserve('mug', 4, on_attempt=lambda: inv.reserve(
++            'mug', 5, on_attempt=lambda: inv.reserve('mug', 1)))
++        self.assertEqual(inv.available['mug'], 0)
++        self.assertEqual(reserved_units(inv, 'mug'), 10)
++        self.assertEqual(outer, 3)
++
++    def test_on_attempt_called_exactly_once_and_before_transition(self):
++        inv = Inventory({'mug': 5})
++        seen = []
++        calls = []
++        inv.reserve('mug', 3, on_attempt=lambda: (seen.append(inv.available['mug']), calls.append(1)))
++        self.assertEqual(calls, [1])
++        self.assertEqual(seen, [5])  # callback observes pre-transition stock
++        self.assertEqual(inv.available['mug'], 2)
++
++    def test_on_attempt_called_even_when_request_is_rejected(self):
++        inv = Inventory({'mug': 1})
++        calls = []
++        inv.reserve('mug', 5, on_attempt=lambda: calls.append(1))
++        self.assertEqual(calls, [1])
++        self.assertEqual(inv.available['mug'], 1)
++        self.assertEqual(inv.reservations, {})
++
++    def test_other_skus_are_independent(self):
++        inv = Inventory({'mug': 1, 'pen': 4})
++
++        def attempt():
++            inv.reserve('pen', 4)
++
++        mug = inv.reserve('mug', 5, on_attempt=attempt)
++        self.assertIsNone(mug)
++        self.assertEqual(inv.available['mug'], 1)
++        self.assertEqual(inv.available['pen'], 0)
++        self.assertEqual(reserved_units(inv, 'pen'), 4)
++
++
++if __name__ == '__main__':
++    unittest.main()

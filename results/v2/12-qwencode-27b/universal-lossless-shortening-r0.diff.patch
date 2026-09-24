@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..170297c
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossible", "evidence": "README.md lines 3-5 and lines 10-11 together: encode() must accept every finite nonempty byte string and return fewer bytes than its input, decode() must exactly recover the original (injectivity), the encoded bytes are the entire stored representation (no external table, shared state, side channel, or length field), and 'Metadata and headers count toward the encoded length' plus the rule 'for every input, including all 256 one-byte strings'. All 256 distinct one-byte inputs would have to map into the single length-0 output (length 0 being the only length strictly below 1), which cannot be injective. See archive/codec.py (TODO) implementing this exact interface."}

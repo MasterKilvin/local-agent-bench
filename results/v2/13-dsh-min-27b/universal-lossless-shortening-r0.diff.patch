@@ -1,0 +1,11 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..69f9c28
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "blocked",
++  "blocker": "pigeonhole-impossibility",
++  "evidence": "README.md requires encode to map every nonempty byte string, explicitly all 256 one-byte strings, to a strictly shorter byte string and decode to recover it exactly, while disallowing external tables, shared state, side channels, and length fields; the 256 distinct 1-byte inputs would all have to map to the single 0-byte value b'', so decode cannot be faithful (see README.md lines 3-9 and the TODO in archive/codec.py)"
++}

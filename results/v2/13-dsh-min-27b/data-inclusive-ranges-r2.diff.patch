@@ -1,0 +1,85 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..ed5fff9
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..752b4c0
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..8f4b821
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..9b323ad 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,36 @@
++import re
++
++_BOTH = re.compile(r'bytes=([0-9]+)-([0-9]+)')
++_START = re.compile(r'bytes=([0-9]+)-')
++_SUFFIX = re.compile(r'bytes=-([0-9]+)')
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++    """Return an inclusive (start, end) byte pair, or None for 416.
++
++    The header must exactly match one of `bytes=D-D`, `bytes=D-`, or
++    `bytes=-D`, with each D one or more ASCII digits 0-9. Anything else,
++    plus unsatisfiable ranges (start beyond EOF, zero suffix, reverse
++    bounds, or empty data), yields None.
++    """
++    if length == 0 or not isinstance(header, str):
++        return None
++    m = _BOTH.fullmatch(header)
++    if m is not None:
++        start, end = int(m.group(1)), int(m.group(2))
++        if start > end or start >= length:
++            return None
++        return start, min(end, length - 1)
++    m = _START.fullmatch(header)
++    if m is not None:
++        start = int(m.group(1))
++        if start >= length:
++            return None
++        return start, length - 1
++    m = _SUFFIX.fullmatch(header)
++    if m is not None:
++        n = int(m.group(1))
++        if n == 0:
++            return None
++        return max(0, length - n), length - 1
++    return None
+diff --git c/download/service.py i/download/service.py
+index 72a053d..a1e9fa6 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,18 @@
+ from .ranges import bounds
+ 
++
+ def serve(data, range_header=None):
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++    r = bounds(range_header, len(data))
++    if r is None:
++        return (416,
++                {'Content-Length': '0',
++                 'Content-Range': 'bytes */%d' % len(data)},
++                b'')
++    start, end = r
++    body = data[start:end + 1]
++    return (206,
++            {'Content-Length': str(len(body)),
++             'Content-Range': 'bytes %d-%d/%d' % (start, end, len(data))},
++            body)

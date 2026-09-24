@@ -1,0 +1,120 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..40a0ec4
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..681e16b
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..3a8f51d
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..b8c408f 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,72 @@
++class RangeError(Exception):
++    """A range header is malformed or unsatisfiable."""
++
++
++def _digits(text):
++    """Parse ``text`` as ASCII decimal digits only.
++
++    Returns an int when ``text`` is at least one character and every
++    character is one of ``0`` through ``9`` (leading zeros allowed).
++    Returns None for anything else: empty input, whitespace, signs,
++    underscores, or non-ASCII digits (Python ``int()`` would accept all
++    of those, so it must not be used here).
++    """
++    if not text:
++        return None
++    value = 0
++    for ch in text:
++        if '0' <= ch <= '9':
++            value = value * 10 + (ord(ch) - 48)
++        else:
++            return None
++    return value
++
++
+ def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
++    """Resolve a single-range header against ``length`` bytes of data.
++
++    Returns inclusive ``(start, end)`` byte positions. Raises RangeError
++    for bad syntax or an unsatisfiable range: start beyond EOF,
++    zero-length suffix, reversed bounds, both endpoints omitted, or any
++    range over empty data.
++    """
++    if not isinstance(header, str) or not header.startswith('bytes='):
++        raise RangeError('bad syntax')
++    spec = header[len('bytes='):]
++    # Exactly one separator: rejects 'bytes=1-2-3', 'bytes=1,3-4',
++    # 'bytes=1-2,5-6', and 'bytes=1' in the same way.
++    if spec.count('-') != 1:
++        raise RangeError('bad syntax')
+     first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++    if not first and not last:
++        raise RangeError('both endpoints omitted')  # 'bytes=-'
++
++    if first:
++        start = _digits(first)
++        if start is None:
++            raise RangeError('bad syntax')
++        if last:
++            # bytes=D-D
++            end = _digits(last)
++            if end is None:
++                raise RangeError('bad syntax')
++            if start > end:
++                raise RangeError('reversed bounds')
++            if start >= length:
++                raise RangeError('start beyond EOF')
++            return start, min(end, length - 1)
++        # bytes=D- : from D to EOF.  start >= length also catches empty
++        # data and D sitting at or past the end.
++        if start >= length:
++            raise RangeError('start beyond EOF')
++        return start, length - 1
++
++    # bytes=-D : the last D bytes.
++    n = _digits(last)
++    if n is None:
++        raise RangeError('bad syntax')
++    if n == 0:
++        raise RangeError('zero-length suffix')
++    if length == 0:
++        raise RangeError('empty data')
++    return max(0, length - n), length - 1
+diff --git c/download/service.py i/download/service.py
+index 72a053d..c5d2e4c 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,16 @@
+-from .ranges import bounds
++from .ranges import RangeError, bounds
++
+ 
+ def serve(data, range_header=None):
++    length = len(data)
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++        return 200, {'Content-Length': str(length)}, data
++    try:
++        start, end = bounds(range_header, length)
++    except RangeError:
++        return (416, {'Content-Length': '0',
++                      'Content-Range': 'bytes */%d' % length}, b'')
++    body = data[start:end + 1]  # the end position is inclusive
++    return (206, {'Content-Length': str(len(body)),
++                  'Content-Range': 'bytes %d-%d/%d' % (start, end, length)},
++            body)

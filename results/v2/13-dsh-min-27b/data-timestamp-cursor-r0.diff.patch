@@ -1,0 +1,41 @@
+diff --git c/activity/__pycache__/__init__.cpython-312.pyc i/activity/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..9302ca8
+Binary files /dev/null and i/activity/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/activity/__pycache__/paging.cpython-312.pyc i/activity/__pycache__/paging.cpython-312.pyc
+new file mode 100644
+index 0000000..a193297
+Binary files /dev/null and i/activity/__pycache__/paging.cpython-312.pyc differ
+diff --git c/activity/__pycache__/store.cpython-312.pyc i/activity/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..3652f4f
+Binary files /dev/null and i/activity/__pycache__/store.cpython-312.pyc differ
+diff --git c/activity/paging.py i/activity/paging.py
+index e9fc2b8..7f3853d 100644
+--- c/activity/paging.py
++++ i/activity/paging.py
+@@ -1,9 +1,22 @@
++import json
++
++
++def _encode_cursor(timestamp, record_id):
++    return json.dumps([timestamp, record_id])
++
++
++def _decode_cursor(cursor):
++    timestamp, record_id = json.loads(cursor)
++    return timestamp, record_id
++
++
+ def page(records, cursor=None, limit=10):
+     if limit < 1:
+         raise ValueError('limit')
+     ordered = sorted(records, key=lambda x: (x['timestamp'], x['id']))
+     if cursor is not None:
+-        ordered = [x for x in ordered if x['timestamp'] > cursor]
++        mark = _decode_cursor(cursor)
++        ordered = [x for x in ordered if (x['timestamp'], x['id']) > mark]
+     items = ordered[:limit]
+-    next_cursor = items[-1]['timestamp'] if len(ordered) > limit else None
++    next_cursor = _encode_cursor(items[-1]['timestamp'], items[-1]['id']) if len(ordered) > limit else None
+     return {'items': items, 'next_cursor': next_cursor}

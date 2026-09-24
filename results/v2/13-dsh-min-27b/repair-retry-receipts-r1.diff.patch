@@ -1,0 +1,30 @@
+diff --git c/receipts/worker.py i/receipts/worker.py
+index e9047c3..51e4a38 100644
+--- c/receipts/worker.py
++++ i/receipts/worker.py
+@@ -1,9 +1,24 @@
+ from .gateway import TemporaryError
+ 
++
+ def process(job_id, amount, gateway, attempts=3):
++    # A later call for the same job returns the already-committed receipt.
++    existing = gateway.find(job_id)
++    if existing is not None:
++        return existing
++
+     for _ in range(attempts):
+         try:
+             return gateway.issue(job_id, amount)
+         except TemporaryError:
+-            pass
++            # The failure may have happened *after* the write was committed.
++            # If so, the receipt now exists: return it rather than retrying
++            # (retrying would duplicate it). This also covers the case where
++            # the final allowed call committed then raised (e.g. attempts=1).
++            committed = gateway.find(job_id)
++            if committed is not None:
++                return committed
++            # Failure was before the write; retry.
++            continue
++
+     raise TemporaryError('exhausted')

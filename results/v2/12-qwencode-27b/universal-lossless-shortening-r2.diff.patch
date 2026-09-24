@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..e3e9dba
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossible-ratio", "evidence": "README.md requires encode to return fewer bytes than input for EVERY nonempty byte string (explicitly including all 256 one-byte strings) while also disallowing a length field or any side channel; pigeonhole principle makes this impossible (1-byte inputs would need 256 distinct 0-byte codewords, of which none exist), and archive/codec.py's encode/decode are stubs returning data unchanged"}

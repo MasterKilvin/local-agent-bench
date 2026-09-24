@@ -1,0 +1,176 @@
+{
+"peak_prompt_tokens": 31818,
+"thinking_tokens": 0,
+"tool_errors": 1,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 2.0,
+"prompt": 11198,
+"completion": 53,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 3.0,
+"prompt": 11345,
+"completion": 162,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 100.1,
+"prompt": 12077,
+"completion": 11435,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 106.2,
+"prompt": 23720,
+"completion": 345,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 128.8,
+"prompt": 24169,
+"completion": 2499,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 149.1,
+"prompt": 26743,
+"completion": 2270,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 159.1,
+"prompt": 29282,
+"completion": 1465,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 162.7,
+"prompt": 30792,
+"completion": 403,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 164.6,
+"prompt": 31618,
+"completion": 173,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 168.7,
+"prompt": 31818,
+"completion": 460,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 2.0,
+"name": "read",
+"args_hash": "e72644138c38a792",
+"error": null
+},
+{
+"t": 3.0,
+"name": "read",
+"args_hash": "19b4e2f4c9a2ed43",
+"error": null
+},
+{
+"t": 3.0,
+"name": "read",
+"args_hash": "3bc969dc8f2d9f8c",
+"error": null
+},
+{
+"t": 3.0,
+"name": "read",
+"args_hash": "6bef34a19cd955fe",
+"error": null
+},
+{
+"t": 3.0,
+"name": "read",
+"args_hash": "d48971345df245c3",
+"error": null
+},
+{
+"t": 100.1,
+"name": "todo",
+"args_hash": "4aa294b3c1994164",
+"error": null
+},
+{
+"t": 100.1,
+"name": "bash",
+"args_hash": "d1a9c7382d8c932f",
+"error": "isError"
+},
+{
+"t": 106.2,
+"name": "bash",
+"args_hash": "4931b1118104d188",
+"error": null
+},
+{
+"t": 128.8,
+"name": "bash",
+"args_hash": "c2dd04de5c0946c1",
+"error": null
+},
+{
+"t": 149.1,
+"name": "edit",
+"args_hash": "4f48ba1ce0b8deac",
+"error": null
+},
+{
+"t": 159.1,
+"name": "bash",
+"args_hash": "89b9721d61d84e55",
+"error": null
+},
+{
+"t": 162.7,
+"name": "todo",
+"args_hash": "052fd8a57854c534",
+"error": null
+},
+{
+"t": 162.7,
+"name": "todo",
+"args_hash": "1185932961c0a82c",
+"error": null
+},
+{
+"t": 162.7,
+"name": "todo",
+"args_hash": "97f28bd71f599ebe",
+"error": null
+},
+{
+"t": 162.7,
+"name": "read",
+"args_hash": "9148ca1635096205",
+"error": null
+},
+{
+"t": 164.6,
+"name": "bash",
+"args_hash": "f8c2fd2a45784f8c",
+"error": null
+}
+]
+}

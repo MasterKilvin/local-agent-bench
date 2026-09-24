@@ -1,0 +1,152 @@
+{
+"peak_prompt_tokens": 17846,
+"thinking_tokens": 0,
+"tool_errors": 2,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 2.2,
+"prompt": 11201,
+"completion": 93,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 3.1,
+"prompt": 11517,
+"completion": 126,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 12.1,
+"prompt": 12046,
+"completion": 1100,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 13.6,
+"prompt": 13261,
+"completion": 228,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 25.7,
+"prompt": 13526,
+"completion": 1467,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 35.6,
+"prompt": 15051,
+"completion": 1283,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 37.3,
+"prompt": 16475,
+"completion": 220,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 38.5,
+"prompt": 16821,
+"completion": 186,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 43.6,
+"prompt": 17044,
+"completion": 761,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 46.9,
+"prompt": 17846,
+"completion": 425,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 2.2,
+"name": "read",
+"args_hash": "9148ca1635096205",
+"error": null
+},
+{
+"t": 2.2,
+"name": "read",
+"args_hash": "19b4e2f4c9a2ed43",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "cd97f62b76006a82",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "18de97dc2b1b8a5f",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "3bc969dc8f2d9f8c",
+"error": null
+},
+{
+"t": 12.1,
+"name": "edit",
+"args_hash": "5df12877c23a8d57",
+"error": null
+},
+{
+"t": 13.7,
+"name": "write",
+"args_hash": "374c815a5133c668",
+"error": null
+},
+{
+"t": 25.7,
+"name": "bash",
+"args_hash": "5eb5fb9e0f666625",
+"error": "isError"
+},
+{
+"t": 35.6,
+"name": "edit",
+"args_hash": "0a6317e64167d891",
+"error": null
+},
+{
+"t": 37.3,
+"name": "write",
+"args_hash": "12a9612f31486cda",
+"error": "isError"
+},
+{
+"t": 38.5,
+"name": "write",
+"args_hash": "a1f8bea1e4921c91",
+"error": null
+},
+{
+"t": 43.6,
+"name": "bash",
+"args_hash": "c498ceec7b05155d",
+"error": null
+}
+]
+}

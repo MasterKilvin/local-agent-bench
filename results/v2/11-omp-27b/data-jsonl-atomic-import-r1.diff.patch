@@ -1,0 +1,57 @@
+diff --git c/events/importer.py i/events/importer.py
+index 4a941c5..b8ac24d 100644
+--- c/events/importer.py
++++ i/events/importer.py
+@@ -1,21 +1,42 @@
+ import json
+ 
++
+ class ImportProblem(Exception):
+     def __init__(self, line):
+         self.line = line
+         super().__init__(f'invalid line {line}')
+ 
++
++def _parse_line(raw, line):
++    try:
++        text = raw.decode('utf-8')
++    except UnicodeDecodeError:
++        raise ImportProblem(line)
++    try:
++        record = json.loads(text)
++    except ValueError:
++        raise ImportProblem(line)
++    if not isinstance(record, dict):
++        raise ImportProblem(line)
++    ident = record.get('id')
++    if not isinstance(ident, str) or not ident:
++        raise ImportProblem(line)
++    count = record.get('count')
++    if isinstance(count, bool) or not isinstance(count, int):
++        raise ImportProblem(line)
++    return record
++
++
+ def import_bytes(payload, store):
+-    count = 0
+-    for line, raw in enumerate(payload.splitlines(), 1):
++    # Physical JSON Lines lines are LF-terminated; split on \n only so a
++    # record never straddles a reported line number.
++    records = []
++    for line, raw in enumerate(payload.split(b'\n'), 1):
+         if not raw.strip():
+             continue
+-        try:
+-            record = json.loads(raw.decode('utf-8'))
+-            if not isinstance(record, dict) or not isinstance(record.get('id'), str):
+-                raise ValueError()
+-        except (UnicodeDecodeError, ValueError):
+-            raise ImportProblem(line)
++        records.append(_parse_line(raw, line))
++    # Validate every line before touching the store: an ImportProblem must
++    # leave it exactly unchanged.
++    for record in records:
+         store.append(record)
+-        count += 1
+-    return count
++    return len(records)

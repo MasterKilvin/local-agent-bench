@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..e9ce0fb
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "missing-sender-signing-spec", "evidence": "README.md lines 7-11: the sender's protocol excerpt names no signing algorithm and no signed bytes (raw body, canonical JSON, selected fields, or headers plus body), provides no signed request or digest, and states interop requires the sender's decisions; warehouse/receiver.py lines 15-16 raise NotImplementedError for the same unspecified sender specification"}

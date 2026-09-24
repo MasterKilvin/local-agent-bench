@@ -1,0 +1,135 @@
+diff --git c/__pycache__/test_jobs.cpython-312.pyc i/__pycache__/test_jobs.cpython-312.pyc
+new file mode 100644
+index 0000000..0b0b732
+Binary files /dev/null and i/__pycache__/test_jobs.cpython-312.pyc differ
+diff --git c/jobs/__pycache__/__init__.cpython-312.pyc i/jobs/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..68be2f0
+Binary files /dev/null and i/jobs/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/jobs/__pycache__/queue.cpython-312.pyc i/jobs/__pycache__/queue.cpython-312.pyc
+new file mode 100644
+index 0000000..36d825e
+Binary files /dev/null and i/jobs/__pycache__/queue.cpython-312.pyc differ
+diff --git c/jobs/__pycache__/worker.cpython-312.pyc i/jobs/__pycache__/worker.cpython-312.pyc
+new file mode 100644
+index 0000000..e796419
+Binary files /dev/null and i/jobs/__pycache__/worker.cpython-312.pyc differ
+diff --git c/jobs/queue.py i/jobs/queue.py
+index 7ed2e9f..4679fb5 100644
+--- c/jobs/queue.py
++++ i/jobs/queue.py
+@@ -5,10 +5,9 @@ class JobQueue:
+ 
+     def claim(self, job_id, worker_id, on_attempt=None):
+         job = self.jobs[job_id]
+-        was_pending = job['state'] == 'pending'
+         if on_attempt is not None:
+             on_attempt()
+-        if not was_pending:
++        if job['state'] != 'pending':
+             return False
+         job['state'] = 'claimed'
+         job['owner'] = worker_id
+diff --git c/test_jobs.py i/test_jobs.py
+new file mode 100644
+index 0000000..a8b8867
+--- /dev/null
++++ i/test_jobs.py
+@@ -0,0 +1,97 @@
++import unittest
++
++from jobs import JobQueue, Worker
++
++
++class JobQueueContractTests(unittest.TestCase):
++    def test_basic_claim_then_complete(self):
++        queue = JobQueue(['j1'])
++        worker = Worker('w1', queue)
++        self.assertTrue(worker.take('j1'))
++        self.assertTrue(worker.finish('j1'))
++        job = queue.jobs['j1']
++        self.assertEqual(job['state'], 'complete')
++        self.assertEqual(job['owner'], 'w1')
++        self.assertEqual(job['completions'], 1)
++
++    def test_interrupting_claim_wins(self):
++        queue = JobQueue(['j1'])
++        a, b = Worker('a', queue), Worker('b', queue)
++        b_results = []
++        a_result = a.take('j1', on_attempt=lambda: b_results.append(b.take('j1')))
++        self.assertEqual(b_results, [True])
++        self.assertFalse(a_result)
++        self.assertEqual(queue.jobs['j1']['owner'], 'b')
++        self.assertEqual(queue.jobs['j1']['state'], 'claimed')
++
++    def test_only_winner_can_complete(self):
++        queue = JobQueue(['j1'])
++        a, b = Worker('a', queue), Worker('b', queue)
++        a.take('j1', on_attempt=lambda: b.take('j1'))
++        self.assertFalse(a.finish('j1'))
++        self.assertTrue(b.finish('j1'))
++        self.assertEqual(queue.jobs['j1']['state'], 'complete')
++        self.assertEqual(queue.jobs['j1']['completions'], 1)
++
++    def test_complete_exactly_once(self):
++        queue = JobQueue(['j1'])
++        a, b = Worker('a', queue), Worker('b', queue)
++        self.assertTrue(a.take('j1'))
++        self.assertTrue(a.finish('j1'))
++        self.assertFalse(a.finish('j1'))
++        self.assertFalse(b.finish('j1'))
++
++    def test_claim_of_claimed_or_completed_job_returns_false(self):
++        queue = JobQueue(['j1'])
++        a, b = Worker('a', queue), Worker('b', queue)
++        calls = []
++        self.assertTrue(a.take('j1'))
++        self.assertFalse(b.take('j1', on_attempt=lambda: calls.append(1)))
++        self.assertEqual(calls, [1])
++        self.assertTrue(a.finish('j1'))
++        self.assertFalse(b.take('j1'))
++        self.assertEqual(queue.jobs['j1']['owner'], 'a')
++
++    def test_callback_runs_exactly_once(self):
++        queue = JobQueue(['j1'])
++        a = Worker('a', queue)
++        calls = []
++        self.assertTrue(a.take('j1', on_attempt=lambda: calls.append(1)))
++        self.assertEqual(calls, [1])
++        self.assertTrue(a.finish('j1'))
++        self.assertFalse(a.take('j1', on_attempt=lambda: calls.append(1)))
++        self.assertEqual(calls, [1, 1])
++
++    def test_nested_interrupts_still_single_winner(self):
++        queue = JobQueue(['j1'])
++        a, b, c = Worker('a', queue), Worker('b', queue), Worker('c', queue)
++        results = []
++
++        def inner():
++            results.append(c.take('j1'))
++
++        def mid():
++            results.append(b.take('j1', on_attempt=inner))
++
++        results.append(a.take('j1', on_attempt=mid))
++        self.assertEqual(sum(results), 1)
++        self.assertEqual(queue.jobs['j1']['owner'], 'c')
++
++    def test_independent_jobs_claim_independently(self):
++        queue = JobQueue(['j1', 'j2'])
++        a, b = Worker('a', queue), Worker('b', queue)
++        self.assertFalse(a.take('j1', on_attempt=lambda: b.take('j1')))
++        self.assertEqual(queue.jobs['j1']['owner'], 'b')
++        self.assertTrue(b.take('j2'))
++        self.assertTrue(b.finish('j1'))
++        self.assertTrue(b.finish('j2'))
++
++    def test_unknown_job_id_raises_keyerror(self):
++        queue = JobQueue(['j1'])
++        a = Worker('a', queue)
++        self.assertRaises(KeyError, a.take, 'missing')
++        self.assertRaises(KeyError, a.finish, 'missing')
++
++
++if __name__ == '__main__':
++    unittest.main()

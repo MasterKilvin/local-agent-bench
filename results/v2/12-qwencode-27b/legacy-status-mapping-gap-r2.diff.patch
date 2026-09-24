@@ -1,0 +1,11 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..14bb518
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "blocked",
++  "blocker": "missing-status-mapping",
++  "evidence": "README.md lines 8-12: the instructions explicitly state they do not define whether 'held' maps to 'paused' or 'cancelled' nor whether 'reversed' maps to 'cancelled' or 'refunded', yet require all five statuses to be migrated with the destination status preserving the original business meaning. No definition of the held/reversed mapping exists anywhere in the project (checked README.md, orders/legacy.py, orders/target.py, orders/migrate.py, main.py). Choosing either candidate would be a guess and risks changing record meaning, which the spec forbids."
++}

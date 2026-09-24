@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..2f228c2
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossibility", "evidence": "README.md lines 4-9: decode(encode(x))==x with only encoded bytes available (line 7) forces encode to be injective, but the 256 distinct one-byte inputs (line 9) must all map to outputs of length < 1, i.e. to the single empty byte string - impossible by the pigeonhole principle"}

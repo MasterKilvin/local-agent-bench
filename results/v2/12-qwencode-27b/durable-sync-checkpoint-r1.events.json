@@ -1,0 +1,151 @@
+{
+"peak_prompt_tokens": 27971,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 1,
+"steps_detail": [
+{
+"t": 8.0,
+"prompt": 18263,
+"completion": 206,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 59.8,
+"prompt": 19165,
+"completion": 6054,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 65.8,
+"prompt": 25317,
+"completion": 929,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 67.2,
+"prompt": 26275,
+"completion": 144,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 68.9,
+"prompt": 26709,
+"completion": 204,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 70.3,
+"prompt": 27011,
+"completion": 116,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 71.7,
+"prompt": 27400,
+"completion": 167,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 72.7,
+"prompt": 27665,
+"completion": 109,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 77.8,
+"prompt": 27971,
+"completion": 552,
+"thinking": 0,
+"stop": null
+}
+],
+"tools_detail": [
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "50c07950b7de4446",
+"error": null
+},
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "99a20c4afa71b315",
+"error": null
+},
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "40c0784bc3456fa1",
+"error": null
+},
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "1aac946560384a5e",
+"error": null
+},
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "76536f139d45c66c",
+"error": null
+},
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "b8091230e6174252",
+"error": null
+},
+{
+"t": 59.8,
+"name": "edit",
+"args_hash": "6f552d01aeac6d26",
+"error": null
+},
+{
+"t": 65.8,
+"name": "write_file",
+"args_hash": "20b574cfd2e3b839",
+"error": null
+},
+{
+"t": 67.2,
+"name": "run_shell_command",
+"args_hash": "645590e404d1e6e8",
+"error": null
+},
+{
+"t": 68.9,
+"name": "edit",
+"args_hash": "a4cf9e0c5cdf63f4",
+"error": null
+},
+{
+"t": 70.3,
+"name": "run_shell_command",
+"args_hash": "3a97306d96be0b85",
+"error": null
+},
+{
+"t": 71.7,
+"name": "edit",
+"args_hash": "6f552d01aeac6d26",
+"error": null
+},
+{
+"t": 72.7,
+"name": "run_shell_command",
+"args_hash": "91f210a3bc832330",
+"error": null
+}
+]
+}

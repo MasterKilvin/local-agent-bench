@@ -1,0 +1,144 @@
+{
+"peak_prompt_tokens": 31887,
+"thinking_tokens": 0,
+"tool_errors": 2,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 8.0,
+"prompt": 18257,
+"completion": 218,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 48.6,
+"prompt": 18936,
+"completion": 4656,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 54.6,
+"prompt": 23639,
+"completion": 881,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 77.6,
+"prompt": 25475,
+"completion": 2603,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 87.8,
+"prompt": 29075,
+"completion": 1477,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 96.8,
+"prompt": 31887,
+"completion": 1330,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 145.1,
+"prompt": 21181,
+"completion": 280,
+"thinking": 0,
+"stop": "tool_use"
+},
+{
+"t": 156.4,
+"prompt": 23991,
+"completion": 539,
+"thinking": 0,
+"stop": null
+}
+],
+"tools_detail": [
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "50c07950b7de4446",
+"error": null
+},
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "99a20c4afa71b315",
+"error": null
+},
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "ceb9fc8ae6f7955d",
+"error": null
+},
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "60c364309c93c921",
+"error": null
+},
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "01ac3ec9063c530d",
+"error": null
+},
+{
+"t": 8.0,
+"name": "read_file",
+"args_hash": "f55d23bda7cf8dc5",
+"error": null
+},
+{
+"t": 48.6,
+"name": "write_file",
+"args_hash": "276878ffa651aa91",
+"error": null
+},
+{
+"t": 48.6,
+"name": "write_file",
+"args_hash": "270e974699f3f0b7",
+"error": null
+},
+{
+"t": 54.6,
+"name": "run_shell_command",
+"args_hash": "dbf57f4959876d00",
+"error": "isError"
+},
+{
+"t": 77.6,
+"name": "run_shell_command",
+"args_hash": "d7c978478b623dce",
+"error": "isError"
+},
+{
+"t": 87.8,
+"name": "run_shell_command",
+"args_hash": "4f949a600391ccb5",
+"error": null
+},
+{
+"t": 96.8,
+"name": "run_shell_command",
+"args_hash": "9d9722d0ebe24526",
+"error": null
+},
+{
+"t": 145.1,
+"name": "run_shell_command",
+"args_hash": "50eeb820b7943f0e",
+"error": null
+}
+]
+}

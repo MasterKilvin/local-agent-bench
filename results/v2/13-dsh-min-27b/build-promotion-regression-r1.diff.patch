@@ -1,0 +1,64 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..6a90e96
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..ef62b57
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..0700a26
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..f59e629
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..361f6e2
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,42 @@
++import unittest
++
++from shop.checkout import checkout
++
++
++class CheckoutPromotionOnceRegression(unittest.TestCase):
++    """The promotion must be applied exactly once to the subtotal.
++
++    The historical bug applied the discount twice (square of the
++    complement), so these assertions are written for the single
++    application that the README specifies.
++    """
++
++    def test_single_line_quantity_above_one(self):
++        # Single line with qty > 1.
++        lines = [{'price': '10.00', 'qty': 2}]
++        rate = '0.10'
++        # subtotal = 20.00, one 10% discount -> 18.00
++        # double bug would give 20.00 * 0.9 * 0.9 = 16.20
++        self.assertEqual(checkout(lines, rate), '18.00')
++
++    def test_multiple_lines_quantity_one(self):
++        # Multiple lines, every quantity equal to one.
++        lines = [
++            {'price': '3.00', 'qty': 1},
++            {'price': '7.00', 'qty': 1},
++        ]
++        rate = '0.10'
++        # subtotal = 10.00, one 10% discount -> 9.00
++        # double bug would give 10.00 * 0.9 * 0.9 = 8.10
++        self.assertEqual(checkout(lines, rate), '9.00')
++
++    def test_round_half_up(self):
++        # single line, qty > 1 where the correct result lands on a half.
++        lines = [{'price': '5.05', 'qty': 3}]
++        rate = '0.10'
++        # subtotal = 15.15, *0.9 = 13.635 -> ROUND_HALF_UP -> 13.64
++        self.assertEqual(checkout(lines, rate), '13.64')
++
++
++if __name__ == '__main__':
++    unittest.main()

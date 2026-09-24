@@ -1,0 +1,99 @@
+diff --git c/download/__pycache__/__init__.cpython-312.pyc i/download/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..ef6d6a5
+Binary files /dev/null and i/download/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/download/__pycache__/ranges.cpython-312.pyc i/download/__pycache__/ranges.cpython-312.pyc
+new file mode 100644
+index 0000000..8f6d4d4
+Binary files /dev/null and i/download/__pycache__/ranges.cpython-312.pyc differ
+diff --git c/download/__pycache__/service.cpython-312.pyc i/download/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..dc56b25
+Binary files /dev/null and i/download/__pycache__/service.cpython-312.pyc differ
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..16dda24 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,46 @@
+-def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++import re
++
++# The range header, after the mandatory 'bytes=' prefix, must be exactly one
++# of:  D-D   (inclusive end)  |  D-  (to EOF)  |  -D  (last D bytes),
++# each D being one or more ASCII digits. No whitespace, signs, underscores,
++# Unicode digits, or more than one '-' is accepted. Both endpoints cannot be
++# omitted ('bytes=-').
++_SPEC = re.compile(
++    r'([0-9]+)-([0-9]+)'   # group 1: start, group 2: end   -> bytes=D-D
++    r'|([0-9]+)-'          # group 3: start                  -> bytes=D-
++    r'|-([0-9]+)'          # group 4: suffix length          -> bytes=-D
++)
++_PREFIX = 'bytes='
++
++
++def resolve(header, length):
++    """Parse a single-range header against content of `length` bytes.
++
++    Returns (start, end), both inclusive, for the bytes to serve, or None
++    when the request must be answered with 416: bad syntax, empty data,
++    start beyond EOF, zero suffix, or reversed bounds. An end past EOF is
++    clamped; a suffix longer than the content selects the whole content.
++    """
++    if not isinstance(header, str) or not header.startswith(_PREFIX):
++        return None
++    match = _SPEC.fullmatch(header[len(_PREFIX):])
++    if match is None or length == 0:
++        return None
++
++    if match.group(1) is not None:            # bytes=D-D
++        start = int(match.group(1))
++        end = int(match.group(2))
++        if start > end or start >= length:
++            return None
++        return (start, min(end, length - 1))
++
++    if match.group(3) is not None:            # bytes=D-
++        start = int(match.group(3))
++        if start >= length:
++            return None
++        return (start, length - 1)
++
++    suffix = int(match.group(4))              # bytes=-D
++    if suffix == 0:
++        return None
++    return (max(0, length - suffix), length - 1)
+diff --git c/download/service.py i/download/service.py
+index 72a053d..0f88b28 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,20 @@
+-from .ranges import bounds
++from .ranges import resolve
+ 
+ def serve(data, range_header=None):
+     if range_header is None:
+         return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++
++    length = len(data)
++    bounds = resolve(range_header, length)
++    if bounds is None:
++        return (416,
++                {'Content-Length': '0',
++                 'Content-Range': f'bytes */{length}'},
++                b'')
++
++    start, end = bounds
++    body = data[start:end + 1]
++    return (206,
++            {'Content-Length': str(len(body)),
++             'Content-Range': f'bytes {start}-{end}/{length}'},
++            body)

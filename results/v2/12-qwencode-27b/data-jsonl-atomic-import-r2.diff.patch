@@ -1,0 +1,40 @@
+diff --git c/events/importer.py i/events/importer.py
+index 4a941c5..5034982 100644
+--- c/events/importer.py
++++ i/events/importer.py
+@@ -5,17 +5,29 @@ class ImportProblem(Exception):
+         self.line = line
+         super().__init__(f'invalid line {line}')
+ 
++def _valid(record):
++    if not isinstance(record, dict):
++        return False
++    rid = record.get('id')
++    if not isinstance(rid, str) or rid == '':
++        return False
++    count = record.get('count')
++    if isinstance(count, bool) or not isinstance(count, int):
++        return False
++    return True
++
+ def import_bytes(payload, store):
+-    count = 0
+-    for line, raw in enumerate(payload.splitlines(), 1):
++    records = []
++    for line, raw in enumerate(payload.split(b'\n'), 1):
+         if not raw.strip():
+             continue
+         try:
+             record = json.loads(raw.decode('utf-8'))
+-            if not isinstance(record, dict) or not isinstance(record.get('id'), str):
+-                raise ValueError()
+         except (UnicodeDecodeError, ValueError):
+             raise ImportProblem(line)
++        if not _valid(record):
++            raise ImportProblem(line)
++        records.append(record)
++    for record in records:
+         store.append(record)
+-        count += 1
+-    return count
++    return len(records)

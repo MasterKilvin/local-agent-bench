@@ -1,0 +1,53 @@
+diff --git c/reports/__pycache__/__init__.cpython-312.pyc i/reports/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..a1aa55c
+Binary files /dev/null and i/reports/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/reports/__pycache__/export.cpython-312.pyc i/reports/__pycache__/export.cpython-312.pyc
+new file mode 100644
+index 0000000..737d29f
+Binary files /dev/null and i/reports/__pycache__/export.cpython-312.pyc differ
+diff --git c/reports/__pycache__/model.cpython-312.pyc i/reports/__pycache__/model.cpython-312.pyc
+new file mode 100644
+index 0000000..a3db306
+Binary files /dev/null and i/reports/__pycache__/model.cpython-312.pyc differ
+diff --git c/reports/export.py i/reports/export.py
+index 6f79688..e6dceab 100644
+--- c/reports/export.py
++++ i/reports/export.py
+@@ -1,13 +1,28 @@
+ import csv
+ import io
++import json
+ from .model import FIELDS
+ 
+-def render(rows, format='csv'):
+-    if format != 'csv':
+-        raise ValueError(format)
+-    out = io.StringIO(newline='')
+-    writer = csv.writer(out, lineterminator='\n')
+-    writer.writerow(FIELDS)
++def _render_jsonl(rows):
++    lines = []
+     for row in rows:
+-        writer.writerow([row[field] for field in FIELDS])
+-    return out.getvalue()
++        obj = {}
++        for field in FIELDS:
++            value = row[field]
++            if field == 'quantity':
++                value = int(value)
++            obj[field] = value
++        lines.append(json.dumps(obj, separators=(',', ':'), ensure_ascii=False))
++    return ''.join(line + '\n' for line in lines)
++
++def render(rows, format='csv'):
++    if format == 'csv':
++        out = io.StringIO(newline='')
++        writer = csv.writer(out, lineterminator='\n')
++        writer.writerow(FIELDS)
++        for row in rows:
++            writer.writerow([row[field] for field in FIELDS])
++        return out.getvalue()
++    if format == 'jsonl':
++        return _render_jsonl(rows)
++    raise ValueError(format)

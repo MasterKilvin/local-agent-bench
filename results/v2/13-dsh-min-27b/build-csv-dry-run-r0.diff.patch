@@ -1,0 +1,55 @@
+diff --git c/main.py i/main.py
+index 4811001..0f0e8df 100644
+--- c/main.py
++++ i/main.py
+@@ -4,4 +4,4 @@ from stock.importer import import_text
+ from stock.store import Store
+ 
+ if __name__ == '__main__':
+-    print(json.dumps(import_text(sys.stdin.read(), Store())))
++    print(json.dumps(import_text(sys.stdin.read(), Store(), dry_run='--dry-run' in sys.argv[1:])))
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..27632d6 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,34 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_NUMERIC = set('0123456789')
++
++def _parse_rows(text):
++    """Trims and validates every row; raises ValueError and commits nothing."""
++    items = []
++    for row in csv.DictReader(io.StringIO(text)):
++        try:
++            sku = row['sku'].strip()
++            name = row['name'].strip()
++            qty_raw = row['qty'].strip()
++        except (AttributeError, TypeError, KeyError):
++            raise ValueError('invalid row: %r' % (row,))
++        if not sku or not name or not (qty_raw and all(c in _NUMERIC for c in qty_raw)):
++            raise ValueError('invalid row: %r' % (row,))
++        items.append({'sku': sku, 'name': name, 'qty': int(qty_raw)})
++    return items
++
++
++def import_text(text, store, dry_run=False):
++    items = _parse_rows(text)
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
++    for item in items:
+         before = store.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+-        result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        result['changes'].append({'sku': item['sku'], 'before': before, 'after': dict(item)})
++        if not dry_run:
++            store.put(item)
+     return result

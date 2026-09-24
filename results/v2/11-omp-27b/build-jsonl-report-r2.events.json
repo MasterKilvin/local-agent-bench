@@ -1,0 +1,152 @@
+{
+"peak_prompt_tokens": 15800,
+"thinking_tokens": 0,
+"tool_errors": 2,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 2.0,
+"prompt": 11198,
+"completion": 53,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 3.1,
+"prompt": 11344,
+"completion": 191,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 7.6,
+"prompt": 11947,
+"completion": 654,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 10.8,
+"prompt": 12761,
+"completion": 407,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 12.5,
+"prompt": 13231,
+"completion": 251,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 14.6,
+"prompt": 13830,
+"completion": 242,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 17.4,
+"prompt": 14157,
+"completion": 397,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 20.8,
+"prompt": 14701,
+"completion": 463,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 24.7,
+"prompt": 15246,
+"completion": 528,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 27.9,
+"prompt": 15800,
+"completion": 377,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 2.0,
+"name": "read",
+"args_hash": "e72644138c38a792",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "e6c0d664471bebb9",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "dfc188c410571047",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "15ab59e68965799f",
+"error": null
+},
+{
+"t": 3.1,
+"name": "read",
+"args_hash": "258baefbccc6b242",
+"error": null
+},
+{
+"t": 7.6,
+"name": "edit",
+"args_hash": "8b6e44d3deb60a39",
+"error": null
+},
+{
+"t": 10.8,
+"name": "bash",
+"args_hash": "ea6df355403ddd87",
+"error": "isError"
+},
+{
+"t": 12.5,
+"name": "bash",
+"args_hash": "249c2d0a7bdcf633",
+"error": null
+},
+{
+"t": 14.6,
+"name": "edit",
+"args_hash": "33336c6aaf7b4e26",
+"error": null
+},
+{
+"t": 17.4,
+"name": "bash",
+"args_hash": "d602d4779dc7a8d2",
+"error": null
+},
+{
+"t": 20.8,
+"name": "bash",
+"args_hash": "e6786d290545637a",
+"error": "isError"
+},
+{
+"t": 24.7,
+"name": "bash",
+"args_hash": "2977c3f75737d5d2",
+"error": null
+}
+]
+}

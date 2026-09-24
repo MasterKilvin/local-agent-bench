@@ -1,0 +1,11 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..c695d01
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "blocked",
++  "blocker": "missing-status-mapping",
++  "evidence": "README.md L8-10: it states the migration instructions do NOT state whether 'held'->'paused'/'cancelled' or 'reversed'->'cancelled'/'refunded'; orders/migrate.py L4 KNOWN defines only queued/sent/failed (3 of 5 statuses); orders/legacy.py L5-6 SAMPLE contains both 'held' and 'reversed', so a meaning-preserving mapping is impossible without inventing a rule."
++}

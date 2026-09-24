@@ -1,0 +1,86 @@
+diff --git c/main.py i/main.py
+index 4811001..900464e 100644
+--- c/main.py
++++ i/main.py
+@@ -1,7 +1,25 @@
++import argparse
+ import json
+ import sys
++
+ from stock.importer import import_text
+ from stock.store import Store
+ 
++
++def main(argv=None):
++    parser = argparse.ArgumentParser(description='Import stock as CSV (sku,name,qty) from stdin.')
++    parser.add_argument(
++        '--dry-run',
++        '-n',
++        action='store_true',
++        help='show the changes that would be made without writing anything',
++    )
++    args = parser.parse_args(argv)
++
++    store = Store()
++    result = import_text(sys.stdin.read(), store, dry_run=args.dry_run)
++    print(json.dumps(result))
++
++
+ if __name__ == '__main__':
+-    print(json.dumps(import_text(sys.stdin.read(), Store())))
++    main()
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..716ee61 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,44 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_DIGITS = frozenset('0123456789')
++
++
++def _field(row, key):
++    value = row.get(key)
++    return value if isinstance(value, str) else ''
++
++
++def import_text(text, store, dry_run=False):
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
+-        before = store.get(item['sku'])
++
++    # Phase 1: trim, validate, and capture every row before touching the store.
++    # This guarantees an invalid row (even a late one) raises ValueError with the
++    # store left exactly as it was, per the README contract.
++    planned = []
++    for row in csv.DictReader(io.StringIO(text)):
++        sku = _field(row, 'sku').strip()
++        name = _field(row, 'name').strip()
++        qty = _field(row, 'qty').strip()
++
++        if not sku:
++            raise ValueError('invalid row: sku must not be empty')
++        if not name:
++            raise ValueError('invalid row: name must not be empty')
++        if not qty or not set(qty) <= _DIGITS:
++            raise ValueError('invalid row: qty must be non-negative decimal digits')
++
++        item = {'sku': sku, 'name': name, 'qty': int(qty)}
++        planned.append((item, store.get(sku)))
++
++    # Phase 2: compute the result and commit (normal import only).
++    for item, before in planned:
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        if not dry_run:
++            store.put(item)
++
+     return result

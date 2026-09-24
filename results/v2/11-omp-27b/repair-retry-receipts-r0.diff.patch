@@ -1,0 +1,32 @@
+diff --git c/receipts/__pycache__/__init__.cpython-312.pyc i/receipts/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..8b0674b
+Binary files /dev/null and i/receipts/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/receipts/__pycache__/gateway.cpython-312.pyc i/receipts/__pycache__/gateway.cpython-312.pyc
+new file mode 100644
+index 0000000..43f9b7f
+Binary files /dev/null and i/receipts/__pycache__/gateway.cpython-312.pyc differ
+diff --git c/receipts/__pycache__/worker.cpython-312.pyc i/receipts/__pycache__/worker.cpython-312.pyc
+new file mode 100644
+index 0000000..4004dd6
+Binary files /dev/null and i/receipts/__pycache__/worker.cpython-312.pyc differ
+diff --git c/receipts/worker.py i/receipts/worker.py
+index e9047c3..b525a82 100644
+--- c/receipts/worker.py
++++ i/receipts/worker.py
+@@ -2,8 +2,14 @@ from .gateway import TemporaryError
+ 
+ def process(job_id, amount, gateway, attempts=3):
+     for _ in range(attempts):
++        committed = gateway.find(job_id)
++        if committed is not None:
++            return committed
+         try:
+             return gateway.issue(job_id, amount)
+         except TemporaryError:
+-            pass
++            continue
++    committed = gateway.find(job_id)
++    if committed is not None:
++        return committed
+     raise TemporaryError('exhausted')

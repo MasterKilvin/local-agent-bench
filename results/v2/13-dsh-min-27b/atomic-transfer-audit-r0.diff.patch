@@ -1,0 +1,47 @@
+diff --git c/__pycache__/main.cpython-312.pyc i/__pycache__/main.cpython-312.pyc
+new file mode 100644
+index 0000000..3a0abf7
+Binary files /dev/null and i/__pycache__/main.cpython-312.pyc differ
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..7974b19
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..34cad51
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..c617b8c
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..bea6624
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..918f780 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,20 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
++
++        # Staged result: apply the transfer to a copy so the live ledger is
++        # untouched no matter which phase the fault fires in.
++        staged = dict(balances)
++        staged[source] -= amount
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
++        staged[target] += amount
+         if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
++
++        # Atomic commit: with every inject point passed, apply the balances
++        # and append the audit event together; neither step can raise.
++        self.ledger.balances.update(staged)
+         self.ledger.audit.append(event(source, target, amount))
+         return True

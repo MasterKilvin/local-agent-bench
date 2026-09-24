@@ -25,3 +25,10 @@ models: qwen3.8:27b-q8-24k=3fa93254c899 qwen3.8:27b-q4-24k=795961fa4710 qwen3.8:
 `run.py` here differs from the frozen `5563a27b…` in four lines: the sandbox-script and task-file paths, and two comments,
 so it runs from this folder. `refusal.py` and `bridge.py` are byte-identical. The published task file drops the `source`
 bookkeeping field; its sha256 is `cb4645681f754b38…`, with task content, hidden tests and reference fixes unchanged.
+
+## Later harness sync (not part of the freeze)
+`tools/sync_harness.py` later copied the working harness forward with the same standalone adjustments: more agent arms
+(Oh My Pi, Qwen Code, DeepSeek Harness driven by `dsh/driver.py`), `--ctx auto`, and stricter stream accounting in
+`bridge.py`. From then on `run.py` and `bridge.py` in this folder are newer than the frozen hashes above; `SYNC.md` lists
+the source and published hashes. Every v2 result folder's `MANIFEST.txt` records the run.py and bridge.py hashes it ran
+with (the ten local arms published so far: the frozen `5563a27b…` and `b10c15f6…`).

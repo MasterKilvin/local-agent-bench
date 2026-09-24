@@ -1,0 +1,49 @@
+diff --git c/stock/importer.py i/stock/importer.py
+index 76fcd00..1950148 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,18 +1,23 @@
++import re
++
+ from .parser import rows
+ 
++_QTY = re.compile(r'[0-9]+')
++
++
+ def import_text(text, store):
+     report = {'seen': 0, 'imported': 0, 'rejected': 0, 'quantity': 0}
+     for parts in rows(text):
+         report['seen'] += 1
+-        if len(parts) != 3 or not parts[0] or not parts[1]:
++        if len(parts) != 3:
+             report['rejected'] += 1
+             continue
+-        try:
+-            qty = int(parts[2])
+-        except ValueError:
++        sku, name, qty = (part.strip() for part in parts)
++        if not sku or not name or _QTY.fullmatch(qty) is None:
+             report['rejected'] += 1
+             continue
+-        store.put(parts[0], parts[1], qty)
++        quantity = int(qty)
++        store.put(sku, name, quantity)
+         report['imported'] += 1
+-        report['quantity'] += qty
++        report['quantity'] += quantity
+     return report
+diff --git c/stock/parser.py i/stock/parser.py
+index 005ca5d..4745d94 100644
+--- c/stock/parser.py
++++ i/stock/parser.py
+@@ -1,3 +1,8 @@
++import csv
++import io
++
++
+ def rows(text):
+-    for line in text.splitlines()[1:]:
+-        yield line.split(',')
++    records = csv.reader(io.StringIO(text, newline=''))
++    next(records, None)  # drop the header line
++    yield from records

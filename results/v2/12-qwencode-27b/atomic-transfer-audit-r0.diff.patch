@@ -1,0 +1,45 @@
+diff --git c/bank/__pycache__/__init__.cpython-312.pyc i/bank/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..939f0ec
+Binary files /dev/null and i/bank/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/bank/__pycache__/audit.cpython-312.pyc i/bank/__pycache__/audit.cpython-312.pyc
+new file mode 100644
+index 0000000..6ded4c6
+Binary files /dev/null and i/bank/__pycache__/audit.cpython-312.pyc differ
+diff --git c/bank/__pycache__/ledger.cpython-312.pyc i/bank/__pycache__/ledger.cpython-312.pyc
+new file mode 100644
+index 0000000..ab1cec7
+Binary files /dev/null and i/bank/__pycache__/ledger.cpython-312.pyc differ
+diff --git c/bank/__pycache__/service.cpython-312.pyc i/bank/__pycache__/service.cpython-312.pyc
+new file mode 100644
+index 0000000..15d240d
+Binary files /dev/null and i/bank/__pycache__/service.cpython-312.pyc differ
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..b6687c4 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,20 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
++
++        new_source_balance = balances[source] - amount
++        new_target_balance = balances[target] + amount
++        new_event = event(source, target, amount)
++
+         if inject is not None:
+             inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+             inject('after_credit')
+             inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
++
++        # Balances and audit commit together: every inject hook that can fail
++        # has already run, and no hook runs between the two balance writes and
++        # the audit append, so a failure leaves no partial state behind.
++        balances[source] = new_source_balance
++        balances[target] = new_target_balance
++        self.ledger.audit.append(new_event)
+         return True

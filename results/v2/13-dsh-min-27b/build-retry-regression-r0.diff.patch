@@ -1,0 +1,109 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..5b720d0
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,103 @@
++"""Regression tests for the ``retry.wrapper.run`` public API.
++
++Covers the contract documented in README.md:
++* ``TransientError`` is retried, with at most ``attempts`` total calls,
++  returning the first success or raising the *last* transient error.
++* ``PermanentError`` propagates immediately on any attempt, including
++  after a transient failure.
++* No other exception is retried.
++"""
++
++import unittest
++
++from retry.wrapper import PermanentError, TransientError, run
++
++
++def counting_operation(script):
++    """Build a zero-argument operation and a shared call counter.
++
++    ``script`` lists what each call does, in order: a plain value is
++    returned, an exception instance (or exception class) is raised.
++    Calling beyond the script length is an assertion failure, which also
++    proves the wrapper stopped calling the operation early.
++    """
++    state = {"calls": 0}
++
++    def operation():
++        index = state["calls"]
++        state["calls"] += 1
++        if index >= len(script):
++            raise AssertionError(
++                "operation called %d times, script has %d steps" % (index + 1, len(script))
++            )
++        spec = script[index]
++        if isinstance(spec, BaseException):
++            raise spec
++        if isinstance(spec, type) and issubclass(spec, BaseException):
++            raise spec()
++        return spec
++
++    return operation, state
++
++
++class TestTransientRetried(unittest.TestCase):
++    def test_success_on_first_attempt_makes_single_call(self):
++        operation, state = counting_operation(["ok"])
++        self.assertEqual(run(operation), "ok")
++        self.assertEqual(state["calls"], 1)
++
++    def test_transient_then_success_returns_first_success(self):
++        operation, state = counting_operation(
++            [TransientError("a"), TransientError("b"), "ok"]
++        )
++        self.assertEqual(run(operation, attempts=3), "ok")
++        self.assertEqual(state["calls"], 3)
++
++    def test_all_transient_exhausts_attempts_and_raises_last(self):
++        first = TransientError("first")
++        second = TransientError("second")
++        last = TransientError("last")
++        operation, state = counting_operation([first, second, last])
++        with self.assertRaises(TransientError) as caught:
++            run(operation, attempts=3)
++        self.assertIs(caught.exception, last)
++        self.assertEqual(state["calls"], 3)
++
++    def test_transient_with_single_attempt_is_not_retried(self):
++        error = TransientError("only")
++        operation, state = counting_operation([error])
++        with self.assertRaises(TransientError) as caught:
++            run(operation, attempts=1)
++        self.assertIs(caught.exception, error)
++        self.assertEqual(state["calls"], 1)
++
++
++class TestPermanentStoppedImmediately(unittest.TestCase):
++    def test_permanent_on_first_attempt_propagates_and_stops(self):
++        permanent = PermanentError("fatal")
++        operation, state = counting_operation([permanent, "unused", "unused"])
++        with self.assertRaises(PermanentError) as caught:
++            run(operation, attempts=3)
++        self.assertIs(caught.exception, permanent)
++        self.assertEqual(state["calls"], 1)
++
++    def test_permanent_after_transient_stops_immediately(self):
++        transient = TransientError("flaky")
++        permanent = PermanentError("fatal")
++        operation, state = counting_operation([transient, permanent, "unused"])
++        with self.assertRaises(PermanentError) as caught:
++            run(operation, attempts=5)
++        self.assertIs(caught.exception, permanent)
++        self.assertEqual(state["calls"], 2)
++
++
++class TestNonRetriedExceptions(unittest.TestCase):
++    def test_other_exception_propagates_on_first_call(self):
++        operation, state = counting_operation([ValueError("bad"), "unused"])
++        with self.assertRaises(ValueError):
++            run(operation, attempts=3)
++        self.assertEqual(state["calls"], 1)
++
++
++if __name__ == "__main__":
++    unittest.main()

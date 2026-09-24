@@ -1,0 +1,47 @@
+diff --git c/shop/inventory.py i/shop/inventory.py
+index b14b695..d37dd6c 100644
+--- c/shop/inventory.py
++++ i/shop/inventory.py
+@@ -1,21 +1,32 @@
++import threading
++
++
+ class Inventory:
+     def __init__(self, stock):
+         self.available = dict(stock)
+         self.reservations = {}
+         self._next_id = 1
++        self._lock = threading.RLock()
+ 
+     def reserve(self, sku, quantity, on_attempt=None):
+         if sku not in self.available:
+             raise KeyError(sku)
+         if type(quantity) is not int or quantity <= 0:
+             raise ValueError('quantity must be a positive integer')
+-        remaining = self.available[sku]
+-        if on_attempt is not None:
+-            on_attempt()
+-        if remaining < quantity:
+-            return None
+-        reservation_id = self._next_id
+-        self._next_id += 1
+-        self.available[sku] = remaining - quantity
+-        self.reservations[reservation_id] = (sku, quantity)
+-        return reservation_id
++        with self._lock:
++            if on_attempt is not None:
++                on_attempt()
++            # Re-read stock after the callback: it may have submitted
++            # competing reservations, so the prior value is stale. The
++            # check and the decrement below run atomically under the
++            # reentrant lock, so competing requests (same thread, as the
++            # on_attempt contract allows, or other threads) can never
++            # oversell the SKU.
++            remaining = self.available[sku]
++            if remaining < quantity:
++                return None
++            reservation_id = self._next_id
++            self._next_id += 1
++            self.available[sku] = remaining - quantity
++            self.reservations[reservation_id] = (sku, quantity)
++            return reservation_id

@@ -1,0 +1,19 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..2910a7d
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "blocked",
++  "blocker": "contradictory-requirements",
++  "evidence": "README.md:4 requires PermanentError to 'propagate immediately on any attempt' and to 'verify call counts as well as outcomes', but retry/wrapper.py:11-13 catches (TransientError, PermanentError) and only re-raises when index == attempts-1, so permanent failures are retried like transients (verified via the public API: operation called 3 times with attempts=3 for a PermanentError, not 1). No test against the unmodified code can pass while proving permanent errors stop immediately (a 1-call assertion fails), and the task forbids modifying production code, so the contradictory requirements cannot be satisfied."
++}
+diff --git c/retry/__pycache__/__init__.cpython-312.pyc i/retry/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..3f05652
+Binary files /dev/null and i/retry/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/retry/__pycache__/wrapper.cpython-312.pyc i/retry/__pycache__/wrapper.cpython-312.pyc
+new file mode 100644
+index 0000000..d452543
+Binary files /dev/null and i/retry/__pycache__/wrapper.cpython-312.pyc differ

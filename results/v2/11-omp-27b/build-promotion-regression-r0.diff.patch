@@ -1,0 +1,51 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..6d11526
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..c163767
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..77cbff8
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..6ebc4c1
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..54e12c4
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,29 @@
++"""Regression test: the promotion must be applied exactly once.
++
++Per README.md, ``checkout(lines, rate)`` sums extended line prices
++(``price * qty``), multiplies the subtotal by ``1 - rate`` exactly once,
++then rounds with ROUND_HALF_UP. Applying the discount twice yields
++``subtotal * (1 - rate) ** 2``: at rate '0.10' a 20.00 subtotal becomes
++16.20 instead of 18.00.
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class CheckoutPromotionRegressionTest(unittest.TestCase):
++    def test_single_line_quantity_above_one(self):
++        lines = [{'price': '10.00', 'qty': 2}]
++        # Subtotal 20.00, one 10% promotion -> 18.00; doubled discount -> 16.20.
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_multiple_lines_all_quantities_one(self):
++        lines = [{'price': '2.50', 'qty': 1}, {'price': '3.75', 'qty': 1}]
++        # Subtotal 6.25, one 10% promotion -> 5.625 -> 5.63 (ROUND_HALF_UP);
++        # doubled discount -> 5.06.
++        self.assertEqual(checkout(lines, '0.10'), '5.63')
++
++
++if __name__ == '__main__':
++    unittest.main()

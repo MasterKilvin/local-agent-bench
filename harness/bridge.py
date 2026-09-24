@@ -42,21 +42,43 @@ def log_call(path, req_body, resp_body, t0, t_first, t_end, status):
     try:
         if resp_body.startswith(b"data:"):
             # streamed: usage arrives in the final chunk; reasoning text is spread over deltas
-            reasoning, content = 0, 0
+            reasoning, content, tool_indices = 0, 0, set()
+            finish_reason, stream_done = None, False
             for line in resp_body.split(b"\n"):
-                if not line.startswith(b"data:") or line.strip() == b"data: [DONE]":
+                if not line.startswith(b"data:"):
                     continue
-                d = json.loads(line[5:])
-                if d.get("usage"):
-                    usage = d["usage"]
-                for ch in d.get("choices") or []:
-                    delta = ch.get("delta") or {}
-                    for k in ("reasoning", "reasoning_content", "thinking"):
-                        if isinstance(delta.get(k), str):
-                            reasoning += len(delta[k])
-                    if isinstance(delta.get("content"), str):
-                        content += len(delta["content"])
+                data = line[5:].strip()
+                if data == b"[DONE]":
+                    stream_done = True
+                    continue
+                try:
+                    d = json.loads(data)
+                    chunk_usage = d.get("usage")
+                    if chunk_usage:
+                        # Validate before replacing usage from an earlier chunk.
+                        if not isinstance(chunk_usage, dict) or not isinstance(
+                                chunk_usage.get("completion_tokens_details") or {}, dict):
+                            raise ValueError("invalid stream usage")
+                        usage = chunk_usage
+                    for ch in d.get("choices") or []:
+                        if ch.get("finish_reason") is not None:
+                            finish_reason = ch["finish_reason"]
+                        delta = ch.get("delta") or {}
+                        for tc in delta.get("tool_calls") or []:
+                            if tc.get("index") is not None:
+                                tool_indices.add(tc["index"])
+                        for k in ("reasoning", "reasoning_content", "thinking"):
+                            if isinstance(delta.get(k), str):
+                                reasoning += len(delta[k])
+                        if isinstance(delta.get("content"), str):
+                            content += len(delta["content"])
+                except (ValueError, AttributeError, TypeError):
+                    # Keep accumulated fields and continue after a malformed data line.
+                    row["parse_error"] = True
             row["reasoning_chars"], row["content_chars"] = reasoning, content
+            row["finish_reason"] = finish_reason
+            row["n_tool_calls"] = len(tool_indices)
+            row["stream_done"] = stream_done
         else:
             d = json.loads(resp_body)
             usage = d.get("usage")

@@ -1,0 +1,59 @@
+diff --git c/stock/importer.py i/stock/importer.py
+index 76fcd00..7cf995f 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,18 +1,32 @@
++import re
++
+ from .parser import rows
+ 
++_QTY_RE = re.compile(r'[0-9]+')
++
++
++def _parse_qty(value):
++    # Nonnegative base-10 integer: digits only, so a leading sign,
++    # underscore, exponent, or other notation is rejected.
++    if _QTY_RE.fullmatch(value) is None:
++        return None
++    return int(value)
++
++
+ def import_text(text, store):
+     report = {'seen': 0, 'imported': 0, 'rejected': 0, 'quantity': 0}
+     for parts in rows(text):
+         report['seen'] += 1
+-        if len(parts) != 3 or not parts[0] or not parts[1]:
++        if len(parts) != 3:
+             report['rejected'] += 1
+             continue
+-        try:
+-            qty = int(parts[2])
+-        except ValueError:
++        sku = parts[0].strip()
++        name = parts[1].strip()
++        quantity = _parse_qty(parts[2].strip())
++        if not sku or not name or quantity is None:
+             report['rejected'] += 1
+             continue
+-        store.put(parts[0], parts[1], qty)
++        store.put(sku, name, quantity)
+         report['imported'] += 1
+-        report['quantity'] += qty
++        report['quantity'] += quantity
+     return report
+diff --git c/stock/parser.py i/stock/parser.py
+index 005ca5d..185a139 100644
+--- c/stock/parser.py
++++ i/stock/parser.py
+@@ -1,3 +1,9 @@
++import csv
++import io
++
++
+ def rows(text):
+-    for line in text.splitlines()[1:]:
+-        yield line.split(',')
++    records = csv.reader(io.StringIO(text))
++    next(records, None)  # skip the header row
++    for record in records:
++        yield record

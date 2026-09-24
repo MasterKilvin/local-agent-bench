@@ -1,0 +1,58 @@
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..214c611
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..4d81d47
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..725b4a5
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..2278630 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,36 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
+-    result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
++
++def import_text(text, store, dry_run=False):
++    rows = list(csv.DictReader(io.StringIO(text)))
++
++    # Parse and validate every row before touching the store, so an invalid
++    # row raises ValueError and leaves the store exactly as it started.
++    items = []
+     for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
++        sku = (row['sku'] or '').strip()
++        name = (row['name'] or '').strip()
++        qty_raw = (row['qty'] or '').strip()
++        if not sku:
++            raise ValueError('row has an empty SKU')
++        if not name:
++            raise ValueError('row has an empty name')
++        if not qty_raw or any(c not in '0123456789' for c in qty_raw):
++            raise ValueError('row has a noninteger or negative quantity: %r' % qty_raw)
++        items.append({'sku': sku, 'name': name, 'qty': int(qty_raw)})
++
++    result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
++    for item in items:
+         before = store.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++
++    if not dry_run:
++        for change in result['changes']:
++            store.put(change['after'])
++
+     return result

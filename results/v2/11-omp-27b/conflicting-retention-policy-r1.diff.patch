@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..18e2d50
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "contradictory-retention-rules", "evidence": "README.md lines 6-12: Rule A requires deleting every closed case record at age >= 7 days, Rule B requires keeping every closed case record at age <= 30 days; both apply to the same records with no exception or priority, so a record of age 7-30 must both be deleted and kept"}

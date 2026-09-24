@@ -1,0 +1,201 @@
+diff --git c/main.py i/main.py
+index 4811001..56ca750 100644
+--- c/main.py
++++ i/main.py
+@@ -4,4 +4,7 @@ from stock.importer import import_text
+ from stock.store import Store
+ 
+ if __name__ == '__main__':
+-    print(json.dumps(import_text(sys.stdin.read(), Store())))
++    dry_run = '--dry-run' in sys.argv[1:]
++    if dry_run:
++        sys.argv.remove('--dry-run')
++    print(json.dumps(import_text(sys.stdin.read(), Store(), dry_run=dry_run)))
+diff --git c/stock/__pycache__/__init__.cpython-312.pyc i/stock/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..835f6ff
+Binary files /dev/null and i/stock/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/stock/__pycache__/importer.cpython-312.pyc i/stock/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..2d67768
+Binary files /dev/null and i/stock/__pycache__/importer.cpython-312.pyc differ
+diff --git c/stock/__pycache__/store.cpython-312.pyc i/stock/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..28ffc7b
+Binary files /dev/null and i/stock/__pycache__/store.cpython-312.pyc differ
+diff --git c/stock/importer.py i/stock/importer.py
+index ed91d1a..b127138 100644
+--- c/stock/importer.py
++++ i/stock/importer.py
+@@ -1,16 +1,48 @@
+ import csv
+ import io
+ 
+-def import_text(text, store):
++_DECIMAL_DIGITS = set('0123456789')
++
++
++def _row_to_item(row):
++    if None in row and row[None]:
++        raise ValueError('row has too many fields')
++    values = []
++    for key in ('sku', 'name', 'qty'):
++        value = row.get(key)
++        if not isinstance(value, str):
++            raise ValueError('row must contain sku, name and qty')
++        values.append(value.strip())
++    sku, name, qty = values
++    if not sku:
++        raise ValueError('sku must not be empty')
++    if not name:
++        raise ValueError('name must not be empty')
++    if not qty or any(ch not in _DECIMAL_DIGITS for ch in qty):
++        raise ValueError('qty must be a nonnegative integer')
++    return {'sku': sku, 'name': name, 'qty': int(qty)}
++
++
++def import_text(text, store, dry_run=False):
++    try:
++        rows = list(csv.DictReader(io.StringIO(text)))
++    except csv.Error as exc:
++        raise ValueError('invalid CSV row') from exc
++    # Validate every row before committing any changes.
++    items = [_row_to_item(row) for row in rows]
++
++    state = {key: value.copy() for key, value in store.items.items()}
+     result = {'created': 0, 'updated': 0, 'unchanged': 0, 'changes': []}
+-    rows = csv.DictReader(io.StringIO(text))
+-    for row in rows:
+-        item = {'sku': row['sku'], 'name': row['name'], 'qty': int(row['qty'])}
+-        before = store.get(item['sku'])
++    for item in items:
++        before = state.get(item['sku'])
+         if before == item:
+             result['unchanged'] += 1
+             continue
+         result['created' if before is None else 'updated'] += 1
+         result['changes'].append({'sku': item['sku'], 'before': before, 'after': item})
+-        store.put(item)
++        state[item['sku']] = item
++
++    if not dry_run:
++        for change in result['changes']:
++            store.put(change['after'])
+     return result
+diff --git c/tests/__pycache__/test_importer.cpython-312.pyc i/tests/__pycache__/test_importer.cpython-312.pyc
+new file mode 100644
+index 0000000..2b220c1
+Binary files /dev/null and i/tests/__pycache__/test_importer.cpython-312.pyc differ
+diff --git c/tests/test_importer.py i/tests/test_importer.py
+new file mode 100644
+index 0000000..25f3e72
+--- /dev/null
++++ i/tests/test_importer.py
+@@ -0,0 +1,107 @@
++import unittest
++from stock.importer import import_text
++from stock.store import Store
++
++HEADER = 'sku,name,qty\n'
++
++
++class TestImportText(unittest.TestCase):
++    def test_create(self):
++        store = Store()
++        result = import_text(HEADER + 'A,apple,3', store)
++        self.assertEqual(result['created'], 1)
++        self.assertEqual(result['updated'], 0)
++        self.assertEqual(result['unchanged'], 0)
++        self.assertEqual(store.get('A'), {'sku': 'A', 'name': 'apple', 'qty': 3})
++
++    def test_update_and_unchanged_counts(self):
++        store = Store({
++            'A': {'sku': 'A', 'name': 'old', 'qty': 1},
++            'C': {'sku': 'C', 'name': 'c0', 'qty': 1},
++        })
++        result = import_text(HEADER + 'A,old,1\nC,c1,1\nB,bee,2', store)
++        self.assertEqual(result['created'], 1)
++        self.assertEqual(result['updated'], 1)
++        self.assertEqual(result['unchanged'], 1)
++        self.assertEqual(
++            result['changes'],
++            [
++                {
++                    'sku': 'C',
++                    'before': {'sku': 'C', 'name': 'c0', 'qty': 1},
++                    'after': {'sku': 'C', 'name': 'c1', 'qty': 1},
++                },
++                {
++                    'sku': 'B',
++                    'before': None,
++                    'after': {'sku': 'B', 'name': 'bee', 'qty': 2},
++                },
++            ],
++        )
++        self.assertEqual(store.get('C'), {'sku': 'C', 'name': 'c1', 'qty': 1})
++
++    def test_dry_run_reports_changes_without_writing(self):
++        store = Store({'A': {'sku': 'A', 'name': 'old', 'qty': 1}})
++        result = import_text(HEADER + 'A,new,2', store, dry_run=True)
++        self.assertEqual(result['updated'], 1)
++        self.assertEqual(result['changes'][0]['before'], {'sku': 'A', 'name': 'old', 'qty': 1})
++        self.assertEqual(result['changes'][0]['after'], {'sku': 'A', 'name': 'new', 'qty': 2})
++        self.assertEqual(store.get('A'), {'sku': 'A', 'name': 'old', 'qty': 1})
++        self.assertEqual(len(store.items), 1)
++
++    def test_dry_run_matches_real_import(self):
++        start = {'A': {'sku': 'A', 'name': 'x', 'qty': 1}}
++        input_text = HEADER + 'A,y,2\nB,bee,0'
++        dry = import_text(input_text, Store(start), dry_run=True)
++        real = import_text(input_text, Store(start))
++        self.assertEqual(dry, real)
++
++    def test_trim_whitespace_fields(self):
++        store = Store()
++        import_text(HEADER + '  A , apple , 3 ', store)
++        self.assertEqual(store.get('A'), {'sku': 'A', 'name': 'apple', 'qty': 3})
++
++    def test_zero_qty_is_valid(self):
++        store = Store()
++        result = import_text(HEADER + 'A,n,0', store)
++        self.assertEqual(result['created'], 1)
++        self.assertEqual(store.get('A')['qty'], 0)
++
++    def test_invalid_qty_raises_value_error(self):
++        for qty in ('abc', '-1', '1.5', '', '1 2', '0x3', '+5', '  -2'):
++            with self.subTest(qty=qty), self.assertRaises(ValueError):
++                import_text(HEADER + 'A,name,' + qty, Store())
++
++    def test_empty_sku_or_name_raises_value_error(self):
++        with self.assertRaises(ValueError):
++            import_text(HEADER + ',n,1', Store())
++        with self.assertRaises(ValueError):
++            import_text(HEADER + 'A,   ,1', Store())
++
++    def test_missing_field_raises_value_error(self):
++        with self.assertRaises(ValueError):
++            import_text('sku,name,qty\nA,n\n', Store())
++
++    def test_invalid_row_leaves_store_unchanged(self):
++        start = {'A': {'sku': 'A', 'name': 'x', 'qty': 1}}
++        store = Store(start)
++        with self.assertRaises(ValueError):
++            import_text(HEADER + 'B,bee,1\nC,cat,-5', store)
++        self.assertEqual(set(store.items), {'A'})
++        self.assertEqual(store.get('A'), {'sku': 'A', 'name': 'x', 'qty': 1})
++
++    def test_dry_run_invalid_row_raises_and_leaves_store_unchanged(self):
++        store = Store()
++        with self.assertRaises(ValueError):
++            import_text(HEADER + 'A,n,1\nC,cat,-5', store, dry_run=True)
++        self.assertEqual(store.items, {})
++
++    def test_store_item_not_shared_with_result(self):
++        store = Store({'A': {'sku': 'A', 'name': 'x', 'qty': 1}})
++        result = import_text(HEADER + 'A,y,2', store)
++        result['changes'][0]['after']['name'] = 'mutated'
++        self.assertEqual(store.get('A')['name'], 'y')
++
++
++if __name__ == '__main__':
++    unittest.main()

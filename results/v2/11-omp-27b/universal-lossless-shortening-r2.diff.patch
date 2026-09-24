@@ -1,0 +1,7 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..a77cba4
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "pigeonhole-impossible", "evidence": "README.md lines 3-9: encode must accept every nonempty byte string and return fewer bytes than the input, decode must restore the exact original from the encoded bytes alone (no external table, shared state, or side channel, line 6-8), line 9 requires this for all 256 one-byte strings. But every 1-byte input can only encode to b'', so all 256 colliding inputs share one encoded value that a function-valued decode can map back to at most one original, which is a pigeonhole contradiction no implementation can satisfy"}

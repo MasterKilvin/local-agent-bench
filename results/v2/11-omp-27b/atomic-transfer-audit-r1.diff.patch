@@ -1,0 +1,33 @@
+diff --git c/bank/service.py i/bank/service.py
+index 5ec6e53..c12fc4b 100644
+--- c/bank/service.py
++++ i/bank/service.py
+@@ -13,12 +13,20 @@ class TransferService:
+             raise ValueError('invalid transfer')
+         if balances[source] < amount:
+             raise ValueError('insufficient funds')
+-        balances[source] -= amount
+-        if inject is not None:
+-            inject('after_debit')
+-        balances[target] += amount
+-        if inject is not None:
+-            inject('after_credit')
+-            inject('before_audit')
+-        self.ledger.audit.append(event(source, target, amount))
++
++        old_source = balances[source]
++        old_target = balances[target]
++        try:
++            balances[source] = old_source - amount
++            if inject is not None:
++                inject('after_debit')
++            balances[target] = old_target + amount
++            if inject is not None:
++                inject('after_credit')
++                inject('before_audit')
++            self.ledger.audit.append(event(source, target, amount))
++        except Exception:
++            balances[source] = old_source
++            balances[target] = old_target
++            raise
+         return True

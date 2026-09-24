@@ -1,0 +1,134 @@
+diff --git c/reports/__pycache__/__init__.cpython-312.pyc i/reports/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..db53a16
+Binary files /dev/null and i/reports/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/reports/__pycache__/export.cpython-312.pyc i/reports/__pycache__/export.cpython-312.pyc
+new file mode 100644
+index 0000000..d2f96a3
+Binary files /dev/null and i/reports/__pycache__/export.cpython-312.pyc differ
+diff --git c/reports/__pycache__/model.cpython-312.pyc i/reports/__pycache__/model.cpython-312.pyc
+new file mode 100644
+index 0000000..249d1e0
+Binary files /dev/null and i/reports/__pycache__/model.cpython-312.pyc differ
+diff --git c/reports/export.py i/reports/export.py
+index 6f79688..6077244 100644
+--- c/reports/export.py
++++ i/reports/export.py
+@@ -1,8 +1,15 @@
+ import csv
+ import io
++import json
+ from .model import FIELDS
+ 
+ def render(rows, format='csv'):
++    if format == 'jsonl':
++        return ''.join(
++            json.dumps({field: row[field] for field in FIELDS},
++                       ensure_ascii=False, separators=(',', ':')) + '\n'
++            for row in rows
++        )
+     if format != 'csv':
+         raise ValueError(format)
+     out = io.StringIO(newline='')
+diff --git c/test_export.py i/test_export.py
+new file mode 100644
+index 0000000..073f767
+--- /dev/null
++++ i/test_export.py
+@@ -0,0 +1,96 @@
++"""Verification of render() against the README.md contract.
++
++Runs standalone (`python test_export.py`) and is also collectable by pytest.
++Standard library only.
++"""
++from reports.export import render
++
++ROWS = [
++    {'id': 1, 'customer': 'Ada', 'quantity': 3},
++    {'id': 2, 'customer': 'Céline', 'quantity': 0},
++    {'id': 3, 'customer': 'Lee, "the" Dev', 'quantity': 12},
++]
++
++
++def test_csv_header_and_rows():
++    assert render(ROWS) == (
++        'id,customer,quantity\n'
++        '1,Ada,3\n'
++        '2,Céline,0\n'
++        '3,"Lee, ""the"" Dev",12\n'
++    )
++
++
++def test_csv_default_format():
++    assert render(ROWS, 'csv') == render(ROWS)
++    assert render(ROWS, format='csv') == render(ROWS)
++
++
++def test_csv_empty_keeps_header():
++    assert render([]) == 'id,customer,quantity\n'
++
++
++def test_jsonl_one_compact_object_per_row():
++    expected = (
++        '{"id":1,"customer":"Ada","quantity":3}\n'
++        '{"id":2,"customer":"Céline","quantity":0}\n'
++        '{"id":3,"customer":"Lee, \\"the\\" Dev","quantity":12}\n'
++    )
++    assert render(ROWS, 'jsonl') == expected
++
++
++def test_jsonl_fields_in_order():
++    first = render([ROWS[0]], 'jsonl').splitlines()[0]
++    positions = [
++        first.index('"id"'),
++        first.index('"customer"'),
++        first.index('"quantity"'),
++    ]
++    assert positions == sorted(positions)
++
++
++def test_jsonl_preserves_unicode():
++    out = render([{'id': 7, 'customer': 'Céline', 'quantity': 1}], 'jsonl')
++    assert 'Céline' in out and '\\u00' not in out
++
++
++def test_jsonl_integer_quantity_preserved():
++    out = render([{'id': 1, 'customer': 'Ada', 'quantity': 42}], 'jsonl')
++    assert '"quantity":42' in out
++    assert '"quantity":"42"' not in out
++
++
++def test_jsonl_empty_is_empty_text():
++    assert render([], 'jsonl') == ''
++
++
++def test_jsonl_row_order_preserved():
++    lines = render(ROWS, 'jsonl').splitlines()
++    assert len(lines) == 3
++    assert '":1,' in lines[0]
++    assert '":2,' in lines[1]
++    assert '":3,' in lines[2]
++
++
++def test_unknown_format_raises_valueerror():
++    for bad in ('yaml', 'JSONL', '', 'tsv'):
++        try:
++            render(ROWS, bad)
++        except ValueError:
++            pass
++        else:
++            raise AssertionError(f'expected ValueError for {bad!r}')
++
++
++if __name__ == '__main__':
++    failures = 0
++    for _name, _fn in sorted(globals().items()):
++        if _name.startswith('test_') and callable(_fn):
++            try:
++                _fn()
++            except AssertionError as exc:
++                failures += 1
++                print(f'FAIL: {_name}: {exc}')
++    if failures:
++        raise SystemExit(f'{failures} test(s) failed')
++    print('All tests passed.')

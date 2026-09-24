@@ -1,0 +1,11 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..1dc4a9f
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "blocked",
++  "blocker": "contradictory-retention-rules",
++  "evidence": "README.md: Rule A (delete once age >= 7, including day 7) directly contradicts Rule B (keep through day 30, including day 30). For any record aged 7-30 days the same record must both be deleted and be kept, and the README forbids the only escapes (no exception, no priority rule, no archiving a second copy, no redefining a case record), so no implementation can satisfy both rules for every age."
++}

@@ -1,0 +1,45 @@
+{
+ "agent": "dsh-std",
+ "agent_version": "0.1.5-rc.3",
+ "model": "qwen3.8:27b-64k",
+ "model_info": {
+  "num_ctx": 65536,
+  "manifest_sha256": "67a1c5bfe600",
+  "modified_at": "2026-09-23T13:03:24.113685059Z",
+  "details": {
+   "parent_model": "qwen3.8:27b",
+   "format": "gguf",
+   "family": "qwen35",
+   "families": [
+    "qwen35"
+   ],
+   "parameter_size": "27.3B",
+   "quantization_level": "Q4_K_M"
+  },
+  "capabilities": [
+   "completion",
+   "vision",
+   "tools",
+   "thinking"
+  ]
+ },
+ "endpoint": "http://127.0.0.1:11435/v1",
+ "ctx": 65536,
+ "max_output": 8192,
+ "steps": 30,
+ "timeout": 900,
+ "repeats": 3,
+ "thinking": null,
+ "protocol": "v2",
+ "image": "localhost/bench-agentroom-deps:1",
+ "image_id": "1203913142c72c18fc3",
+ "workroom_sha": "ea01f440cb10",
+ "tasks_sha": "7c8fddf11146",
+ "run_py_sha": "34b871d9e304",
+ "n_tasks": 20,
+ "started": "2026-09-23 20:17:27",
+ "agent_config": {
+  "standard.patch.yml": "# DSH Standard (profile sdk): stock tree; the pi-ai row from base carries no routes here, the bench row owns local-ollama.\n- id: session-log-deepseek\n  config:\n    enabled: false\n- id: tool-web\n  disabled: true\n- id: web-search-deepseek\n  disabled: true\n- id: web-fetch-http\n  disabled: true\n\n# Model route: configure the pi-ai adapter dsh-base already mounts (a second instance does not register).\n- id: llm-pi-ai\n  config:\n    providers:\n      local-ollama:\n        displayName: Local Ollama (bench relay)\n        api: openai-completions\n        baseURL: http://127.0.0.1:11435/v1\n        apiKeyEnv: DSH_BENCH_API_KEY\n        streamIdleTimeoutMs: 1200000\n        retryPolicy:\n          mode: normal\n          maxRetries: 0\n        compat:\n          supportsDeveloperRole: false\n        models:\n          - id: !!js process.env.DSH_BENCH_MODEL\n            contextWindow: 65536\n            maxTokens: 8192\n            reasoningEfforts: false\n",
+  "minimal.patch.yml": "# DSH Minimal (profile sdk-minimal): stock tree; its DeepSeek adapter is unused (the bench route is local-ollama).\n- id: session-log-deepseek\n  config:\n    enabled: false\n\n# Model route (was common.patch.yml): pi-ai's OpenAI-compatible adapter to the in-container relay.\n- insert:\n    - id: llm-pi-ai-bench\n      name: '@deepseek-ai/dsh-llm-pi-ai'\n      config:\n        providers:\n          local-ollama:\n            displayName: Local Ollama (bench relay)\n            api: openai-completions\n            baseURL: http://127.0.0.1:11435/v1\n            apiKeyEnv: DSH_BENCH_API_KEY\n            streamIdleTimeoutMs: 1200000\n            retryPolicy:\n              mode: normal\n              maxRetries: 0\n            compat:\n              supportsDeveloperRole: false\n            models:\n              - id: !!js process.env.DSH_BENCH_MODEL\n                contextWindow: 65536\n                maxTokens: 8192\n                reasoningEfforts: false\n"
+ }
+}

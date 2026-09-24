@@ -1,0 +1,36 @@
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..1ab4536
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,30 @@
++"""Regression test: the promotion must be applied exactly once at checkout.
++
++Covers the double-discount bug where the rate was applied twice, producing
++`(1 - rate) ** 2` of the subtotal instead of `(1 - rate)`.
++"""
++
++import unittest
++
++from shop.checkout import checkout
++
++
++class CheckoutPromotionOnceTests(unittest.TestCase):
++    def test_single_line_with_quantity_above_one(self):
++        # Subtotal 20.00, rate 0.10: 20.00 * 0.90 = 18.00 (once).
++        # Applying the promotion twice would give 20.00 * 0.81 = 16.20.
++        result = checkout([{'price': '10.00', 'qty': 2}], '0.10')
++        self.assertEqual(result, '18.00')
++
++    def test_multiple_lines_all_quantities_one(self):
++        # Subtotal 40.00, rate 0.10: 40.00 * 0.90 = 36.00 (once).
++        # Applying the promotion twice would give 40.00 * 0.81 = 32.40.
++        result = checkout([
++            {'price': '15.00', 'qty': 1},
++            {'price': '25.00', 'qty': 1},
++        ], '0.10')
++        self.assertEqual(result, '36.00')
++
++
++if __name__ == '__main__':
++    unittest.main()

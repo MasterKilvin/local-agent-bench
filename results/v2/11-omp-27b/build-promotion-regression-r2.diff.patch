@@ -1,0 +1,55 @@
+diff --git c/shop/__pycache__/__init__.cpython-312.pyc i/shop/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..b7c9745
+Binary files /dev/null and i/shop/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/shop/__pycache__/checkout.cpython-312.pyc i/shop/__pycache__/checkout.cpython-312.pyc
+new file mode 100644
+index 0000000..4ad6c51
+Binary files /dev/null and i/shop/__pycache__/checkout.cpython-312.pyc differ
+diff --git c/tests/__pycache__/__init__.cpython-312.pyc i/tests/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..596891c
+Binary files /dev/null and i/tests/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/tests/__pycache__/test_regression.cpython-312.pyc i/tests/__pycache__/test_regression.cpython-312.pyc
+new file mode 100644
+index 0000000..ecfeefc
+Binary files /dev/null and i/tests/__pycache__/test_regression.cpython-312.pyc differ
+diff --git c/tests/test_regression.py i/tests/test_regression.py
+new file mode 100644
+index 0000000..c71531b
+--- /dev/null
++++ i/tests/test_regression.py
+@@ -0,0 +1,33 @@
++"""Regression test: the promotion must be applied exactly once per checkout.
++
++Contract (README.md): sum extended line prices, apply the promotion exactly
++once to the subtotal, then round with ROUND_HALF_UP. The historical defect
++applied the promotion twice (discount factor squared), so any positive
++subtotal with a rate strictly between 0 and 1 yields a different payable
++total. The two baskets below are the distinct regression scenarios from the
++README: one single line with quantity above one, and a separate multi-line
++basket where every quantity is one.
++"""
++import unittest
++
++from shop.checkout import checkout
++
++
++class CheckoutPromotionRegression(unittest.TestCase):
++    def test_single_line_quantity_above_one(self):
++        # 10.00 x 2 => subtotal 20.00; rate 0.10 => keep 0.90 once
++        # correct: 20.00 * 0.90 = 18.00
++        # buggy:   20.00 * 0.90 * 0.90 = 16.20
++        lines = [{'price': '10.00', 'qty': 2}]
++        self.assertEqual(checkout(lines, '0.10'), '18.00')
++
++    def test_multi_line_basket_all_quantities_one(self):
++        # 10.00 + 20.00 => subtotal 30.00; rate 0.10 => keep 0.90 once
++        # correct: 30.00 * 0.90 = 27.00
++        # buggy:   30.00 * 0.90 * 0.90 = 24.30
++        lines = [{'price': '10.00', 'qty': 1}, {'price': '20.00', 'qty': 1}]
++        self.assertEqual(checkout(lines, '0.10'), '27.00')
++
++
++if __name__ == '__main__':
++    unittest.main()

@@ -1,0 +1,133 @@
+diff --git c/__pycache__/test_queue.cpython-312.pyc i/__pycache__/test_queue.cpython-312.pyc
+new file mode 100644
+index 0000000..c6dc2d0
+Binary files /dev/null and i/__pycache__/test_queue.cpython-312.pyc differ
+diff --git c/jobs/__pycache__/__init__.cpython-312.pyc i/jobs/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..0c7a2cc
+Binary files /dev/null and i/jobs/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/jobs/__pycache__/queue.cpython-312.pyc i/jobs/__pycache__/queue.cpython-312.pyc
+new file mode 100644
+index 0000000..c935dfd
+Binary files /dev/null and i/jobs/__pycache__/queue.cpython-312.pyc differ
+diff --git c/jobs/__pycache__/worker.cpython-312.pyc i/jobs/__pycache__/worker.cpython-312.pyc
+new file mode 100644
+index 0000000..36e29ce
+Binary files /dev/null and i/jobs/__pycache__/worker.cpython-312.pyc differ
+diff --git c/jobs/queue.py i/jobs/queue.py
+index 7ed2e9f..4679fb5 100644
+--- c/jobs/queue.py
++++ i/jobs/queue.py
+@@ -5,10 +5,9 @@ class JobQueue:
+ 
+     def claim(self, job_id, worker_id, on_attempt=None):
+         job = self.jobs[job_id]
+-        was_pending = job['state'] == 'pending'
+         if on_attempt is not None:
+             on_attempt()
+-        if not was_pending:
++        if job['state'] != 'pending':
+             return False
+         job['state'] = 'claimed'
+         job['owner'] = worker_id
+diff --git c/test_queue.py i/test_queue.py
+new file mode 100644
+index 0000000..18b2fab
+--- /dev/null
++++ i/test_queue.py
+@@ -0,0 +1,95 @@
++import unittest
++
++from jobs import JobQueue, Worker
++
++
++class ClaimContractTests(unittest.TestCase):
++    def test_simple_claim_and_complete(self):
++        queue = JobQueue(['j1'])
++        self.assertTrue(queue.claim('j1', 'w1'))
++        self.assertEqual(queue.jobs['j1']['owner'], 'w1')
++        self.assertTrue(queue.complete('j1', 'w1'))
++        self.assertEqual(queue.jobs['j1']['state'], 'complete')
++        self.assertEqual(queue.jobs['j1']['completions'], 1)
++
++    def test_callback_interruption_only_one_owner(self):
++        queue = JobQueue(['j1'])
++        # w1's claim is interrupted mid-attempt when w2 claims the same job.
++        inner = [None]
++        outer = queue.claim('j1', 'w1',
++                            on_attempt=lambda: inner.__setitem__(0, queue.claim('j1', 'w2')))
++        # Exactly one owner exists: whoever claimed inside the callback won.
++        self.assertTrue(inner[0])
++        self.assertFalse(outer)
++        self.assertEqual(queue.jobs['j1']['owner'], 'w2')
++        self.assertEqual(queue.jobs['j1']['state'], 'claimed')
++
++    def test_callback_interruption_first_does_not_overwrite(self):
++        queue = JobQueue(['j1'])
++        # This time w2's claim is interrupted by w1's claim; w1 must not be
++        # able to overwrite the callback's acquisition.
++        inner = [None]
++        outer = queue.claim('j1', 'w2',
++                            on_attempt=lambda: inner.__setitem__(0, queue.claim('j1', 'w1')))
++        self.assertTrue(inner[0])
++        self.assertFalse(outer)
++        self.assertEqual(queue.jobs['j1']['owner'], 'w1')
++
++    def test_only_owner_can_complete_exactly_once(self):
++        queue = JobQueue(['j1'])
++        queue.claim('j1', 'w1', on_attempt=lambda: queue.claim('j1', 'w2'))
++        # The losing worker must not be able to complete.
++        self.assertFalse(queue.complete('j1', 'w1'))
++        # The winner may complete exactly once.
++        self.assertTrue(queue.complete('j1', 'w2'))
++        self.assertFalse(queue.complete('j1', 'w2'))
++        self.assertEqual(queue.jobs['j1']['completions'], 1)
++
++    def test_claim_after_claim_or_complete_returns_false(self):
++        queue = JobQueue(['j1'])
++        queue.claim('j1', 'w1')
++        self.assertFalse(queue.claim('j1', 'w2'))
++        queue.complete('j1', 'w1')
++        self.assertFalse(queue.claim('j1', 'w2'))
++        self.assertEqual(queue.jobs['j1']['owner'], 'w1')
++
++    def test_callback_on_claimed_job_runs_once_and_fails_ownership(self):
++        queue = JobQueue(['j1'])
++        queue.claim('j1', 'w1')
++        ran = []
++        self.assertFalse(queue.claim('j1', 'w2', on_attempt=lambda: ran.append(None)))
++        self.assertEqual(len(ran), 1)
++        self.assertEqual(queue.jobs['j1']['owner'], 'w1')
++
++    def test_different_jobs_independent(self):
++        queue = JobQueue(['j1', 'j2'])
++        self.assertTrue(queue.claim('j1', 'w1'))
++        self.assertTrue(queue.claim('j2', 'w2'))
++        self.assertTrue(queue.complete('j1', 'w1'))
++        self.assertTrue(queue.complete('j2', 'w2'))
++
++    def test_unknown_job_raises_keyerror(self):
++        queue = JobQueue(['j1'])
++        with self.assertRaises(KeyError):
++            queue.claim('nope', 'w1')
++        with self.assertRaises(KeyError):
++            queue.complete('nope', 'w1')
++
++
++class WorkerTests(unittest.TestCase):
++    def test_worker_take_and_finish(self):
++        queue = JobQueue(['pack-1'])
++        east = Worker('east', queue)
++        west = Worker('west', queue)
++        east_won = [None]
++        east_take = lambda: east_won.__setitem__(0, east.take('pack-1'))
++        west_take = west.take('pack-1', on_attempt=east_take)
++        self.assertFalse(west_take)
++        self.assertTrue(east_won[0])
++        self.assertEqual(queue.jobs['pack-1']['owner'], 'east')
++        self.assertFalse(west.finish('pack-1'))
++        self.assertTrue(east.finish('pack-1'))
++
++
++if __name__ == '__main__':
++    unittest.main()

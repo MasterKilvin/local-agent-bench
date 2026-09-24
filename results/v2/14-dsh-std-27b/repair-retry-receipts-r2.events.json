@@ -1,0 +1,106 @@
+{
+"peak_prompt_tokens": 12401,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 1,
+"steps_detail": [
+{
+"t": 1.5,
+"prompt": 7073,
+"completion": 81,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 2.7,
+"prompt": 7928,
+"completion": 165,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 20.9,
+"prompt": 8874,
+"completion": 2369,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 25.8,
+"prompt": 11273,
+"completion": 709,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 26.4,
+"prompt": 12082,
+"completion": 74,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 29.9,
+"prompt": 12401,
+"completion": 402,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 1.5,
+"name": "bash",
+"args_hash": "a916cdb6e268f99c",
+"error": null
+},
+{
+"t": 2.7,
+"name": "read",
+"args_hash": "d74f29ba48a9e92c",
+"error": null
+},
+{
+"t": 2.7,
+"name": "read",
+"args_hash": "79a15eaa6ebdf9b9",
+"error": null
+},
+{
+"t": 2.7,
+"name": "read",
+"args_hash": "d86dcd7212024fc4",
+"error": null
+},
+{
+"t": 2.7,
+"name": "read",
+"args_hash": "1a0d968221bc8a5d",
+"error": null
+},
+{
+"t": 2.7,
+"name": "read",
+"args_hash": "ad10295ff1660794",
+"error": null
+},
+{
+"t": 20.9,
+"name": "edit",
+"args_hash": "9afd4a348275f642",
+"error": null
+},
+{
+"t": 25.8,
+"name": "bash",
+"args_hash": "5aeb083019599778",
+"error": null
+},
+{
+"t": 26.4,
+"name": "read",
+"args_hash": "d86dcd7212024fc4",
+"error": null
+}
+]
+}

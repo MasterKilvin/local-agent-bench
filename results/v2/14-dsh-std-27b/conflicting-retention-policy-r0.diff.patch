@@ -1,0 +1,8 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..999dc2e
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1 @@
++{"status": "blocked", "blocker": "contradictory-retention-rules", "evidence": "README.md lines 6-13: Rule A (lines 6-7) requires deleting closed case records once age reaches 7 (keeping them at day 7 or later violates Rule A), while Rule B (lines 8-9) requires keeping every closed case record through day 30 (deleting it at or before day 30 violates Rule B); lines 11-13 then state both rules apply to the same records with no exception or priority rule, that the implementation must satisfy both rules for every age, and that it may neither archive a second copy nor change what counts as a case record — so no behavior exists for case ages 7 through 30 inclusive (main.py's c2 with age 8 is in this band): deleting violates Rule B, keeping violates Rule A."}
+\ No newline at end of file

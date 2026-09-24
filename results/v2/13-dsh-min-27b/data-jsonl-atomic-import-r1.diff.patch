@@ -1,0 +1,73 @@
+diff --git c/events/__pycache__/__init__.cpython-312.pyc i/events/__pycache__/__init__.cpython-312.pyc
+new file mode 100644
+index 0000000..615ec89
+Binary files /dev/null and i/events/__pycache__/__init__.cpython-312.pyc differ
+diff --git c/events/__pycache__/importer.cpython-312.pyc i/events/__pycache__/importer.cpython-312.pyc
+new file mode 100644
+index 0000000..74922bf
+Binary files /dev/null and i/events/__pycache__/importer.cpython-312.pyc differ
+diff --git c/events/__pycache__/store.cpython-312.pyc i/events/__pycache__/store.cpython-312.pyc
+new file mode 100644
+index 0000000..98c25dc
+Binary files /dev/null and i/events/__pycache__/store.cpython-312.pyc differ
+diff --git c/events/importer.py i/events/importer.py
+index 4a941c5..8da8651 100644
+--- c/events/importer.py
++++ i/events/importer.py
+@@ -1,21 +1,43 @@
+ import json
+ 
++
+ class ImportProblem(Exception):
+-    def __init__(self, line):
++    def __init__(self, line, message='invalid line'):
+         self.line = line
+-        super().__init__(f'invalid line {line}')
++        super().__init__(f'invalid line {line}: {message}')
++
++
++def _validate_line(raw, line_no):
++    if not raw.strip():
++        return None
++    try:
++        text = raw.decode('utf-8')
++    except UnicodeDecodeError:
++        raise ImportProblem(line_no, 'malformed UTF-8') from None
++    try:
++        record = json.loads(text)
++    except ValueError:
++        raise ImportProblem(line_no, 'malformed JSON') from None
++    if not isinstance(record, dict):
++        raise ImportProblem(line_no, 'record must be an object')
++    record_id = record.get('id')
++    if not isinstance(record_id, str) or not record_id:
++        raise ImportProblem(line_no, 'missing or invalid id')
++    record_count = record.get('count')
++    if isinstance(record_count, bool) or not isinstance(record_count, int):
++        raise ImportProblem(line_no, 'missing or invalid count')
++    return record
++
+ 
+ def import_bytes(payload, store):
+-    count = 0
+-    for line, raw in enumerate(payload.splitlines(), 1):
+-        if not raw.strip():
+-            continue
+-        try:
+-            record = json.loads(raw.decode('utf-8'))
+-            if not isinstance(record, dict) or not isinstance(record.get('id'), str):
+-                raise ValueError()
+-        except (UnicodeDecodeError, ValueError):
+-            raise ImportProblem(line)
++    # Validate every line before touching the store, so a failure at line N
++    # leaves previously parsed records uncommitted (no half import).
++    records = []
++    for line_no, raw in enumerate(payload.splitlines(), 1):
++        record = _validate_line(raw, line_no)
++        if record is not None:
++            records.append(record)
++    count = len(records)
++    for record in records:
+         store.append(record)
+-        count += 1
+     return count

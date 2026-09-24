@@ -1,0 +1,152 @@
+{
+"peak_prompt_tokens": 13794,
+"thinking_tokens": 0,
+"tool_errors": 0,
+"repeated_calls": 0,
+"steps_detail": [
+{
+"t": 1.5,
+"prompt": 7116,
+"completion": 65,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 2.3,
+"prompt": 7409,
+"completion": 125,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 3.2,
+"prompt": 8065,
+"completion": 118,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 24.9,
+"prompt": 8344,
+"completion": 3151,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 29.0,
+"prompt": 11553,
+"completion": 689,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 30.0,
+"prompt": 12286,
+"completion": 129,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 34.0,
+"prompt": 12735,
+"completion": 524,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 35.0,
+"prompt": 13349,
+"completion": 126,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 37.0,
+"prompt": 13522,
+"completion": 252,
+"thinking": 0,
+"stop": "toolUse"
+},
+{
+"t": 41.5,
+"prompt": 13794,
+"completion": 640,
+"thinking": 0,
+"stop": "stop"
+}
+],
+"tools_detail": [
+{
+"t": 1.5,
+"name": "bash",
+"args_hash": "45ec8f4d04fbb539",
+"error": null
+},
+{
+"t": 2.3,
+"name": "read",
+"args_hash": "d74f29ba48a9e92c",
+"error": null
+},
+{
+"t": 2.3,
+"name": "read",
+"args_hash": "79a15eaa6ebdf9b9",
+"error": null
+},
+{
+"t": 2.3,
+"name": "bash",
+"args_hash": "b1b8e3bfb3c707f4",
+"error": null
+},
+{
+"t": 3.2,
+"name": "read",
+"args_hash": "a2175fab1e2ac24f",
+"error": null
+},
+{
+"t": 3.2,
+"name": "bash",
+"args_hash": "cf24cf476a0540de",
+"error": null
+},
+{
+"t": 24.9,
+"name": "bash",
+"args_hash": "d3e8210dbc99968e",
+"error": null
+},
+{
+"t": 29.0,
+"name": "write",
+"args_hash": "38282db063cbcad2",
+"error": null
+},
+{
+"t": 30.0,
+"name": "bash",
+"args_hash": "2243a690964ad302",
+"error": null
+},
+{
+"t": 34.0,
+"name": "bash",
+"args_hash": "dc4fc58133c3a805",
+"error": null
+},
+{
+"t": 35.0,
+"name": "bash",
+"args_hash": "182aecb8b8b9d978",
+"error": null
+},
+{
+"t": 37.0,
+"name": "bash",
+"args_hash": "b71280023cf4a942",
+"error": null
+}
+]
+}

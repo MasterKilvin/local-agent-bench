@@ -1,0 +1,11 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..bfaf244
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "blocked",
++  "blocker": "pigeonhole-impossibility",
++  "evidence": "README.md requires encode to return strictly fewer bytes than its input for EVERY nonempty byte string, explicitly all 256 one-byte strings ('not an average ratio'), while decode returns the exact original purely from the encoded bytes and with no side channel, shared state, external table, or length field. Fewer than 1 byte leaves only the single 0-byte string b'', so all 256 one-byte inputs must collide to b''; no pure inverse in codec.py::decode can map b'' back to 256 distinct originals. This is the pigeonhole / no-free-lunch lossless-compression contradiction: the spec is unsatisfiable as written."
++}

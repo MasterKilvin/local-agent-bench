@@ -1,0 +1,11 @@
+diff --git c/BLOCKED.json i/BLOCKED.json
+new file mode 100644
+index 0000000..aa6b523
+--- /dev/null
++++ i/BLOCKED.json
+@@ -0,0 +1,5 @@
++{
++  "status": "blocked",
++  "blocker": "spec-code-mismatch",
++  "evidence": "README.md:5 requires 'PermanentError must propagate immediately on any attempt, including after a transient failure', but retry/wrapper.py:11-13 catches PermanentError together with TransientError and re-raises only when index == attempts - 1, so a permanent error is swallowed and retried; verified by execution: run(op, attempts=3) with an op that always raises PermanentError makes 3 calls before raising, and a transient-then-permanent sequence makes a 3rd unnecessary call. A test proving immediate propagation with call counts cannot pass without changing production code, which the task forbids."
++}

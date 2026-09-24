@@ -1,0 +1,98 @@
+diff --git c/download/ranges.py i/download/ranges.py
+index d76cf07..f099960 100644
+--- c/download/ranges.py
++++ i/download/ranges.py
+@@ -1,6 +1,36 @@
+-def bounds(header, length):
+-    spec = header.removeprefix('bytes=')
+-    first, last = spec.split('-', 1)
+-    start = int(first or 0)
+-    end = int(last or length)
+-    return start, end
++import re
++
++# The grammar is exact: one or more ASCII digits (0-9) only. Leading zeros
++# are allowed; whitespace, signs, underscores, hex/octal spellings, Unicode
++# digits and multiple ranges are all rejected. Using [0-9] (not \d) keeps
++# the match ASCII-only, and fullmatch forbids any leading/trailing garbage.
++_FULL = re.compile(r'bytes=([0-9]+)-([0-9]+)')
++_PREFIX = re.compile(r'bytes=([0-9]+)-')
++_SUFFIX = re.compile(r'bytes=-([0-9]+)')
++
++
++class RangeError(ValueError):
++    """Raised when a Range header is malformed or unsatisfiable."""
++
++
++def parse(header):
++    """Parse an exact single-range header.
++
++    Returns one of:
++        ('full', start, end)        # bytes=start-end
++        ('prefix', start)           # bytes=start-
++        ('suffix', count)           # bytes=-count
++    with all values as ints. Raises RangeError for any other spelling.
++    """
++    if not isinstance(header, str):
++        raise RangeError('range header must be a string')
++    m = _FULL.fullmatch(header)
++    if m is not None:
++        return 'full', int(m.group(1)), int(m.group(2))
++    m = _PREFIX.fullmatch(header)
++    if m is not None:
++        return 'prefix', int(m.group(1))
++    m = _SUFFIX.fullmatch(header)
++    if m is not None:
++        return 'suffix', int(m.group(1))
++    raise RangeError('bad range syntax: %r' % (header,))
+diff --git c/download/service.py i/download/service.py
+index 72a053d..f655954 100644
+--- c/download/service.py
++++ i/download/service.py
+@@ -1,9 +1,40 @@
+-from .ranges import bounds
++from .ranges import RangeError, parse
++
++
++def _not_satisfiable(length):
++    return 416, {
++        'Content-Length': '0',
++        'Content-Range': 'bytes */%d' % length,
++    }, b''
++
+ 
+ def serve(data, range_header=None):
++    length = len(data)
+     if range_header is None:
+-        return 200, {'Content-Length': str(len(data))}, data
+-    start, end = bounds(range_header, len(data))
+-    body = data[start:end]
+-    return 206, {'Content-Length': str(len(body)),
+-                 'Content-Range': f'bytes {start}-{end}/{len(data)}'}, body
++        return 200, {'Content-Length': str(length)}, data
++
++    try:
++        kind, *values = parse(range_header)
++    except RangeError:
++        return _not_satisfiable(length)
++
++    if kind == 'suffix':
++        count = values[0]
++        if count == 0 or length == 0:
++            return _not_satisfiable(length)
++        first = length - count if count < length else 0
++        last = length - 1
++    else:
++        start, end = values[0], values[1] if kind == 'full' else length - 1
++        if start >= length:              # start beyond (or at) EOF, incl. empty data
++            return _not_satisfiable(length)
++        last = end if end < length else length - 1   # clamp end past EOF
++        first = start
++        if first > last:                 # reverse bounds
++            return _not_satisfiable(length)
++
++    body = data[first:last + 1]          # end is inclusive
++    return 206, {
++        'Content-Length': str(len(body)),
++        'Content-Range': 'bytes %d-%d/%d' % (first, last, length),
++    }, body
